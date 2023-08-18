@@ -123,11 +123,12 @@ def zone_list_to_ortho_dico(tile):
     # where higher lines have priority over lower ones.
     masks_im=Image.new("L",(4096,4096),'black')
     masks_draw=ImageDraw.Draw(masks_im)
-    airport_array=numpy.zeros((4096,4096),dtype=numpy.bool)
+    airport_array=numpy.zeros((4096,4096),dtype=bool)
     progressive_zones = list()
 
     if tile.cover_airports_with_highres in ['True','ICAO']:
         UI.vprint(1,"-> Checking airport locations for upgraded zoomlevel.")
+        
         try:
             f=open(FNAMES.apt_file(tile),'rb')
             dico_airports=pickle.load(f)
@@ -149,11 +150,11 @@ def zone_list_to_ortho_dico(tile):
             ymax+=1000*tile.cover_extent*GEO.m_to_lat
             ymin-=1000*tile.cover_extent*GEO.m_to_lat
             # round off to texture boundaries at tile.cover_zl zoomlevel
-            (til_x_left,til_y_top)=GEO.wgs84_to_orthogrid(ymax+tile.lat,xmin+tile.lon,tile.cover_zl.default)
-            (ymax,xmin)=GEO.gtile_to_wgs84(til_x_left,til_y_top,tile.cover_zl.default)
+            (til_x_left,til_y_top)=GEO.wgs84_to_orthogrid(ymax+tile.lat,xmin+tile.lon,tile.cover_zl._value)
+            (ymax,xmin)=GEO.gtile_to_wgs84(til_x_left,til_y_top,tile.cover_zl._value)
             ymax-=tile.lat; xmin-=tile.lon
-            (til_x_left2,til_y_top2)=GEO.wgs84_to_orthogrid(ymin+tile.lat,xmax+tile.lon,tile.cover_zl.default)
-            (ymin,xmax)=GEO.gtile_to_wgs84(til_x_left2+16,til_y_top2+16,tile.cover_zl.default)
+            (til_x_left2,til_y_top2)=GEO.wgs84_to_orthogrid(ymin+tile.lat,xmax+tile.lon,tile.cover_zl._value)
+            (ymin,xmax)=GEO.gtile_to_wgs84(til_x_left2+16,til_y_top2+16,tile.cover_zl._value)
             ymin-=tile.lat; xmax-=tile.lon
             xmin=max(0,xmin); xmax=min(1,xmax); ymin=max(0,ymin); ymax=min(1,ymax)
             # mark to airport_array
@@ -165,7 +166,7 @@ def zone_list_to_ortho_dico(tile):
 
     elif tile.cover_airports_with_highres == 'Progressive':
         UI.vprint(1,"-> Auto-generating custom ZL zones along the runways of each airport.")
-        wall_time = time.clock()
+        wall_time = time.perf_counter()
         airport_collection = APT_SRC.AirportCollection(xp_tile=APT_SRC.XPlaneTile(tile.lat, tile.lon),
                                                        include_surrounding_tiles=True)
         progressive_zones = airport_collection.zone_list(screen_res=tile.cover_screen_res,
@@ -176,7 +177,7 @@ def zone_list_to_ortho_dico(tile):
                                                          cover_zl=tile.cover_zl,
                                                          greediness=tile.cover_greediness,
                                                          greediness_threshold=tile.cover_greediness_threshold)
-        wall_time_delta = datetime.timedelta(seconds=(time.clock() - wall_time))
+        wall_time_delta = datetime.timedelta(seconds=(time.perf_counter() - wall_time))
         UI.lvprint(0, "ZL zones computed in {}s".format(wall_time_delta))
 
     dico_customzl={}
@@ -198,7 +199,7 @@ def zone_list_to_ortho_dico(tile):
             y=round((tile.lat+1-latp)*4095)
             (zoomlevel,provider_code)=dico_tmp[masks_im.getpixel((x,y))]
             if airport_array[y,x]:
-                zoomlevel=max(zoomlevel,tile.cover_zl.default)
+                zoomlevel=max(zoomlevel,tile.cover_zl._value)
             til_x_text=16*(int(til_x/2**(tile.mesh_zl-zoomlevel))//16)
             til_y_text=16*(int(til_y/2**(tile.mesh_zl-zoomlevel))//16)
             dico_customzl[(til_x,til_y)]=(til_x_text,til_y_text,zoomlevel,provider_code)
