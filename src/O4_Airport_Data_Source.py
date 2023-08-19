@@ -785,7 +785,7 @@ class AirportCollection:
         polys = shapely.ops.unary_union([gtile.polygon() for gtile in gtiles])
 
         if isinstance(polys, shapely.geometry.MultiPolygon):
-            return list(polys)
+            return list(polys.geoms)
         elif isinstance(polys, shapely.geometry.Polygon):
             return [polys]
         elif isinstance(polys, list):
@@ -913,11 +913,14 @@ class XPlaneAptDatParser:
         The order is important : airports in the first files will be overwritten by those in the last ones (as in XP)"""
         xp_dir = CFG.xplane_install_dir
         apt_dat = os.path.join('Earth nav data', 'apt.dat')
-        default_scenery = os.path.join(xp_dir, 'Resources', 'default scenery', 'default apt dat', apt_dat)
-        global_airports = os.path.join(xp_dir, 'Custom Scenery', 'Global Airports', apt_dat)
+        if "12" in (xp_dir): 
+          global_airports = os.path.join(xp_dir, 'Global Scenery', 'Global Airports', apt_dat)
+        else:
+          global_airports = os.path.join(xp_dir, 'Custom Scenery', 'Global Airports', apt_dat)
+        
         custom_airports = set(glob.glob(os.path.join(xp_dir, 'Custom Scenery', '*', apt_dat))) - {global_airports}
-        return [default_scenery, global_airports] + sorted(custom_airports)
-
+        return [global_airports] + sorted(custom_airports)
+ 
     @staticmethod
     def parse(apt_dat_file):
         # Translation dicts
@@ -951,12 +954,12 @@ class XPlaneAptDatParser:
                     if m and current_airport_data is not None:
                         current_airport_data['runways'].append({
                             'end_1_id': m.group('runway_end_1_number'),
-                            'end_1_lat': numpy.float(m.group('runway_end_1_latitude')),
-                            'end_1_lon': numpy.float(m.group('runway_end_1_longitude')),
+                            'end_1_lat': float(m.group('runway_end_1_latitude')),
+                            'end_1_lon': float(m.group('runway_end_1_longitude')),
                             'end_2_id': m.group('runway_end_2_number'),
-                            'end_2_lat': numpy.float(m.group('runway_end_2_latitude')),
-                            'end_2_lon': numpy.float(m.group('runway_end_2_longitude')),
-                            'width': numpy.float(m.group('runway_width'))})
+                            'end_2_lat': float(m.group('runway_end_2_latitude')),
+                            'end_2_lon': float(m.group('runway_end_2_longitude')),
+                            'width': float(m.group('runway_width'))})
                 else:
                     pass  # skip any other line
 
