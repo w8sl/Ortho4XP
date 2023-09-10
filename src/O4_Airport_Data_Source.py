@@ -913,14 +913,14 @@ class XPlaneAptDatParser:
         The order is important : airports in the first files will be overwritten by those in the last ones (as in XP)"""
         xp_dir = CFG.xplane_install_dir
         apt_dat = os.path.join('Earth nav data', 'apt.dat')
-        if "12" in (xp_dir): 
+        if "12" in (xp_dir):
           global_airports = os.path.join(xp_dir, 'Global Scenery', 'Global Airports', apt_dat)
         else:
           global_airports = os.path.join(xp_dir, 'Custom Scenery', 'Global Airports', apt_dat)
-        
+
         custom_airports = set(glob.glob(os.path.join(xp_dir, 'Custom Scenery', '*', apt_dat))) - {global_airports}
         return [global_airports] + sorted(custom_airports)
- 
+
     @staticmethod
     def parse(apt_dat_file):
         # Translation dicts

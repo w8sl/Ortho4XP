@@ -128,7 +128,7 @@ def zone_list_to_ortho_dico(tile):
 
     if tile.cover_airports_with_highres in ['True','ICAO']:
         UI.vprint(1,"-> Checking airport locations for upgraded zoomlevel.")
-        
+
         try:
             f=open(FNAMES.apt_file(tile),'rb')
             dico_airports=pickle.load(f)
