@@ -361,11 +361,7 @@ class Vector_Map():
                 (key,marker)=long_key
                 if key not in self.seeds: continue
                 for seed in self.seeds[key]:
-                 if total_seeds==1:
-                  seed_value=seed
-                 else:
-                  seed_value=seed[0]
-                 f.write(str(idx)+' '+' '.join(['{:.15f}'.format(s) for s in seed_value])+' '+str(marker)+'\n')
+                 f.write(str(idx)+' '+' '.join(['{:.15f}'.format(s) for s in seed[0]])+' '+str(marker)+'\n')
                  idx+=1
         f.close()
         return
