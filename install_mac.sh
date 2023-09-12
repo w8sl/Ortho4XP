@@ -1,14 +1,16 @@
-# Install XCode Command Line Tools(enter the command: xcode-select --install   in the terminal)
-# Install Homebrew (download and run .pkg installer from https://github.com/Homebrew/brew/releases)
-# Verify integrity (enter the command: brew doctor  in the terminal), follow instructions if neccesary.
+# Install XCode Command Line Tools(open terminal, enter the command: xcode-select --install   →hit return)
+# Install Homebrew (open terminal, enter the command: /bin/bash -c "$(curl -fsSL https://raw.githubusercontent.com/Homebrew/install/HEAD/install.sh)"  →hit return.)
+# Verify integrity (enter the command: brew doctor  →hit return), read terminal output, follow recommendations if neccesary.
+Copy paste line 8,12 and 16 into terminal or run install_mac.sh as a script.
 
 # Install dependencies
-brew install gdal spatialindex p7zip python-tk
 
-# (python, proj, numpy should be already installed as a gdal dependencies. Verify with command: brew list --versions)
+brew install gdal python proj spatialindex p7zip python-tk
 
 # Install pyproj
+
 pip3 install pyproj
 
 # Install other dependencies
-pip3 install shapely rtree pillow requests
+
+pip3 install numpy shapely rtree pillow requests
