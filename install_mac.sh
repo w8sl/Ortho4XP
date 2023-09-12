@@ -1,7 +1,7 @@
 # Install XCode Command Line Tools(open terminal, enter the command: xcode-select --install   →hit return)
 # Install Homebrew (open terminal, enter the command: /bin/bash -c "$(curl -fsSL https://raw.githubusercontent.com/Homebrew/install/HEAD/install.sh)"  →hit return.)
 # Verify integrity (enter the command: brew doctor  →hit return), read terminal output, follow recommendations if neccesary.
-Copy paste line 8,12 and 16 into terminal or run install_mac.sh as a script.
+# Copy paste line 8,12 and 16 into terminal or run install_mac.sh as a script.
 
 # Install dependencies
 
