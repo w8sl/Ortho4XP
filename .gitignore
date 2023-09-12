@@ -3,13 +3,8 @@ Binary/
 
 # Ortho4XP workdir cache directories (in case workdir is kept within the source dir)
 Airport_Data/
-Elevation_data/
-Geotiffs/
-Masks/
-OSM_data/
-Orthophotos/
+build/
 Previews/
-Tiles/
 
 # Ortho4XP output and logs
 **/Ortho4XP.log
