@@ -64,15 +64,20 @@ and launch "python Ortho4XP.py".
 
 OS X
 ----
+1) In a Terminal window, install Xcode Command Line Tools:
 
-1) In a Terminal window, install Homebrew (brew.sh), a package manager
-/usr/bin/ruby -e "$(curl -fsSL https://raw.githubusercontent.com/Homebrew/install/master/install)"
+xcode-select --install   
 
-2) Go to the Ortho4XP folder
+2) Install Homebrew (brew.sh), a package manager:
+
+/bin/bash -c "$(curl -fsSL https://raw.githubusercontent.com/Homebrew/install/HEAD/install.sh)"
+
+
+3) Go to the Ortho4XP folder
 cd /path/to/Ortho4XP
 
-3) Execute the install script (you may have to run "chmod +x ./install_mac.sh" first)
+4) Execute the install script (you may have to run "chmod +x ./install_mac.sh" first)
 ./install_mac.sh
 
-4) Launch Ortho4XP
+5) Launch Ortho4XP
 python3 Ortho4XP.py
