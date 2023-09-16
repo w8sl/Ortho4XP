@@ -12,4 +12,4 @@ brew install gdal python proj spatialindex p7zip python-tk
 # cd /path/to/Ortho4XP
 # or write in terminal: cd   →drag and drop Ortho4XP folder   →hit return
 
-pip3 install -r requirements_mac.txt
+pip3 install -r ./requirements_mac.txt
