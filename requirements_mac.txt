@@ -1,0 +1,9 @@
+
+certifi==2023.7.22
+numpy==1.25.2
+Pillow==10.0.0
+pyproj==3.6.0
+requests==2.31.0
+Rtree==1.0.1
+shapely==2.0.1
+
