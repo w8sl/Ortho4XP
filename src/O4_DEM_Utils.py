@@ -54,7 +54,9 @@ class DEM():
                 self.nodata_to_zero()
 
         UI.vprint(1,"    * Min altitude:",self.alt_dem.min(),", Max altitude:",self.alt_dem.max(),", Mean:",self.alt_dem.mean())
-
+        if self.alt_dem.min() == 0.0 and self.alt_dem.max() == 0.0 and self.alt_dem.mean() == 0.0:
+            UI.vprint(1, "   INFO: No evelation found. Please use another source for elevation.")
+            UI.red_flag = True
     def load_data(self,source,info_only=False):
         if not source:
             if os.path.exists(FNAMES.generic_tif(self.lat,self.lon)):
@@ -459,23 +461,16 @@ def ensure_elevation(source,lat,lon,verbose=True):
             UI.vprint(2,"   Recycling ",FNAMES.elevation_data(source,lat,lon))
             return 1
         UI.vprint(1,"    Downloading ",FNAMES.elevation_data(source,lat,lon),"from USGS.")
-        url_base='https://prd-tnm.s3.amazonaws.com/StagedProducts/Elevation/13/IMG/'
-        usgs_name='USGS_NED_13_n'+str(lat + 1)+'w'+str(-lon).zfill(3)+'_IMG'
-        r=http_request(url_base+usgs_name+'.zip',source,verbose)
-        if not r:
-            UI.vprint(2,"    Trying alternative naming scheme.")
-            usgs_name="imgn"+str(lat + 1)+"w"+str(-lon).zfill(3)+"_13"
-            r=http_request(url_base+'n'+str(lat + 1).zfill(2)+'w'+str(-lon).zfill(3)+'.zip',source,verbose)
-            if not r:
+        url_base='https://prd-tnm.s3.amazonaws.com/StagedProducts/Elevation/13/TIFF/current/'
+        usgs_name='n'+str(lat + 1)+'w'+str(-lon).zfill(3)+'/USGS_13_n'+str(lat + 1)+'w'+str(-lon).zfill(3)
+        r=http_request(url_base+usgs_name+'.tif',source,verbose)
+        if not os.path.isdir(os.path.dirname(FNAMES.elevation_data(source,lat,lon))):
+            os.makedirs(os.path.dirname(FNAMES.elevation_data(source,lat,lon)))
+        with open(FNAMES.elevation_data(source,lat,lon),"wb") as out:
+            try:
+                out.write(r.content)
+            except:
                 return 0
-        with zipfile.ZipFile(io.BytesIO(r.content),"r") as zip_ref:
-            if not os.path.isdir(os.path.dirname(FNAMES.elevation_data(source,lat,lon))):
-                os.makedirs(os.path.dirname(FNAMES.elevation_data(source,lat,lon)))
-            with open(FNAMES.elevation_data(source,lat,lon),"wb") as out:
-                try:
-                    out.write((zip_ref.open(usgs_name+'.img',"r").read()))
-                except:
-                    return 0
     elif source=='NED1':
         if os.path.exists(FNAMES.elevation_data(source,lat,lon)):
             UI.vprint(2,"   Recycling ",FNAMES.elevation_data(source,lat,lon))
