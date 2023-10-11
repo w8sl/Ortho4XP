@@ -62,7 +62,7 @@ pip install *******.whl [replacing ******** successively by each of the files do
 You should be done. Open a command window in the Ortho4XP directory (freshly downloaded from Github)
 and launch "python Ortho4XP.py".
 
-OS X
+macOS
 ----
 1) In a Terminal window, install Xcode Command Line Tools:
 
@@ -76,8 +76,8 @@ xcode-select --install
 3) Go to the Ortho4XP folder
 cd /path/to/Ortho4XP
 
-4) Execute the install script (you may have to run "chmod +x ./install_mac.sh" first)
-./install_mac.sh   or  ./install_mac_OSX14.sh (includes fix for macOS Sonoma)
+4) Execute the install script (you have to run "chmod +x ./install_mac.sh" or "chmod +x ./install_macOS14.sh" first)
+./install_mac.sh   or  ./install_macOS14.sh   (includes fix for macOS Sonoma)
 
 5) Launch Ortho4XP
 python3 Ortho4XP.py
