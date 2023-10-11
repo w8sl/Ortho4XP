@@ -76,8 +76,8 @@ xcode-select --install
 3) Go to the Ortho4XP folder
 cd /path/to/Ortho4XP
 
-4) Execute the install script (you have to run "chmod +x ./install_mac.sh" or "chmod +x ./install_macOS14.sh" first)
-./install_mac.sh   or  ./install_macOS14.sh   (includes fix for macOS Sonoma)
+4) Execute the install script (you have to run "chmod +x ./install_mac.sh" or "chmod +x ./install_on_macOS14.sh" first)
+./install_mac.sh   or  ./install_on_macOS14.sh   (includes fix for macOS Sonoma)
 
 5) Launch Ortho4XP
 python3 Ortho4XP.py
