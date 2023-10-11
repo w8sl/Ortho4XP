@@ -8,4 +8,4 @@ pip3 install -r ./requirements_mac.txt
 
 # Rename files for macOS 14 compatibility
 
-python3 ./macOS14_fix.py
+python3 ./Fix_for_macOS14.py
