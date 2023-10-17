@@ -12,7 +12,7 @@ import O4_File_Names as FNAMES
 overpass_servers={
          "DE":"https://overpass-api.de/api/interpreter",
          "KU":"https://overpass.kumi.systems/api/interpreter",
-         "RU":"https://overpass.openstreetmap.ru/api/interpreter",
+         "RU":"https://overpass.openstreetmap.ru/api/interpreter"
         }
 overpass_server_choice="DE"
 max_osm_tentatives=8
