@@ -6,6 +6,6 @@ brew install gdal python proj spatialindex p7zip python-tk
 
 pip3 install -r ./requirements_mac.txt
 
-# Rename files for macOS 14 compatibility
+# Remove .app extension
 
-python3 ./Fix_for_macOS14.py
+python3 ./Filename_fix_macOS.py
