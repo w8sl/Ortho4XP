@@ -6,8 +6,6 @@ Repository forked from: https://github.com/oscarpilote/Ortho4XP/tree/feature/pro
 
 Updated with modified version of: https://github.com/oscarpilote/Ortho4XP/pull/186
 
-https://github.com/oscarpilote/Ortho4XP/pull/194 is also included
-
 Several bugfixes were done, some coming from: https://github.com/voyageur/Ortho4XP
 
 Providers were updated from official master-branch
