@@ -1,19 +1,20 @@
 import re
 import os
 
+f_dic = {"nvcompress.app":"nvcompress","moulinette.app":"moulinette",
+         "triangle.app":"triangle","Triangle4XP.app":"Triangle4XP",
+         "DSFTool.app":"DSFTool"}
+
 def replace_all(contents, dic):
     for i, j in dic.items():
-        contents = contents.replace(i, j)
+        contents = re.sub(i,j,contents)
     return contents
-
-f_dic = {"nvcompress.app":"nvcompress","moulinette.app":"moulinette","triangle.app":"triangle","Triangle4XP.app":"Triangle4XP","DSFTool.app":"DSFTool"}
 
 def name_fix(file_py):
 
    with open(file_py,'r') as f:
        contents=f.read()
        contents=replace_all(contents,f_dic)
-       contents=re.sub(r'PROD\s(?=[1-9])',r'PROD',contents)
    with open(file_py,'w') as w:
        w.write(contents)
 
