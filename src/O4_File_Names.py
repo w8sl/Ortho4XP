@@ -128,7 +128,7 @@ def base_file_name(lat, lon):
 
 ##############################################################################
 def elevation_data(source,lat, lon):
-    if (source=='View')or(source=='View3'):
+    if source=='View':
         return base_file_name(lat,lon)+'.hgt'
     elif source=='SRTM':
         return base_file_name(lat,lon)+'_SRTMv3.hgt'
@@ -137,7 +137,7 @@ def elevation_data(source,lat, lon):
     elif source=='NED1/3':
         return base_file_name(lat,lon)+'_NED13.tif'
     elif source=='NED1':
-        return os.path.join(Elevation_dir,long_latlon(lat,lon)+'_NED1','w001001.adf')
+        return base_file_name(lat,lon)+"_NED1.tif"
 ##############################################################################
 
 ##############################################################################
