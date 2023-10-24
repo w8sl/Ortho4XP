@@ -361,12 +361,12 @@ class Vector_Map():
                 (key,marker)=long_key
                 if key not in self.seeds: continue
                 for seed in self.seeds[key]:
-                 if type(seed[0])==numpy.int64:
-                   seed_v=seed
-                 else:
-                   seed_v=seed[0]
-                 f.write(str(idx)+' '+' '.join(['{:.15f}'.format(s) for s in seed_v])+' '+str(marker)+'\n')
-                 idx+=1
+                   if (total_seeds==1) and (type(seed[0]) in (numpy.int64, numpy.float64)):
+                       seed_v=seed                   
+                   else:
+                       seed_v=seed[0]
+                   f.write(str(idx)+' '+' '.join(['{:.15f}'.format(s) for s in seed_v])+' '+str(marker)+'\n')
+                   idx+=1
         f.close()
         return
 ##############################################################################
