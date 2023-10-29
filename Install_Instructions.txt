@@ -30,37 +30,45 @@ Windows
 
 Just select one for your Windows OS, there is no benefit in our case to
 download the pretty lastest version of Python, since you might get difficulties
-further down to find modules already built for it. As of 10/2018, I would
-recommend using 3.7.
+further down to find modules already built for it. As of 10/2023, Python 3.11. is recommended.
+
 Make sure during the process that "pip" (package management system for Python)
 is installed along and made accessible from your PATH [there is a checkbox
 for this during the Python install process wich by default ISN'T checked].
 
-2) Download the following packages from https://www.lfd.uci.edu/~gohlke/pythonlibs/
+2) For Python 3.11. and GDAL 3.7.2, download the following package from (unofficial!) repository https://github.com/cgohlke/geospatial-wheels :
 
-Pyproj, Numpy, Gdal, Shapely, Rtree, Pillow (or alternatively Pillow-SIMD)
+https://github.com/cgohlke/geospatial-wheels/releases/download/v2023.9.30/GDAL-3.7.2-cp311-cp311-win_amd64.whl
 
-Pay attention to take the ones that correspond to the Python version which you picked
-at Step 1) and to your OS nbr of bits (32 or 64, I guess 64 in all but a few cases).
-As an example, if Python 3.7.*  was selected at Step 1) above and you
-have a 64bit windows, then you would choose these files that have -cp37- and _amd64
-within their filename.
+Pay attention to take the one that corresponds to the Python version which you picked
+at Step 1) and to your OS nbr of bits (64 as of 2023).
+As an example, if Python 3.11.*  was selected at Step 1) above and you
+have a 64bit windows, then you would choose file that contain -cp311- and _amd64
+within filename.
 
-In order to use the build geotiff feature of the custom_zl map, you will need to
-add the directory containing gdal_translate and gdalwarp (***/python**/lib/site-packages/osgeo/)
-into your PATH variable.
+In order to use the build geotiff feature of the custom_zl map or custom_dem source you will need to
+add the directory containing gdal.py, gdal_translate and gdalwarp (***/python**/lib/site-packages/osgeo/)
+into the system PATH variable.
 
-Finally, if you do not already have them : download and install the build tools for visual studio (2017):
-https://visualstudio.microsoft.com/fr/downloads/
+Download and install The Microsoft Visual C++ Redistributable packages for Visual Studio 2022:
 
-3) From a command window launch successively
+https://learn.microsoft.com/en-US/cpp/windows/latest-supported-vc-redist?view=msvc-170
+
+3) From a command window launch:
 
 pip install --upgrade pip  [if this goes wrong you probably missed the last point in 1)]
-pip install requests
-pip install *******.whl [replacing ******** successively by each of the files downloaded at Step 2]
 
-You should be done. Open a command window in the Ortho4XP directory (freshly downloaded from Github)
+4) Change directory to Ortho4XP folder (freshly downloaded from Github) and launch:
+
+pip install -r requirements.txt
+
+4) Execute the following command as administrator:
+
+pip install /path to GDAL-***.whl file, downloaded at Step 2)
+
+You should be done. Open a command window in the Ortho4XP directory 
 and launch "python Ortho4XP.py".
+
 
 macOS
 ----
