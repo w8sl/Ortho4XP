@@ -1,6 +1,6 @@
 
 certifi==2023.7.22
-numpy==1.25.2
+numpy==1.26.1
 Pillow==10.0.0
 pyproj==3.6.0
 requests==2.31.0
