@@ -40,7 +40,7 @@ further down to find modules already built for it. As of 11/2023, Python 3.11. i
 
 Make sure during the process that "pip" (package management system for Python)
 is installed along and made accessible from your PATH [there is a checkbox
-for this during the Python install process]. Chose "Add Python to environment variables".
+for this during the Python install process]. Check the "Add Python to environment variables" option.
 
 2) Download binary wheel for GDAL from (unofficial) repository https://github.com/cgohlke/geospatial-wheels :
 
