@@ -15,13 +15,13 @@ custom_overlay_src=''
 
 if 'dar' in sys.platform:
     unzip_cmd    = "7z "
-    dsftool_cmd  = os.path.join(FNAMES.Utils_dir,"DSFTool.app ")
+    dsftool_cmd  = os.path.join(FNAMES.Utils_dir,"DSFTool ")
 elif 'win' in sys.platform:
     unzip_cmd    = os.path.join(FNAMES.Utils_dir,"7z.exe ")
-    dsftool_cmd  = os.path.join(FNAMES.Utils_dir,"DSFTool.exe ")
+    dsftool_cmd  = os.path.join(FNAMES.Utils_dir,"DSFTool_linux.exe ")
 else:
     unzip_cmd    = "7z "
-    dsftool_cmd  = os.path.join(FNAMES.Utils_dir,"DSFTool ")
+    dsftool_cmd  = os.path.join(FNAMES.Utils_dir,"DSFTool_linux ")
 
 ##############################################################################
 def build_overlay(lat,lon):
@@ -58,7 +58,7 @@ def build_overlay(lat,lon):
         else:
             UI.vprint(1,'     '+line.decode("utf-8")[:-1])
     if fingers_crossed.returncode:
-        UI.exit_message_and_bottom_line("   ERROR: DSFTool crashed.")
+        UI.exit_message_and_bottom_line("   ERROR: DSFTool_linux crashed.")
         return 0
     UI.vprint(1,"-> Selecting overlays for copy/paste")
     f=open(os.path.join(FNAMES.Tmp_dir,FNAMES.short_latlon(lat,lon)+'_tmp_dsf.txt'),'r')
