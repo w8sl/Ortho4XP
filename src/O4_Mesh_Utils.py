@@ -15,19 +15,19 @@ import O4_OSM_Utils as OSM
 import O4_Version
 
 if 'dar' in sys.platform:
-    Triangle4XP_cmd = os.path.join(FNAMES.Utils_dir,"Triangle4XP ")
-    triangle_cmd    = os.path.join(FNAMES.Utils_dir,"triangle ")
-    sort_mesh_cmd   = os.path.join(FNAMES.Utils_dir,"moulinette ")
+    Triangle4XP_cmd = os.path.join(FNAMES.Utils_dir,"Triangle4XP.app ")
+    triangle_cmd    = os.path.join(FNAMES.Utils_dir,"triangle.app ")
+    sort_mesh_cmd   = os.path.join(FNAMES.Utils_dir,"moulinette.app ")
     unzip_cmd       = "7z "
 elif 'win' in sys.platform:
-    Triangle4XP_cmd = os.path.join(FNAMES.Utils_dir,"Triangle4XP_linux.exe ")
+    Triangle4XP_cmd = os.path.join(FNAMES.Utils_dir,"Triangle4XP.exe ")
     triangle_cmd    = os.path.join(FNAMES.Utils_dir,"triangle.exe ")
     sort_mesh_cmd   = os.path.join(FNAMES.Utils_dir,"moulinette.exe ")
     unzip_cmd       = os.path.join(FNAMES.Utils_dir,"7z.exe ")
 else:
-    Triangle4XP_cmd = os.path.join(FNAMES.Utils_dir,"Triangle4XP_linux ")
-    triangle_cmd    = os.path.join(FNAMES.Utils_dir,"triangle_linux ")
-    sort_mesh_cmd   = os.path.join(FNAMES.Utils_dir,"moulinette_linux ")
+    Triangle4XP_cmd = os.path.join(FNAMES.Utils_dir,"Triangle4XP ")
+    triangle_cmd    = os.path.join(FNAMES.Utils_dir,"triangle ")
+    sort_mesh_cmd   = os.path.join(FNAMES.Utils_dir,"moulinette ")
     unzip_cmd       = "7z "
 
 
@@ -153,7 +153,7 @@ def post_process_nodes_altitudes(tile):
     init_line_f_node=f_node.readline()
     nbr_pt=int(init_line_f_node.split()[0])
     vertices=numpy.zeros(6*nbr_pt)
-    UI.vprint(1,"-> Loading of the mesh computed by Triangle4XP_linux.")
+    UI.vprint(1,"-> Loading of the mesh computed by Triangle4XP.")
     for i in range(0,nbr_pt):
         vertices[6*i:6*i+6]=[float(x) for x in f_node.readline().split()[1:7]]
     end_line_f_node=f_node.readline()
@@ -430,7 +430,7 @@ def build_mesh(tile):
 
     del(tile.dem) # for machines with not much RAM, we do not need it anymore
     tile.dem=None
-    UI.vprint(1,"-> Start of the mesh algorithm Triangle4XP_linux.")
+    UI.vprint(1,"-> Start of the mesh algorithm Triangle4XP.")
     UI.vprint(2,'   Mesh command:',' '.join(mesh_cmd))
     fingers_crossed=subprocess.Popen(mesh_cmd,stdout=subprocess.PIPE,bufsize=0)
     while True:
@@ -445,7 +445,7 @@ def build_mesh(tile):
     time.sleep(0.3)
     fingers_crossed.poll()
     if fingers_crossed.returncode:
-        UI.vprint(0,"\nWARNING: Triangle4XP_linux could not achieve the requested quality (min_angle), most probably due to an uncatched OSM error.\n"+\
+        UI.vprint(0,"\nWARNING: Triangle4XP could not achieve the requested quality (min_angle), most probably due to an uncatched OSM error.\n"+\
                     "It will be tempted now with no angle constraint (i.e. min_angle=0).")
         mesh_cmd[-5]='{:.9g}'.format(0)
         fingers_crossed=subprocess.Popen(mesh_cmd,stdout=subprocess.PIPE,bufsize=0)
@@ -461,7 +461,7 @@ def build_mesh(tile):
         time.sleep(0.3)
         fingers_crossed.poll()
         if fingers_crossed.returncode:
-            UI.exit_message_and_bottom_line("\nERROR: Triangle4XP_linux really couldn't make it !\n\n"+\
+            UI.exit_message_and_bottom_line("\nERROR: Triangle4XP really couldn't make it !\n\n"+\
                                         "If the reason is not due to the limited amount of RAM please\n"+\
                                         "file a bug including the .node and .poly files that you\n"+\
                                         "will find in "+str(tile.build_dir)+".\n")
