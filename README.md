@@ -4,12 +4,17 @@ A scenery generator for the X-Plane flight simulator
 
 Repository forked from: https://github.com/oscarpilote/Ortho4XP/tree/feature/progressive_zl
 
-Updated with modified version of: https://github.com/oscarpilote/Ortho4XP/pull/186
+Description of progressive_zl:
+https://forums.x-plane.org/index.php?/forums/topic/147570-feature-automated-zoom-levels-around-airports/&page=2#comment-1670217
+
+Everything else should work exactly as on official Ortho4XP/master branch, updated with modified version of: 
+https://github.com/oscarpilote/Ortho4XP/pull/186
 
 Several bugfixes were done, some coming from: https://github.com/voyageur/Ortho4XP
 
-Providers were updated from official master-branch
+Providers were updated from the official master-branch
 
-For list of original contributors see: 
-
+For complete list of original contributors - see:
 https://github.com/oscarpilote/Ortho4XP 
+
+Special thanks to all !!! 
