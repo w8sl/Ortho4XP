@@ -783,9 +783,11 @@ class AirportCollection:
     def as_polygons(gtiles):
         """Return as few Shapely polygons as possible for the given gtiles."""
         polys = shapely.ops.unary_union([gtile.polygon() for gtile in gtiles])
-
+        
         if isinstance(polys, shapely.geometry.MultiPolygon):
             return list(polys.geoms)
+        elif isinstance(polys, shapely.geometry.collection.GeometryCollection):
+            return list(polys.geoms)   
         elif isinstance(polys, shapely.geometry.Polygon):
             return [polys]
         elif isinstance(polys, list):
@@ -913,7 +915,7 @@ class XPlaneAptDatParser:
         The order is important : airports in the first files will be overwritten by those in the last ones (as in XP)"""
         xp_dir = CFG.xplane_install_dir
         apt_dat = os.path.join('Earth nav data', 'apt.dat')
-        if "12" in (xp_dir):
+        if "12" in xp_dir:
           global_airports = os.path.join(xp_dir, 'Global Scenery', 'Global Airports', apt_dat)
         else:
           global_airports = os.path.join(xp_dir, 'Custom Scenery', 'Global Airports', apt_dat)
