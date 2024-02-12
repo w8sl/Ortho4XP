@@ -1,7 +1,6 @@
-certifi==2023.7.22
-numpy==1.26.2
-Pillow==10.0.0
+numpy==1.26.3
+Pillow==10.2.0
 pyproj==3.6.1
 requests==2.31.0
-Rtree==1.1.0
+Rtree==1.2.0
 shapely==2.0.2
