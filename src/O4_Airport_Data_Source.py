@@ -785,15 +785,13 @@ class AirportCollection:
         polys = shapely.ops.unary_union([gtile.polygon() for gtile in gtiles])
         
         if isinstance(polys, shapely.geometry.MultiPolygon):
-            return list(polys.geoms)
-        elif isinstance(polys, shapely.geometry.collection.GeometryCollection):
             return list(polys.geoms)   
         elif isinstance(polys, shapely.geometry.Polygon):
             return [polys]
         elif isinstance(polys, list):
             return polys
         else:
-            return polys
+            return []
 
     def zone_list(self, screen_res, fov, fpa, provider, base_zl, cover_zl, greediness, greediness_threshold):
         tile_zones = []
