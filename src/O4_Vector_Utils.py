@@ -497,11 +497,11 @@ def ensure_MultiLineString(input_geometry):
     elif input_geometry.geom_type in ['LineString','LinearRing']:
         return geometry.MultiLineString([input_geometry])
     elif 'Collection' in input_geometry.geom_type:
-        Collection=[]
+        multiline=[]
         for line in input_geometry.geoms:
             if line.geom_type in ['LineString','LinearRing']:
-               Collection.append(line)
-        return geometry.MultiLineString(Collection)
+               multiline.append(line)
+        return geometry.MultiLineString(multiline)
     else:
         return geometry.MultiLineString()
 ##############################################################################
