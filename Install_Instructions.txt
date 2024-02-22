@@ -36,19 +36,19 @@ Windows
 
 Just select one for your Windows OS, there is no benefit in our case to
 download the pretty lastest version of Python, since you might get difficulties
-further down to find modules already built for it. As of 11/2023, Python 3.11. is recommended.
+further down to find modules already built for it. As of 02/2024, Python 3.11. is recommended.
 
 Make sure during the process that "pip" (package management system for Python)
 is installed along and made accessible from your PATH [there is a checkbox
 for this during the Python install process]. Check the "Add Python to environment variables" option.
 
-2) Download binary wheel for GDAL from (unofficial) repository https://github.com/cgohlke/geospatial-wheels :
+2) Download binary wheel for GDAL from (unofficial) repository https://github.com/cgohlke/geospatial-wheels:
 
-GDAL 3.7.3 for Python 3.11:
-https://github.com/cgohlke/geospatial-wheels/releases/download/v2023.11.3/GDAL-3.7.3-cp311-cp311-win_amd64.whl
+GDAL 3.8.4 for Python 3.11:
+https://github.com/cgohlke/geospatial-wheels/releases/download/v2024.2.18/GDAL-3.8.4-cp311-cp311-win_amd64.whl
 
-GDAL 3.7.3 for Python 3.10:
-https://github.com/cgohlke/geospatial-wheels/releases/download/v2023.11.3/GDAL-3.7.3-cp310-cp310-win_amd64.whl
+GDAL 3.8.4 for Python 3.10:
+https://github.com/cgohlke/geospatial-wheels/releases/download/v2024.2.18/GDAL-3.8.4-cp310-cp310-win_amd64.whl
 
 Pay attention to take the one that corresponds to the Python version which you picked
 at Step 1) and to your OS nbr of bits (32 or 64, I guess 64 in all but a few cases).
@@ -99,4 +99,4 @@ cd /path/to/Ortho4XP
 ./install_mac.sh
 
 5) Launch Ortho4XP
-python3 Ortho4XP.py
+python3.11 Ortho4XP.py
