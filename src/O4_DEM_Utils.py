@@ -14,23 +14,26 @@ import O4_File_Names as FNAMES
 has_gdal = False
 try:
     from osgeo import gdal
+    gdal.UseExceptions()
     has_gdal = True
 except ImportError:
     try:
         import gdal
+        gdal.UseExceptions()
         has_gdal = True
     except ImportError:
         pass
 
-available_sources=(
-                 'View','Viewfinderpanoramas (J. de Ferranti) - mostly worldwide',
-                 'SRTM','SRTMv3 (from OpenTopography) - worldwide at latitudes < 60',
-                 'NED1','NED 1" (from USGS) - USA, Canada, Mexico',
-                 'NED1/3','NED 1/3" (from USGS) - USA',
-                 'ALOS','ALOS 3W30 average (from OpenTopography) - mostly worldwide'
-                 ) 
+available_sources = (
+    'View', 'Viewfinderpanoramas (J. de Ferranti) - mostly worldwide',
+    'SRTM', 'SRTMv3 (from OpenTopography) - worldwide at latitudes < 60',
+    'NED1', 'NED 1" (from USGS) - USA, Canada, Mexico',
+    'NED1/3', 'NED 1/3" (from USGS) - USA',
+    'ALOS', 'ALOS 3W30 average (from OpenTopography) - mostly worldwide',
+    'SRTMv3', 'SRTMv3 1" GeoTiffs (manually downloaded from USGS)',
+)
                  
-global_sources = ('View','SRTM','ALOS')
+global_sources = ('View','SRTM','ALOS','SRTMv3')
 
 ##############################################################################
 class DEM():
@@ -54,6 +57,9 @@ class DEM():
                 self.nodata_to_zero()
             
         UI.vprint(1,"    * Min altitude:",self.alt_dem.min(),", Max altitude:",self.alt_dem.max(),", Mean:",self.alt_dem.mean())
+        if self.alt_dem.min() == 0.0 and self.alt_dem.max() == 0.0 and self.alt_dem.mean() == 0.0:
+            UI.vprint(1, "   INFO: No evelation found. Please use another source for elevation.")
+            UI.red_flag = True
 
     def load_data(self,source,info_only=False):
         if not source:
@@ -209,7 +215,7 @@ class DEM():
 ###############################################################################
 def build_combined_raster(source,lat,lon,info_only):
     world_tiles=numpy.array(Image.open(os.path.join(FNAMES.Utils_dir,'world_tiles.png')))
-    if source in ('View','SRTM'):
+    if source in ('View','SRTM', 'SRTMv3'):
         base=3601; overlap=1; beyond=36
         x0=y0=-0.01; x1=y1=1.01
         epsg=4326; nodata=-32768
@@ -330,30 +336,75 @@ def read_elevation_from_file(file_name,lat,lon,info_only=False,base_if_error=360
 def ensure_elevation(source,lat,lon,verbose=True):
     if source=='View':
         # Viewfinderpanorama grouping of files and resolutions is a bit complicated...
-        if (lat,lon) in ((44,5),(45,5),(46,5),(43,6),(44,6),(45,6),(46,6),(47,6),(43,7),(44,7),(45,7),
-                         (46,7),(47,7),(45,8),(46,8),(47,8),(45,9),(46,9),(47,9),(45,10),(46,10),(47,10),
-                         (45,11),(46,11),(47,11),(45,12),(46,12),(47,12),(46,13),(47,13),(46,14),(47,14),(46,15),(47,15)):
-            resol = 1                 
-            url="http://viewfinderpanoramas.org/dem1/"+os.path.basename(FNAMES.base_file_name(lat,lon)).lower()+".zip"
+        deferranti_nbr=31+lon//6
+        if deferranti_nbr<10:
+            deferranti_nbr='0'+str(deferranti_nbr)
         else:
-            deferranti_nbr=31+lon//6
-            if deferranti_nbr<10:
-                deferranti_nbr='0'+str(deferranti_nbr)
-            else:
-                deferranti_nbr=str(deferranti_nbr)
-            alphabet=list('ABCDEFGHIJKLMNOPQRSTUVWXYZ')
-            deferranti_letter=alphabet[lat//4] if lat>=0 else alphabet[(-1-lat)//4]
-            if lat<0:
-                deferranti_letter='S'+deferranti_letter
-            if deferranti_letter+deferranti_nbr in (
-               "O31","P31","N32","O32","P32","Q32","N33","O33","P33","Q33","R33",
-               "O34","P34","Q34","R34","O35","P35","Q35","R35","P36","Q36","R36"):
-                resol=1
-            else:
+            deferranti_nbr=str(deferranti_nbr)
+        alphabet=list('ABCDEFGHIJKLMNOPQRSTUVWXYZ')
+        deferranti_letter=alphabet[lat//4] if lat>=0 else alphabet[(-1-lat)//4]
+        if lat<0:
+            deferranti_letter='S'+deferranti_letter
+        if deferranti_letter+deferranti_nbr in (
+            # Europe
+            "O29", "N29", "M29", "K29", "J29",
+            "O30", "N30", "M30", "L30", "K30", "J30",
+            "P31", "O31", "N31", "M31", "L31", "K31", "J31",
+            "Q32", "P32", "O32", "N32", "M32", "L32", "K32", "J32",
+            "R33", "Q33", "P33", "O33", "N33", "M33", "L33", "K33", "J33",
+            "R34", "Q34", "P34", "O34", "N34", "M34", "L34",
+            "R35", "Q35", "P35",  # "O35", "L35",
+            "R36", "Q36", "P36",
+            # New Zealand
+            "SL58",
+            "SI59", "SJ59", "SK59", "SL59",
+            "SI60", "SJ60", "SK60", "SL60",
+            # North America
+            "N01", "M01",
+            "O02", "N02",
+            "R03", "Q03", "P03", "O03", "N03",
+            "R04", "Q04", "P04", "O04", "N04",
+            "R05", "Q05", "P05", "O05", "N05",
+            "R06", "Q06", "P06", "O06",
+            "R07", "Q07", "P07", "O07",
+            "R08", "Q08", "P08", "O08", "N08",
+            "R09", "Q09", "P09", "O09", "N09", "M09",
+            "T10", "S10", "R10", "Q10", "P10", "O10", "N10", "M10", "L10", "K10", "J10", "I10",
+            "T11", "S11", "R11", "Q11", "P11", "O11", "N11", "M11", "L11", "K11", "J11", "I11",
+            "T12", "S12", "R12", "Q12", "P12", "O12", "N12", "M12", "L12", "K12", "J12", "I12", "H12",
+            "T13", "S13", "R13", "Q13", "P13", "O13", "N13", "M13", "L13", "K13", "J13", "I13", "H13",
+            "U14", "T14", "S14", "R14", "Q14", "P14", "O14", "N14", "M14", "L14", "K14", "J14", "I14", "H14", "G14",
+            "U15", "T15", "S15", "R15", "Q15", "P15", "O15", "N15", "M15", "L15", "K15", "J15", "I15", "H15",
+            "U16", "T16", "S16", "R16", "Q16", "P16", "O16", "N16", "M16", "L16", "K16", "J16", "I16", "H16",
+            "U17", "T17", "S17", "R17", "Q17", "P17", "O17", "N17", "M17", "L17", "K17", "J17", "I17", "H17", "G17",
+            "U18", "T18", "S18", "R18", "Q18", "P18", "O18", "N18", "M18", "L18", "K18", "J18", "I18",
+            "U19", "T19", "S19", "R19", "Q19", "P19", "O19", "N19", "M19", "L19", "K19",
+            "U20", "T20", "S20", "R20", "Q20", "P20", "O20", "N20", "M20", "L20", "K20",
+            "U21", "T21", "S21", "R21", "N21", "M21", "L21", "K21",
+            "U22", "T22", "S22", "R22", "Q22", "P22", "M22", "L22",
+            "U23", "T23", "S23", "R23", "Q23", "P23", "O23",
+            "U24", "T24", "S24", "R24", "Q24", "P24",
+            "U25", "T25", "S25", "R25", "Q25",
+            "U26", "T26", "S26", "R26",
+            "U27", "T27", "S27", "R27",
+            "U28", "T28", "S28",
+            "U29",
+        ):
+            resol=1
+
+            # Workaround for missing 1" DEM data for Heligoland...
+            if (lat,lon) == (54,7):
                 resol=3
-            url="http://viewfinderpanoramas.org/dem"+str(resol)+"/"+deferranti_letter+deferranti_nbr+".zip"
+        else:
+            resol=3
+        # Fix letter/number for Faroer Islands
+        if deferranti_letter+str(deferranti_nbr) == "P29":
+            deferranti_letter = "FAR"
+            deferranti_nbr = ""
+
+        url=f"http://viewfinderpanoramas.org/dem{resol}/{deferranti_letter}{deferranti_nbr}.zip"
         if os.path.exists(FNAMES.viewfinderpanorama(lat,lon)) and (resol==3 or os.path.getsize(FNAMES.viewfinderpanorama(lat,lon))>=25934402):
-            UI.vprint(2,"   Recycling ",FNAMES.viewfinderpanorama(lat,lon))
+            UI.vprint(1,"   Recycling ",FNAMES.viewfinderpanorama(lat,lon))
             return 1
         UI.vprint(1,"    Downloading ",FNAMES.viewfinderpanorama(lat,lon),"from Viewfinderpanoramas (J. de Ferranti).")    
         r=http_request(url,source,verbose)
@@ -380,7 +431,7 @@ def ensure_elevation(source,lat,lon,verbose=True):
                         out.write(zip_ref.open(f,"r").read())
     elif source in ('SRTM','ALOS'):
         if os.path.exists(FNAMES.elevation_data(source,lat,lon)):
-            UI.vprint(2,"   Recycling ",FNAMES.elevation_data(source,lat,lon))
+            UI.vprint(1,"   Recycling ",FNAMES.elevation_data(source,lat,lon))
             return 1 
         UI.vprint(1,"    Downloading ",FNAMES.elevation_data(source,lat,lon),"from OpenTopography (SDSC).")
         url="https://cloud.sdsc.edu/v1/AUTH_opentopography/Raster/"
@@ -415,80 +466,76 @@ def ensure_elevation(source,lat,lon,verbose=True):
             except:
                 return 0
     elif source=='NED1/3':
-        if os.path.exists(FNAMES.elevation_data(source,lat,lon)):
-            UI.vprint(2,"   Recycling ",FNAMES.elevation_data(source,lat,lon))
-            return 1 
-        UI.vprint(1,"    Downloading ",FNAMES.elevation_data(source,lat,lon),"from USGS.")
-        url_base='https://prd-tnm.s3.amazonaws.com/StagedProducts/Elevation/13/IMG/'
-        usgs_name='USGS_NED_13_n'+str(lat + 1)+'w'+str(-lon).zfill(3)+'_IMG'
-        r=http_request(url_base+usgs_name+'.zip',source,verbose)
-        if not r:
-            UI.vprint(2,"    Trying alternative naming scheme.")
-            usgs_name="imgn"+str(lat + 1)+"w"+str(-lon).zfill(3)+"_13"
-            r=http_request(url_base+'n'+str(lat + 1).zfill(2)+'w'+str(-lon).zfill(3)+'.zip',source,verbose)
-            if not r:
+        if os.path.exists(FNAMES.elevation_data(source, lat, lon)):
+            UI.vprint(1, "   Recycling ", FNAMES.elevation_data(source, lat, lon))
+            return 1
+        UI.vprint(1, "    Downloading ", FNAMES.elevation_data(source, lat, lon), "from USGS.")
+        url_base = 'https://prd-tnm.s3.amazonaws.com/StagedProducts/Elevation/13/TIFF/current/'
+        usgs_name = 'n' + str(lat + 1) + 'w' + str(-lon).zfill(3) + '/USGS_13_n' + str(lat + 1) + 'w' + str(-lon).zfill(3)
+        r = http_request(url_base + usgs_name + '.tif', source, verbose)
+        if not r: return 0
+        if not os.path.isdir(os.path.dirname(FNAMES.elevation_data(source, lat, lon))):
+            os.makedirs(os.path.dirname(FNAMES.elevation_data(source, lat, lon)))
+        with open(FNAMES.elevation_data(source, lat, lon), "wb") as out:
+            try:
+                out.write(r.content)
+            except:
                 return 0
-        with zipfile.ZipFile(io.BytesIO(r.content),"r") as zip_ref:
-            if not os.path.isdir(os.path.dirname(FNAMES.elevation_data(source,lat,lon))):
-                os.makedirs(os.path.dirname(FNAMES.elevation_data(source,lat,lon)))
-            with open(FNAMES.elevation_data(source,lat,lon),"wb") as out:
-                try:
-                    out.write((zip_ref.open(usgs_name+'.img',"r").read()))
-                except:
-                    return 0
     elif source=='NED1':
         if os.path.exists(FNAMES.elevation_data(source,lat,lon)):
-            UI.vprint(2,"   Recycling ",FNAMES.elevation_data(source,lat,lon))
+            UI.vprint(1,"   Recycling ",FNAMES.elevation_data(source,lat,lon))
             return 1 
         UI.vprint(1,"    Downloading ",FNAMES.elevation_data(source,lat,lon),"from USGS.")
-        url_base='https://prd-tnm.s3.amazonaws.com/StagedProducts/Elevation/1/ArcGrid/'
-        usgs_base='n'+str(lat + 1)+'w'+str(-lon).zfill(3)
-        r=http_request(url_base+'USGS_NED_1_'+usgs_base+'_ArcGrid.zip',source,verbose)
-        if not r:
-            UI.vprint(2,"    Trying alternative naming scheme.")
-            r=http_request(url_base+usgs_base+'.zip',source,verbose)
-            if not r:
+        url_base = 'https://prd-tnm.s3.amazonaws.com/StagedProducts/Elevation/1/TIFF/current/'
+        usgs_name = 'n' + str(lat + 1) + 'w' + str(-lon).zfill(3) + '/USGS_1_n' + str(lat + 1) + 'w' + str(-lon).zfill(3)
+        r = http_request(url_base + usgs_name + '.tif', source, verbose)
+        if not r: return 0
+        if not os.path.isdir(os.path.dirname(FNAMES.elevation_data(source, lat, lon))):
+            os.makedirs(os.path.dirname(FNAMES.elevation_data(source, lat, lon)))
+        with open(FNAMES.elevation_data(source, lat, lon), "wb") as out:
+            try:
+                out.write(r.content)
+            except:
                 return 0
-        with zipfile.ZipFile(io.BytesIO(r.content),"r") as zip_ref:
-            if not os.path.isdir(os.path.dirname(FNAMES.elevation_data(source,lat,lon))):
-                os.makedirs(os.path.dirname(FNAMES.elevation_data(source,lat,lon)))
-            for f in zip_ref.filelist:
-                if not '.adf' in f.filename: continue
-                fname=os.path.basename(f.filename)    
-                with open(os.path.join(os.path.dirname(FNAMES.elevation_data(source,lat,lon)),fname),"wb") as out:
-                    try:
-                        out.write((zip_ref.open(f,"r").read()))
-                    except:
-                        return 0
+    elif source=='SRTMv3':
+        if os.path.exists(FNAMES.elevation_data(source, lat, lon)):
+            UI.vprint(1, "   Recycling ", FNAMES.elevation_data(source, lat, lon))
+            return 1
+        else:
+            UI.vprint(1,"   SORRY: Please download "+FNAMES.elevation_data(source, lat, lon)+" from EarthExplorer first...")
+            UI.red_flag = True
+            return 0
     else:
         UI.vprint(1,"   ERROR: Unknown elevation source.")
         return 0
     return 1
 ##############################################################################
-                
+
+
 ##############################################################################
-def http_request(url,source,verbose=False):
-    s=requests.Session()
-    tentative=0
-    while True: 
+def http_request(url, source, verbose=False):
+    s = requests.Session()
+    tentative = 0
+    while True:
         try:
-            r=s.get(url,timeout=10)
-            status_code = str(r)   
-            if ('[20' in status_code):
+            r = s.get(url, timeout=10)
+            if r.status_code == requests.codes.ok:
                 return r
-            elif ('[40' in status_code or '[30' in status_code):
-                if verbose: UI.vprint(2,"    Server said 'Not Found'")
+            elif r.status_code == 404:
+                if verbose:
+                    UI.vprint(2, f"    Server said '404 Not Found'")
                 return 0
-            elif ('[5' in status_code):      
-                if verbose: UI.vprint(2,"    Server said 'Internal Error'.",status_code)
             else:
-                if verbose: UI.vprint(2,status_code)
+                if verbose:
+                    UI.vprint(2, r.status_code)
         except Exception as e:
-            if verbose: UI.vprint(2,e)
-        tentative+=1
-        if tentative==6: return 0
-        UI.vprint(1,"    ",source,"server may be down or busy, new tentative in",2**tentative,"sec...")
-        time.sleep(2**tentative)
+            if verbose:
+                UI.vprint(2, e)
+        tentative += 1
+        if tentative == 6:
+            return 0
+        UI.vprint(1, "    ", source, "server may be down or busy, new tentative in", 2 ** tentative, "sec...")
+        time.sleep(2 ** tentative)
 ##############################################################################
 
 ##############################################################################
