@@ -128,7 +128,7 @@ def base_file_name(lat, lon):
 
 ##############################################################################
 def elevation_data(source,lat, lon):
-    if source=='View':
+    if source in ('View','View3'):
         return base_file_name(lat,lon)+'.hgt'
     elif source=='SRTM':
         return base_file_name(lat,lon)+'_SRTMv3.hgt'

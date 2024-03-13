@@ -25,7 +25,8 @@ except ImportError:
         pass
 
 available_sources = (
-    'View', 'Viewfinderpanoramas (J. de Ferranti) - mostly worldwide',
+    'View3','Viewfinderpanoramas (J. de Ferranti) 3" - mostly worldwide',
+    'View', 'Viewfinderpanoramas (J. de Ferranti) 1" (USA,CA,EU,NZ) or 3" - mostly worldwide',
     'SRTM', 'SRTMv3 (from OpenTopography) - worldwide at latitudes < 60',
     'NED1', 'NED 1" (from USGS) - USA, Canada, Mexico',
     'NED1/3', 'NED 1/3" (from USGS) - USA',
@@ -33,7 +34,7 @@ available_sources = (
     'SRTMv3', 'SRTMv3 1" GeoTiffs (manually downloaded from USGS)',
 )
                  
-global_sources = ('View','SRTM','ALOS','SRTMv3')
+global_sources = ('View3','View','SRTM','ALOS','SRTMv3')
 
 ##############################################################################
 class DEM():
@@ -215,7 +216,7 @@ class DEM():
 ###############################################################################
 def build_combined_raster(source,lat,lon,info_only):
     world_tiles=numpy.array(Image.open(os.path.join(FNAMES.Utils_dir,'world_tiles.png')))
-    if source in ('View','SRTM', 'SRTMv3'):
+    if source in ('View','View3','SRTM', 'SRTMv3'):
         base=3601; overlap=1; beyond=36
         x0=y0=-0.01; x1=y1=1.01
         epsg=4326; nodata=-32768
@@ -334,7 +335,11 @@ def read_elevation_from_file(file_name,lat,lon,info_only=False,base_if_error=360
            
 ##############################################################################
 def ensure_elevation(source,lat,lon,verbose=True):
-    if source=='View':
+    if source in ('View','View3'):
+        if source == 'View3':
+           res=3
+        else:
+           res=1
         # Viewfinderpanorama grouping of files and resolutions is a bit complicated...
         deferranti_nbr=31+lon//6
         if deferranti_nbr<10:
@@ -390,7 +395,7 @@ def ensure_elevation(source,lat,lon,verbose=True):
             "U28", "T28", "S28",
             "U29",
         ):
-            resol=1
+            resol=res
 
             # Workaround for missing 1" DEM data for Heligoland...
             if (lat,lon) == (54,7):
