@@ -336,10 +336,6 @@ def read_elevation_from_file(file_name,lat,lon,info_only=False,base_if_error=360
 ##############################################################################
 def ensure_elevation(source,lat,lon,verbose=True):
     if source in ('View','View3'):
-        if source == 'View3':
-           res=3
-        else:
-           res=1
         # Viewfinderpanorama grouping of files and resolutions is a bit complicated...
         deferranti_nbr=31+lon//6
         if deferranti_nbr<10:
@@ -350,7 +346,7 @@ def ensure_elevation(source,lat,lon,verbose=True):
         deferranti_letter=alphabet[lat//4] if lat>=0 else alphabet[(-1-lat)//4]
         if lat<0:
             deferranti_letter='S'+deferranti_letter
-        if deferranti_letter+deferranti_nbr in (
+        if source=='View' and deferranti_letter+deferranti_nbr in (
             # Europe
             "O29", "N29", "M29", "K29", "J29",
             "O30", "N30", "M30", "L30", "K30", "J30",
@@ -395,7 +391,7 @@ def ensure_elevation(source,lat,lon,verbose=True):
             "U28", "T28", "S28",
             "U29",
         ):
-            resol=res
+            resol=1
 
             # Workaround for missing 1" DEM data for Heligoland...
             if (lat,lon) == (54,7):
