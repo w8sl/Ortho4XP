@@ -1,9 +1,9 @@
 # Ortho4XP
-A scenery generator for the X-Plane flight simulator
+A scenery generator for the X-Plane flight simulator created by **Oscar Pilote**
  
-Repository forked from: https://github.com/oscarpilote/Ortho4XP/tree/feature/progressive_zl
+Progressive mod created by **Artesim** forked from: https://github.com/oscarpilote/Ortho4XP/tree/feature/progressive_zl
 
-Updated with modified version of: https://github.com/oscarpilote/Ortho4XP/pull/186
+Version 1.30 updated with modified: https://github.com/oscarpilote/Ortho4XP/pull/186
 
 Several bugfixes were done, some coming from: https://github.com/voyageur/Ortho4XP
 
