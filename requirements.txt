@@ -4,4 +4,3 @@ pyproj==3.6.1
 requests==2.31.0
 Rtree==1.2.0
 shapely==2.0.3
-scikit-fmm
