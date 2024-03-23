@@ -11,6 +11,9 @@ import O4_Vector_Map as VMAP
 import O4_Imagery_Utils as IMG
 import O4_Tile_Utils as TILE
 import O4_Overlay_Utils as OVL
+import O4_Airport_Data_Source as APT_SRC
+
+from O4_Common_Types import CoverZLConfig, DecalConfig, ScreenRes
 
 
 cfg_vars = {
@@ -20,32 +23,21 @@ cfg_vars = {
         "type": int,
         "default": 1,
         "values": (0, 1, 2, 3),
-        "hint": 
-"Verbosity determines the amount of information about the whole process which \
-is printed on screen.  Critical errors, if any, are reported in all states as \
-well as in the Log. Values above 1 are probably only useful for for debug \
-purposes.",
+        "hint": "Verbosity determines the amount of information about the whole process which is printed on screen.  Critical errors, if any, are reported in all states as well as in the Log. Values above 1 are probably only useful for for debug purposes.",
     },
     "cleaning_level": {
         "module": "UI",
         "type": int,
         "default": 1,
         "values": (0, 1, 2, 3),
-        "hint": 
-"Determines which temporary files are removed. Level 3 erases everything \
-except the config and what is needed for X-Plane; Level 2 erases everything \
-except what is needed to redo the current step only; Level 1 allows you to \
-redo any prior step; Level 0 keeps every single file.",
+        "hint": "Determines which temporary files are removed. Level 3 erases everything except the config and what is needed for X-Plane; Level 2 erases everything except what is needed to redo the current step only; Level 1 allows you to redo any prior step; Level 0 keeps every single file.",
     },
     "overpass_server_choice": {
         "module": "OSM",
         "type": str,
-        "default": "random",
+        "default": "DE",
         "values": ["random"] + sorted(OSM.overpass_servers.keys()),
-        "hint": 
-"The (country) of the Overpass OSM server used to grab vector data. It can be \
-modified on the fly (as all _Application_ variables) in case of problem with \
-a particular server.",
+        "hint": "The (country) of the Overpass OSM server used to grab vector data. It can be modified on the fly (as all _Application_ variables) in case of problem with a particular server.",
     },
     "skip_downloads": {
         "module": "TILE",
@@ -102,10 +94,10 @@ a particular server.",
         "default": [],
         "hint": "Indices of road types which one would like to left aside in the extraction of overlays. The list of these indices is can be in the roads.net file within X-Plane Resources, but some sceneries use their own corresponding net definition file. Powerlines have index 22001 in XP11 roads.net default file.",
     },
-    "custom_scenery_dir": {
+    "xplane_install_dir": {
         "type": str,
-        "default": "",
-        "hint": 'Your X-Plane Custom Scenery. Used only for "1-click" creation (or deletion) of symbolic links from Ortho4XP tiles to there.',
+        "default": "<X-Plane Top Level directory>",
+        "hint": 'Your X-Plane top-level directory. Used to find and parse the X-Plane apt.dat files. Also used for "1-click" linking of tiles from Ortho4XP to the X-Plane Custom Scenery folder. Supersedes the old "custom_scenery_dir" config option',
     },
     "custom_overlay_src": {
         "module": "OVL",
@@ -243,7 +235,7 @@ a particular server.",
     },
     "imprint_masks_to_dds": {
         "type": bool,
-        "default": True,
+        "default": False,
         "hint": "Will apply masking directly to dds textures (at the Build Imagery/DSF step) rather than using external png files. This doubles the file size of masked textures (dxt5 vs dxt1) but reduce the overall VRAM footprint (a matter of choice!)",
     },
     "distance_masks_too": {
@@ -271,19 +263,45 @@ too low to grab these details.",
     "cover_airports_with_highres": {
         "type": str,
         "default": "False",
-        "values": ("False", "True", "ICAO", "Existing"),
-        "hint": 'When set, textures above airports will be upgraded to a higher zoomlevel, the imagery being the same as the one they would otherwise receive. Can be limited to airports with an ICAO code for tiles with so many airports. Exceptional: use "Existing" to (try to) derive custom zl zones from the textures directory of an existing tile.',
+        "values": ("False", "True", "ICAO", "Progressive", "Existing"),
+        "hint": 'When set to True, textures above airports will be upgraded to a higher zoomlevel, the imagery being the same as the one they would otherwise receive.\nIn ICAO mode, this will be limited to airports with an ICAO code (for tiles with so many airports).\nIn Progressive mode, custom ZL zones will automatically be computed along all the runway axes, from "cover_zl" (highest resolution near the airport, see below) up to "base_zl" (lowest). See also cover_screen_res, cover_fov, and cover_fpa.\nIn "Existing" mode, (try to) derive custom zl zones from the textures directory of an existing tile.',
         "short_name": "high_zl_airports",
     },
     "cover_extent": {
         "type": float,
         "default": 1,
-        "hint": "The extent (in km) past the airport boundary taken into account for higher ZL. Note that for VRAM efficiency higher ZL textures are fully used on their whole extent as soon as part of them are needed.",
+        "hint": 'Only used in True or ICAO mode (see "high_zl_airports")\nThe extent (in km) past the airport boundary taken into account for higher ZL.\nNote that for VRAM efficiency higher ZL textures are fully used on their whole extent as soon as part of them are needed.',
     },
     "cover_zl": {
-        "type": int,
+        "type": CoverZLConfig,
         "default": 18,
-        "hint": "The zoomlevel with which to cover the airports zone when high_zl_airports is set. Note that if the cover_zl is lower than the zoomlevel which would otherwise be applied on a specific zone, the latter is used.",
+        "hint": 'Only used in True, ICAO or Progressive mode (see "high_zl_airports")\nIn True or ICAO mode, this is the zoomlevel with which to cover the airports zone.\nNote that if the cover_zl is lower than the zoomlevel which would otherwise be applied on a specific zone, the latter is used.\nIn Progressive mode, this is the highest desired ZL, near the airport (lowest is set to the base_zl).\nIt can be either an int, or dict of the form {"non-icao": 17, "icao": 18, "KBSP": 19, "L52": 16} ("icao" and "non-icao" are required)',
+    },
+    "cover_screen_res": {
+        "type": ScreenRes,
+        "default": "HD_1080p",
+        "values": [str(res) for res in ScreenRes],
+        "hint": 'Only used in Progressive mode (see "high_zl_airports")\nThe screen resolution you are expecting to use the most in the simulator.',
+    },
+    "cover_fov": {
+        "type": float,
+        "default": 60.0,
+        "hint": 'Only used in Progressive mode (see "high_zl_airports")\nThe Field of View you are are expecting to use in the simulator.',
+    },
+    "cover_fpa": {
+        "type": float,
+        "default": 10,
+        "hint": 'Only used in Progressive mode (see "high_zl_airports")\nThe higher you are, the less texture resolution you need. Progressive mode uses this Flight Path Angle (from the runway outward) to progressively decrease the Zoom Level of the textures.\nThe total tile size can very drastically increase as you lower this value. The default of 10 degrees was found visually acceptable, with a decent tile size.',
+    },
+    "cover_greediness": {
+        "type": int,
+        "default": 1,
+        "hint": 'Only used in Progressive mode (see "high_zl_airports")\nOptimize texture usage, by "eating up" any ZLn-1 texture being "greediness_threshold"-percent covered by ZLn textures\nWill look up to \'greediness\' lower zoom levels',
+    },
+    "cover_greediness_threshold": {
+        "type": float,
+        "default": 0.70,
+        "hint": 'Only used in Progressive mode (see "high_zl_airports")\nOptimize texture usage, by "eating up" any ZLn-1 texture being "greediness_threshold"-percent covered by ZLn textures\nWill look up to \'greediness\' lower zoom levels',
     },
     "sea_texture_blur": {
         "type": float,
@@ -291,22 +309,13 @@ too low to grab these details.",
         "hint": 'For layers of type "mask" in combined providers imageries, determines the extent (in meters) of the blur radius applied. This allows to smoothen some sea imageries where the wave or reflection pattern was too much present.',
     },
     "water_tech": {
-            "type": str,
-            "default": "XP11 + bathy",
-            "values" : ("XP12", "XP11 + bathy"),
-            "hint" : "Water tech type. XP12 uses a new (partly in construction) rendering tech, XP11 + bathy uses a more traditionnal blend. Both allows for 3D water."
+        "type": str,
+        "default": "XP11 + bathy",
+        "values": ("XP12", "XP11 + bathy"),
+        "hint": "Water tech type. XP12 uses a new (partly in construction) rendering tech, XP11 + bathy uses a more traditionnal blend. Both allows for 3D water.",
     },
-    #"add_low_res_sea_ovl": {
-    #    "type": bool,
-    #    "default": False,
-    #    "hint": "Will add an extra texture layer over the sea (with constant alpha channel given by ratio_water as for inland water), based on a low resolution imagery with global coverage. Masks with their full resolution imagery are still being used when present, the final render is a composite of both. The default imagery with code SEA can be changed as any other imagery defined in the Providers directory, it needs to have a max_zl defined and is used at its max_zl.",
-    #},
-    #"experimental_water": {
-    #    "type": int,
-    #    "default": 0,
-    #    "values": (0, 1, 2, 3),
-    #    "hint": 'If non zero, replaces X-Plane water by a custom normal map over low res ortho-imagery (requires XP11 but turns water rendering more XP10 alike). The value 0 corresponds to legacy X-Plane water, 1 replaces it for inland water only, 2 over sea water only, and 3 over both. Values 2 and 3 should always be used in combination with "imprint_masks_to_dds".\n\nThis experimental feature has two strong downsides: 1) the waves are static rather dynamical (would require a plugin to update the normal_map as X-Plane does) and 2) the wave height is no longer weather dependent. On the other hand, waves might have less repetitive patterns and some blinking in water reflections might be improved too; users are welcome to improve the provided water_normal_map.dds (Gimp can be used to edit the mipmaps individually).',
-    #},
+    #'add_low_res_sea_ovl': {'type':bool,'default':False,'hint':'Will add an extra texture layer over the sea (with constant alpha channel given by ratio_water as for inland water), based on a low resolution imagery with global coverage. Masks with their full resolution imagery are still being used when present, the final render is a composite of both. The default imagery with code SEA can be changed as any other imagery defined in the Providers directory, it needs to have a max_zl defined and is used at its max_zl.'},
+    #'experimental_water':  {'type':int,'default':0,'values':(0,1,2,3),'hint':'If non zero, replaces X-Plane water by a custom normal map over low res ortho-imagery (requires XP11 but turns water rendering more XP10 alike). The value 0 corresponds to legacy X-Plane water, 1 replaces it for inland water only, 2 over sea water only, and 3 over both. Values 2 and 3 should always be used in combination with "imprint_masks_to_dds".\n\nThis experimental feature has two strong downsides: 1) the waves are static rather dynamical (would require a plugin to update the normal_map as X-Plane does) and 2) the wave height is no longer weather dependent. On the other hand, waves might have less repetitive patterns and some blinking in water reflections might be improved too; users are welcome to improve the provided water_normal_map.dds (Gimp can be used to edit the mipmaps individually).'},
     "ratio_water": {
         "type": float,
         "default": 0.25,
@@ -315,7 +324,7 @@ too low to grab these details.",
     "ratio_bathy": {
         "type": float,
         "default": 1.0,
-        "hint": 'Bathymetry multiplier for near shore vertices. In the range [0,1].'
+        "hint": "Bathymetry multiplier for near shore vertices. In the range [0,1].",
     },
     "normal_map_strength": {
         "type": float,
@@ -334,9 +343,21 @@ too low to grab these details.",
         "hint": "Distance until which overlay imageries (that is orthophotos over water) are drawn. Lower distances have a positive impact on frame rate and VRAM usage, and IFR flyers will probably need a higher value than VFR ones.",
     },
     "use_decal_on_terrain": {
-        "type": bool,
+        "type": DecalConfig,
         "default": False,
-        "hint": "Terrain files for all but water triangles will contain the maquify_1_green_key.dcl decal directive. The effect is noticeable at very low altitude and helps to overcome the orthophoto blur at such levels. Can be slightly distracting at higher altitude.",
+        "hint": "\n".join(
+            [
+                "Terrain files for all but water triangles will or will not contain a decal directive according to this value.",
+                "The effect is noticeable at very low altitude and helps to overcome the orthophoto blur at such levels.",
+                "Can be slightly distracting at higher altitude.",
+                "Can be either :",
+                "- a boolean : if True, apply default decals according to the ZL",
+                "- an int : if the ZL is at or above this value, a default decal is applied",
+                '- a dict of {"zl": "<dcl_file_from_XP11/Resources/default scenery/1000 decals>"} :',
+                "  => both zl and the decal file must be enclosed in double-quotes",
+                "  => the corresponding decal is applied to each specified zl, or no decal if omitted",
+            ]
+        ),
     },
     # Other
     "custom_dem": {
@@ -364,7 +385,7 @@ list_app_vars = [
     "max_baddata_retries",
     "ovl_exclude_pol",
     "ovl_exclude_net",
-    "custom_scenery_dir",
+    "xplane_install_dir",
     "custom_overlay_src",
 ]
 gui_app_vars_short = list_app_vars[:-2]
@@ -408,13 +429,16 @@ list_dsf_vars = [
     "cover_airports_with_highres",
     "cover_extent",
     "cover_zl",
+    "cover_screen_res",
+    "cover_fov",
+    "cover_fpa",
+    "cover_greediness",
+    "cover_greediness_threshold",
     "water_tech",
     "ratio_bathy",
     "ratio_water",
     "overlay_lod",
     "sea_texture_blur",
-    #"add_low_res_sea_ovl",
-    #"experimental_water",
     "normal_map_strength",
     "terrain_casts_shadows",
     "use_decal_on_terrain",
@@ -430,23 +454,15 @@ list_tile_vars = (
 )
 
 list_global_cfg = (
-    list_app_vars
-    + list_vector_vars
-    + list_mesh_vars
-    + list_mask_vars
-    + list_dsf_vars
+    list_app_vars + list_vector_vars + list_mesh_vars + list_mask_vars + list_dsf_vars
 )
 
-################################################################################
+############################################################################################
 # Initialization to default values
 for var in cfg_vars:
-    target = (
-        cfg_vars[var]["module"] + "." + var
-        if "module" in cfg_vars[var]
-        else var
-    )
+    target = cfg_vars[var]["module"] + "." + var if "module" in cfg_vars[var] else var
     exec(target + "=cfg_vars['" + var + "']['default']")
-################################################################################
+############################################################################################
 # Update from Global Ortho4XP.cfg
 try:
     f = open(os.path.join(FNAMES.Ortho4XP_dir, "Ortho4XP.cfg"), "r")
@@ -474,24 +490,23 @@ try:
                 cmd = target + "=cfg_vars['" + var + "']['type'](value)"
             exec(cmd)
         except:
-            UI.lvprint(1, "Global config file contains an invalid line:", line)
+            UI.lvprint(1, "Global config file contains an invalide line:", line)
             pass
     f.close()
 except:
     print("No global config file found. Reverting to default values.")
 
 
-################################################################################
+############################################################################################
 class Tile:
+
     def __init__(self, lat, lon, custom_build_dir):
 
         self.lat = lat
         self.lon = lon
         self.custom_build_dir = custom_build_dir
         self.grouped = (
-            True
-            if (custom_build_dir and custom_build_dir[-1] != "/")
-            else False
+            True if (custom_build_dir and custom_build_dir[-1] != "/") else False
         )
         self.build_dir = FNAMES.build_dir(lat, lon, custom_build_dir)
         self.dem = None
@@ -552,18 +567,13 @@ class Tile:
                         value = value[:-1]
                     if cfg_vars[var]["type"] in (bool, list):
                         cmd = "self." + var + "=" + value
+                    elif cfg_vars[var]["type"] is ScreenRes:
+                        cmd = "self." + var + "=ScreenRes.from_config_value(value)"
                     else:
-                        cmd = (
-                            "self."
-                            + var
-                            + "=cfg_vars['"
-                            + var
-                            + "']['type'](value)"
-                        )
+                        cmd = "self." + var + "=cfg_vars['" + var + "']['type'](value)"
                     exec(cmd)
                 except Exception as e:
-                    # compatibility with zone_list config files from 
-                    # version <= 1.20
+                    # compatibility with zone_list config files from version <= 1.20
                     if "zone_list.append" in line:
                         try:
                             exec("self." + line)
@@ -582,7 +592,7 @@ class Tile:
             )
             return 0
 
-    def write_to_config(self, config_file = None):
+    def write_to_config(self, config_file=None):
         if not config_file:
             config_file = os.path.join(
                 self.build_dir,
@@ -609,10 +619,12 @@ class Tile:
             return 0
 
 
-################################################################################
+############################################################################################
 
-################################################################################
+
+############################################################################################
 class Ortho4XP_Config(tk.Toplevel):
+
     def __init__(self, parent):
 
         tk.Toplevel.__init__(self)
@@ -629,9 +641,7 @@ class Ortho4XP_Config(tk.Toplevel):
         self.parent = parent
 
         # Frames
-        self.main_frame = tk.Frame(
-            self, border=4, relief=RIDGE, bg="light green"
-        )
+        self.main_frame = tk.Frame(self, border=4, relief=RIDGE, bg="light green")
         self.frame_cfg = tk.Frame(
             self.main_frame, border=0, padx=5, pady=self.pady, bg="light green"
         )
@@ -665,7 +675,7 @@ class Ortho4XP_Config(tk.Toplevel):
 
         col = 0
         next_row = 0
-        for (title, sub_list) in (
+        for title, sub_list in (
             ("Vector data", list_vector_vars),
             ("Mesh", list_mesh_vars),
             ("Masks", list_mask_vars),
@@ -677,13 +687,7 @@ class Ortho4XP_Config(tk.Toplevel):
                 bg="light green",
                 anchor=W,
                 font="TKFixedFont 14",
-            ).grid(
-                row=0,
-                column=col,
-                columnspan=2,
-                pady=(0, 10),
-                sticky=N + S + E + W,
-            )
+            ).grid(row=0, column=col, columnspan=2, pady=(0, 10), sticky=N + S + E + W)
             row = 1
             for item in sub_list:
                 text = (
@@ -695,12 +699,8 @@ class Ortho4XP_Config(tk.Toplevel):
                     self.frame_cfg,
                     text=text,
                     takefocus=False,
-                    command=lambda item=item: self.popup(
-                        item, cfg_vars[item]["hint"]
-                    ),
-                ).grid(
-                    row=row, column=col, padx=2, pady=2, sticky=E + W + N + S
-                )
+                    command=lambda item=item: self.popup(item, cfg_vars[item]["hint"]),
+                ).grid(row=row, column=col, padx=2, pady=2, sticky=E + W + N + S)
                 if cfg_vars[item]["type"] == bool or "values" in cfg_vars[item]:
                     values = (
                         [True, False]
@@ -711,29 +711,23 @@ class Ortho4XP_Config(tk.Toplevel):
                         self.frame_cfg,
                         values=values,
                         textvariable=self.v_[item],
-                        width=6,
+                        width=11,
                         state="readonly",
                         style="O4.TCombobox",
                     )
                 else:
                     self.entry_[item] = ttk.Entry(
-                        self.frame_cfg, textvariable=self.v_[item], width=7
+                        self.frame_cfg, textvariable=self.v_[item], width=12
                     )
                 self.entry_[item].grid(
-                    row=row,
-                    column=col + 1,
-                    padx=(0, 20),
-                    pady=2,
-                    sticky=N + S + W,
+                    row=row, column=col + 1, padx=(0, 20), pady=2, sticky=N + S + W
                 )
                 row += 1
             next_row = max(next_row, row)
             col += 2
         row = next_row
 
-        self.frame_dem.grid(
-            row=row, column=0, columnspan=6, sticky=N + S + W + E
-        )
+        self.frame_dem.grid(row=row, column=0, columnspan=6, sticky=N + S + W + E)
         item = "custom_dem"
         ttk.Button(
             self.frame_dem,
@@ -741,8 +735,7 @@ class Ortho4XP_Config(tk.Toplevel):
             takefocus=False,
             command=lambda item=item: self.popup(item, cfg_vars[item]["hint"]),
         ).grid(row=0, column=0, padx=2, pady=2, sticky=E + W)
-        # self.entry_[item]=tk.Entry(self.frame_dem,textvariable=self.v_[item],
-        # bg='white',fg='blue',width=80)
+        # self.entry_[item]=tk.Entry(self.frame_dem,textvariable=self.v_[item],bg='white',fg='blue',width=80)
         values = DEM.available_sources[1::2]
         self.entry_[item] = ttk.Combobox(
             self.frame_dem,
@@ -809,9 +802,7 @@ class Ortho4XP_Config(tk.Toplevel):
                 self.frame_cfg,
                 text=text,
                 takefocus=False,
-                command=lambda item=item: self.popup(
-                    item, cfg_vars[item]["hint"]
-                ),
+                command=lambda item=item: self.popup(item, cfg_vars[item]["hint"]),
             ).grid(row=row, column=col, padx=2, pady=2, sticky=E + W + N + S)
             if cfg_vars[item]["type"] == bool or "values" in cfg_vars[item]:
                 values = (
@@ -847,15 +838,10 @@ class Ortho4XP_Config(tk.Toplevel):
                 self.frame_cfg,
                 text=item,
                 takefocus=False,
-                command=lambda item=item: self.popup(
-                    item, cfg_vars[item]["hint"]
-                ),
+                command=lambda item=item: self.popup(item, cfg_vars[item]["hint"]),
             ).grid(row=row, column=0, padx=2, pady=2, sticky=E + W + N + S)
             self.entry_[item] = tk.Entry(
-                self.frame_cfg,
-                textvariable=self.v_[item],
-                bg="white",
-                fg="blue",
+                self.frame_cfg, textvariable=self.v_[item], bg="white", fg="blue"
             )
             self.entry_[item].grid(
                 row=row,
@@ -874,51 +860,29 @@ class Ortho4XP_Config(tk.Toplevel):
             row += 1
 
         self.button1 = ttk.Button(
-            self.frame_lastbtn,
-            text="Load Tile Cfg ",
-            command=self.load_tile_cfg,
+            self.frame_lastbtn, text="Load Tile Cfg ", command=self.load_tile_cfg
         )
-        self.button1.grid(
-            row=0, column=0, padx=5, pady=self.pady, sticky=N + S + E + W
-        )
+        self.button1.grid(row=0, column=0, padx=5, pady=self.pady, sticky=N + S + E + W)
         self.button2 = ttk.Button(
-            self.frame_lastbtn,
-            text="Write Tile Cfg",
-            command=self.write_tile_cfg,
+            self.frame_lastbtn, text="Write Tile Cfg", command=self.write_tile_cfg
         )
-        self.button2.grid(
-            row=0, column=1, padx=5, pady=self.pady, sticky=N + S + E + W
-        )
+        self.button2.grid(row=0, column=1, padx=5, pady=self.pady, sticky=N + S + E + W)
         self.button3 = ttk.Button(
-            self.frame_lastbtn,
-            text="Reload App Cfg",
-            command=self.load_global_cfg,
+            self.frame_lastbtn, text="Reload App Cfg", command=self.load_global_cfg
         )
-        self.button3.grid(
-            row=0, column=2, padx=5, pady=self.pady, sticky=N + S + E + W
-        )
+        self.button3.grid(row=0, column=2, padx=5, pady=self.pady, sticky=N + S + E + W)
         self.button4 = ttk.Button(
-            self.frame_lastbtn,
-            text="Write App Cfg ",
-            command=self.write_global_cfg,
+            self.frame_lastbtn, text="Write App Cfg ", command=self.write_global_cfg
         )
-        self.button4.grid(
-            row=0, column=3, padx=5, pady=self.pady, sticky=N + S + E + W
-        )
+        self.button4.grid(row=0, column=3, padx=5, pady=self.pady, sticky=N + S + E + W)
         self.button5 = ttk.Button(
-            self.frame_lastbtn,
-            text="    Apply     ",
-            command=self.apply_changes,
+            self.frame_lastbtn, text="    Apply     ", command=self.apply_changes
         )
-        self.button5.grid(
-            row=0, column=4, padx=5, pady=self.pady, sticky=N + S + E + W
-        )
+        self.button5.grid(row=0, column=4, padx=5, pady=self.pady, sticky=N + S + E + W)
         self.button6 = ttk.Button(
             self.frame_lastbtn, text="     Exit     ", command=self.destroy
         )
-        self.button6.grid(
-            row=0, column=5, padx=5, pady=self.pady, sticky=N + S + E + W
-        )
+        self.button6.grid(row=0, column=5, padx=5, pady=self.pady, sticky=N + S + E + W)
 
         # Initialize fields and variables
         self.v_["default_website"] = parent.default_website
@@ -959,9 +923,7 @@ class Ortho4XP_Config(tk.Toplevel):
             if not self.v_["custom_dem"].get():
                 self.v_["custom_dem"].set(str(tmp))
             else:
-                self.v_["custom_dem"].set(
-                    self.v_["custom_dem"].get() + ";" + str(tmp)
-                )
+                self.v_["custom_dem"].set(self.v_["custom_dem"].get() + ";" + str(tmp))
 
     def choose_dir(self, item):
         tmp = filedialog.askdirectory(parent=self)
@@ -979,8 +941,7 @@ class Ortho4XP_Config(tk.Toplevel):
         try:
             f = open(
                 os.path.join(
-                    build_dir,
-                    "Ortho4XP_" + FNAMES.short_latlon(lat, lon) + ".cfg",
+                    build_dir, "Ortho4XP_" + FNAMES.short_latlon(lat, lon) + ".cfg"
                 ),
                 "r",
             )
@@ -1031,8 +992,7 @@ class Ortho4XP_Config(tk.Toplevel):
                 os.makedirs(build_dir)
             f = open(
                 os.path.join(
-                    build_dir,
-                    "Ortho4XP_" + FNAMES.short_latlon(lat, lon) + ".cfg",
+                    build_dir, "Ortho4XP_" + FNAMES.short_latlon(lat, lon) + ".cfg"
                 ),
                 "w",
             )
@@ -1072,15 +1032,22 @@ class Ortho4XP_Config(tk.Toplevel):
     def write_global_cfg(self):
         old_cfg = os.path.join(FNAMES.Ortho4XP_dir, "Ortho4XP.cfg.bak")
         new_cfg = os.path.join(FNAMES.Ortho4XP_dir, "Ortho4XP.cfg")
+        if os.path.isfile(old_cfg):
+            try:
+                os.remove(old_cfg)
+            except:
+                pass
         try:
-            if (os.path.exists(new_cfg)):
-                os.replace(new_cfg, old_cfg)
-            f = open(new_cfg, "w")
-            for var in list_global_cfg:
-                f.write(var + "=" + self.v_[var].get() + "\n")
-            f.close()
+            os.rename(new_cfg, old_cfg)
         except:
-            UI.lvprint(1, "Could not write global config.")
+            pass
+        try:
+            f = open(new_cfg, "w")
+        except:
+            return 0
+        for var in list_global_cfg:
+            f.write(var + "=" + self.v_[var].get() + "\n")
+        f.close()
         return
 
     def apply_changes(self):
@@ -1122,11 +1089,13 @@ class Ortho4XP_Config(tk.Toplevel):
                 errors.append(var)
         if errors:
             error_text = (
-                "The following variables had wrong type\nand were reset " + 
-                "to their default value!\n\n* "
+                "The following variables had wrong type\nand were reset to their default value!\n\n* "
                 + "\n* ".join(errors)
             )
             self.popup("ERROR", error_text)
+
+        # Trigger a cache update (will only run if needed)
+        APT_SRC.AirportDataSource.update_cache()
 
     def popup(self, header, input_text):
         self.popupwindow = tk.Toplevel()
@@ -1134,10 +1103,10 @@ class Ortho4XP_Config(tk.Toplevel):
         ttk.Label(
             self.popupwindow, text=header + " :", anchor=W, font="TkBoldFont"
         ).pack(side="top", fill="x", padx=5, pady=3)
-        ttk.Label(
-            self.popupwindow, text=input_text, wraplength=600, anchor=W
-        ).pack(side="top", fill="x", padx=5, pady=0)
-        ttk.Button(
-            self.popupwindow, text="Ok", command=self.popupwindow.destroy
-        ).pack(pady=5)
+        ttk.Label(self.popupwindow, text=input_text, wraplength=600, anchor=W).pack(
+            side="top", fill="x", padx=5, pady=0
+        )
+        ttk.Button(self.popupwindow, text="Ok", command=self.popupwindow.destroy).pack(
+            pady=5
+        )
         return

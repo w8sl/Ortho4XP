@@ -6,6 +6,7 @@ g2xpl_16_prefix = ""
 g2xpl_16_suffix = ""
 
 Ortho4XP_dir = ".." if getattr(sys, "frozen", False) else "."
+Airport_dir   =  os.path.join(Ortho4XP_dir, "Airport_data")
 Preview_dir = os.path.join(Ortho4XP_dir, "Previews")
 Provider_dir = os.path.join(Ortho4XP_dir, "Providers")
 Extent_dir = os.path.join(Ortho4XP_dir, "Extents")
@@ -457,3 +458,6 @@ def geotiff_file_name_from_attributes(
 
 
 ##############################################################################
+def cached_arpt_data(lat, lon):
+    return os.path.join(Airport_dir, round_latlon(lat, lon), short_latlon(lat, lon) + ".json")
+    

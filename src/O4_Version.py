@@ -1,1 +1,1 @@
-version='1.40'
+version='Progressive zl 1.40'

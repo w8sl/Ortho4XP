@@ -1,5 +1,7 @@
-from math import log, tan, pi, atan, exp, cos, sin, sqrt, atan2
+from math import log, log2, tan, pi, atan, exp, cos, sin, sqrt, atan2, floor
 from pyproj import CRS, Transformer
+import functools
+
 
 earth_radius = 6378137
 lat_to_m = pi * earth_radius / 180
@@ -31,6 +33,10 @@ def dist(A, B):
 ################################################################################
 def webmercator_pixel_size(lat, zoomlevel):
     return 2 * pi * earth_radius * cos(pi * lat / 180) / (2 ** (zoomlevel + 8))
+
+def webmercator_zoomlevel(lat, pixel_size):
+    return floor(log2((2 * pi * earth_radius * cos(lat * pi / 180)) / pixel_size) - 8)
+
 ################################################################################
 
 epsg = dict()
@@ -63,6 +69,7 @@ def geo_to_webm(lon, lat):
 ################################################################################
 
 ################################################################################
+@functools.lru_cache(maxsize=2**16)
 def gtile_to_wgs84(til_x, til_y, zoomlevel):
     """
     Returns the latitude and longitude of the top left corner of the tile
@@ -149,3 +156,15 @@ def st_coord(lat, lon, tex_x, tex_y, zoomlevel, provider_code):
     t = t if t <= 1 else 1
     return (s, t)
 ################################################################################
+
+# FIXME: tile_pix_origin() + latlon_to_tile_relative_pix() could be similar to either
+#      : wgs84_to_orthogrid() or st_coord(), I'm not sure
+def tile_pix_origin(lat, lon, zl):
+    tilxleft, tilytop = wgs84_to_gtile(lat + 1, lon, zl)
+    latmax, lonmin = gtile_to_wgs84(tilxleft, tilytop, zl)
+    return wgs84_to_pix(latmax, lonmin, zl)
+
+
+def latlon_to_tile_relative_pix(tile_origin, lat, lon, zl):
+    pix_x, pix_y = wgs84_to_pix(lat, lon, zl)
+    return pix_x - tile_origin[0], pix_y - tile_origin[1]
