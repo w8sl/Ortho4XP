@@ -20,3 +20,6 @@ Original install instructions with some updates are included:
 
 https://github.com/w8sl/Ortho4XP/blob/WIP/Install_Instructions.txt
 
+Special features are described by Artesim in this thread:
+
+https://forums.x-plane.org/index.php?/forums/topic/147570-feature-automated-zoom-levels-around-airports/&page=2#comment-1670217
