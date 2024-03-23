@@ -1,8 +1,11 @@
 # Install dependencies
-brew install python gdal spatialindex p7zip proj python-tk
 
-# Install pyproj
-pip3 install pyproj
+brew install gdal python@3.11 proj spatialindex p7zip python-tk@3.11
 
 # Install other dependencies
-pip3 install numpy shapely rtree pillow requests
+
+pip3.11 install -r ./requirements.txt
+
+# Install GDAL/Python bindings for Python 3.11
+
+pip3.11 install gdal
