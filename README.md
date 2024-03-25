@@ -10,14 +10,6 @@ History of changes are documented on my 1.30 fork
 
 Uploaded for testing with no warranty of any kind
 
-Recommended settings for XP 12.09:
-
-"imprint_masks_to_dds": False
-(It just looks better)
-
-"water_tech": 
-I prefer: XP11 + bathy. XP12 works also. Both variants are compatible with 3D water.
-
 Original install instructions with some updates are included:
 
 https://github.com/w8sl/Ortho4XP/blob/WIP/Install_Instructions.txt
