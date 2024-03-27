@@ -1,5 +1,6 @@
 # Ortho4XP
-A scenery generator for the X-Plane flight simulator.
+A scenery generator for the X-Plane 12 flight simulator.
+(Not compatible with X-Plane 11)
 
 Unofficial fork of Ortho4XP-master, a genial tool created and developed by **Oscar Pilote**:
 https://github.com/oscarpilote/Ortho4XP
