@@ -16,3 +16,7 @@ For complete list of original contributors - see:
 https://github.com/oscarpilote/Ortho4XP 
 
 Special thanks to all !!!
+
+Install instructions included:
+
+https://github.com/w8sl/Ortho4XP/blob/progressive_zl_2023/Install_Instructions.txt
