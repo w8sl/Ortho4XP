@@ -13,7 +13,7 @@ Uploaded for testing with no warranty of any kind
 
 Original install instructions with some updates are included:
 
-https://github.com/w8sl/Ortho4XP/blob/WIP/Install_Instructions.txt
+https://github.com/w8sl/Ortho4XP/blob/Progressive_XP12/Install_Instructions.txt
 
 Special features are described by Artesim in this thread:
 
