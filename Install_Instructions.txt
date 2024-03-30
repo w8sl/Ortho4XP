@@ -2,17 +2,9 @@ NOTICE 1. Windows users: Only use Notepad++ or an equivalent decent editor
 to read or modify Ortho4XP related files. Notepad doesn't understand linux
 line-ends and will create a mess.
 ------------------------------------------------------------------------
-
+NOTICE 2. A copy of X-Plane 12 is required.
+During the first run of Ortho4XP, configuration variable "custom_overlay_src" should be set to: "../X-Plane 12/Global Scenery/X-Plane 12 Global Scenery" directory
 ------------------------------------------------------------------------
-NOTICE 2 : Windows users: You do not need to read further than this
-notice if you have installed the binary windows version !
-In your case, the executable file is Binary/Ortho4XP_v130.exe, and the
-only advisable action is to make a short-cut to it somewhere, e.g. in the
-main Ortho4XP directory (but the executable needs to stay where it is).
-If you end-up installing the python modules some day (to get more frequent
-updates or bugs fixed), the Binary directory won't be necessary anymore.
-------------------------------------------------------------------------
-
 The following instructions are for the script install :
 
 
@@ -26,7 +18,16 @@ Arch-based distributions
 
 sudo pacman -S python python-pip python-requests python-numpy python-pyproj python-gdal python-shapely python-rtree python-pillow p7zip freeglut tk
 
-(if some of them were not packaged for your distro you can use pip instead, like say, pip install pyproj)
+(if some of them were not packaged for your distro you can use pip instead, like say, pip install scikit-fmm)
+
+
+On some Arch-based distributions it may be necessary to build scikit-fmm from source:
+
+git clone https://github.com/scikit-fmm/scikit-fmm.git
+
+cd scikit-fmm
+
+python setup.py install
 
 
 Windows
@@ -83,6 +84,9 @@ and launch "python Ortho4XP.py".
 
 macOS
 ----
+It is not recommended to manually download and install Python from www.python.org !
+Just follow these steps:
+
 1) In a Terminal window, install Xcode Command Line Tools:
 
 xcode-select --install   
