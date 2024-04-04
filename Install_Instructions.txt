@@ -95,12 +95,16 @@ xcode-select --install
 
 /bin/bash -c "$(curl -fsSL https://raw.githubusercontent.com/Homebrew/install/HEAD/install.sh)"
 
+3) Run these two commands in your terminal to add Homebrew to your PATH (replace *** with your user account name):
 
-3) Go to the Ortho4XP folder
+    echo 'eval "$(/opt/homebrew/bin/brew shellenv)"' >> /Users/***/.zprofile
+    eval "$(/opt/homebrew/bin/brew shellenv)"
+
+4) Go to the Ortho4XP folder
 cd /path/to/Ortho4XP
 
-4) Execute the install script (you have to run "chmod +x ./install_mac.sh" first)
+5) Execute the install script (you have to run "chmod +x ./install_mac.sh" first)
 ./install_mac.sh
 
-5) Launch Ortho4XP
+6) Launch Ortho4XP
 python3.11 Ortho4XP.py
