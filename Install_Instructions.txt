@@ -55,7 +55,6 @@ Download and install The Microsoft Visual C++ Redistributable packages for Visua
 
 https://learn.microsoft.com/en-US/cpp/windows/latest-supported-vc-redist?view=msvc-170
 
-
 3) From a command window launch:
 
 pip install --upgrade pip  [if this goes wrong you probably missed the last point in 1)]
@@ -79,8 +78,8 @@ and launch "python Ortho4XP.py".
 macOS
 ------------------------------------------------------------------------------------------
 IMPORTANT NOTICE
-Ortho4XP uses Python installed via Homebrew
-It is important that the path to Homebrew has the highest priority - see 3)
+Ortho4XP uses Python installed via Homebrew. 
+Access path to Homebrew must be set correctly - see 3)
 ------------------------------------------------------------------------------------------
 
 1) In a Terminal window, install Xcode Command Line Tools:
@@ -91,14 +90,18 @@ xcode-select --install
 
 /bin/bash -c "$(curl -fsSL https://raw.githubusercontent.com/Homebrew/install/HEAD/install.sh)"
 
-3) Set up PATH. Follow instructions given by Homebrew installer. On M1/M2/M3 it looks like this:  
+3) Set up PATH. Follow instructions given by Homebrew installer. On M1/M2/M3 Mac it may look like this:  
 
    Run these two commands in your terminal to add Homebrew to your PATH (replace *** with your user account name):
 
     echo 'eval "$(/opt/homebrew/bin/brew shellenv)"' >> /Users/***/.zprofile
     eval "$(/opt/homebrew/bin/brew shellenv)"
+   
+   Restart the terminal and verify that the path to Homebrew is at the top of the list:
+    
+    echo $PATH
 
-4) On M1/M2/M3 - if not done already, install Rosetta:
+4) On M1/M2/M3 Mac - if not done already, install Rosetta:
 
 softwareupdate --install-rosetta
    
