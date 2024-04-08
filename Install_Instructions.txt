@@ -90,14 +90,14 @@ xcode-select --install
 
 /bin/bash -c "$(curl -fsSL https://raw.githubusercontent.com/Homebrew/install/HEAD/install.sh)"
 
-3) Set up PATH. Follow instructions given by Homebrew installer. On M1/M2/M3 Mac it may look like this:  
+3) Set up PATH. Follow instructions given by Homebrew installer. On M1/M2/M3 Mac it should look like this:  
 
    Run these two commands in your terminal to add Homebrew to your PATH (replace *** with your user account name):
 
     echo 'eval "$(/opt/homebrew/bin/brew shellenv)"' >> /Users/***/.zprofile
     eval "$(/opt/homebrew/bin/brew shellenv)"
    
-   Restart the terminal and verify that the path to Homebrew is at the top of the list:
+   Restart the terminal and verify that the path to Homebrew is at beginning of the list:
     
     echo $PATH
 
