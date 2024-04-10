@@ -97,7 +97,7 @@ xcode-select --install
     echo 'eval "$(/opt/homebrew/bin/brew shellenv)"' >> /Users/???/.zprofile
     eval "$(/opt/homebrew/bin/brew shellenv)"
    
-   Restart the terminal and verify that the path to Homebrew is at beginning of the list:
+   Restart the terminal and verify that the path to Homebrew is at the beginning of the list:
     
     echo $PATH
 
