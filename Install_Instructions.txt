@@ -3,16 +3,6 @@ to read or modify Ortho4XP related files. Notepad doesn't understand linux
 line-ends and will create a mess.
 ------------------------------------------------------------------------
 
-------------------------------------------------------------------------
-NOTICE 2 : Windows users: You do not need to read further than this
-notice if you have installed the binary windows version !
-In your case, the executable file is Binary/Ortho4XP_v130.exe, and the
-only advisable action is to make a short-cut to it somewhere, e.g. in the
-main Ortho4XP directory (but the executable needs to stay where it is).
-If you end-up installing the python modules some day (to get more frequent
-updates or bugs fixed), the Binary directory won't be necessary anymore.
-------------------------------------------------------------------------
-
 The following instructions are for the script install :
 
 
@@ -42,13 +32,7 @@ Make sure during the process that "pip" (package management system for Python)
 is installed along and made accessible from your PATH [there is a checkbox
 for this during the Python install process]. Check the "Add Python to environment variables" option.
 
-2) Download binary wheel for GDAL from (unofficial) repository https://github.com/cgohlke/geospatial-wheels:
-
-GDAL 3.8.4 for Python 3.11:
-https://github.com/cgohlke/geospatial-wheels/releases/download/v2024.2.18/GDAL-3.8.4-cp311-cp311-win_amd64.whl
-
-GDAL 3.8.4 for Python 3.10:
-https://github.com/cgohlke/geospatial-wheels/releases/download/v2024.2.18/GDAL-3.8.4-cp310-cp310-win_amd64.whl
+2) Download binary wheel for GDAL from https://github.com/cgohlke/geospatial-wheels/releases
 
 Pay attention to take the one that corresponds to the Python version which you picked
 at Step 1) and to your OS nbr of bits (32 or 64, I guess 64 in all but a few cases).
@@ -82,7 +66,12 @@ and launch "python Ortho4XP.py".
 
 
 macOS
-----
+------------------------------------------------------------------------------------------
+IMPORTANT NOTICE
+Ortho4XP uses Python installed via Homebrew. 
+Access path to Homebrew must be set correctly - see 3)
+------------------------------------------------------------------------------------------
+
 1) In a Terminal window, install Xcode Command Line Tools:
 
 xcode-select --install   
@@ -91,12 +80,26 @@ xcode-select --install
 
 /bin/bash -c "$(curl -fsSL https://raw.githubusercontent.com/Homebrew/install/HEAD/install.sh)"
 
+3) Set up PATH. Follow instructions given by Homebrew installer. On M1/M2/M3 Mac it should look like this:  
 
-3) Go to the Ortho4XP folder
+   Run these two commands in your terminal to add Homebrew to your PATH (replace ??? with your user account name):
+
+    echo 'eval "$(/opt/homebrew/bin/brew shellenv)"' >> /Users/???/.zprofile
+    eval "$(/opt/homebrew/bin/brew shellenv)"
+   
+   Restart the terminal and verify that the path to Homebrew is at the beginning of the list:
+    
+    echo $PATH
+
+4) On M1/M2/M3 Mac - if not done already, install Rosetta:
+
+softwareupdate --install-rosetta
+   
+4) Go to the Ortho4XP folder
 cd /path/to/Ortho4XP
 
-4) Execute the install script (you have to run "chmod +x ./install_mac.sh" first)
+5) Execute the install script (you have to run "chmod +x ./install_mac.sh" first)
 ./install_mac.sh
 
-5) Launch Ortho4XP
+6) Launch Ortho4XP
 python3.11 Ortho4XP.py
