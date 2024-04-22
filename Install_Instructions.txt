@@ -106,7 +106,7 @@ xcode-select --install
 softwareupdate --install-rosetta
    
 4) Go to the Ortho4XP folder
-cd /path/to/Ortho4XP
+cd /path/to/Ortho4XP (cd space drag-and-drop Ortho4XP folder into the terminal window enter)
 
 5) Execute the install script (you have to run "chmod +x ./install_mac.sh" first)
 ./install_mac.sh
