@@ -111,7 +111,7 @@ cd /path/to/Ortho4XP (cd space drag-and-drop Ortho4XP folder into the terminal w
 5) Execute the install script (you have to run "chmod +x ./install_mac.sh" first)
 ./install_mac.sh
 
-6) Double click executable files in Ortho4XP-master/Utils/mac folder and approve the execution in Security&Privacy settings
+6) Double-click each of the executable files in Ortho4XP-master/Utils/mac folder and approve the execution in Security&Privacy settings
 
 7) Launch Ortho4XP
 python3.11 Ortho4XP.py
