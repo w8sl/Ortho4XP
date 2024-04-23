@@ -55,7 +55,7 @@ Download and install The Microsoft Visual C++ Redistributable packages for Visua
 
 https://learn.microsoft.com/en-US/cpp/windows/latest-supported-vc-redist?view=msvc-170
 
-3) From a command window launch:
+3) From a Command Prompt window launch as user:
 
 pip install --upgrade pip  [if this goes wrong you probably missed the last point in 1)]
 
