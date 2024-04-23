@@ -55,15 +55,13 @@ Download and install The Microsoft Visual C++ Redistributable packages for Visua
 
 https://learn.microsoft.com/en-US/cpp/windows/latest-supported-vc-redist?view=msvc-170
 
-3) From a Command Prompt window launch as user:
-
-pip install --upgrade pip  [if this goes wrong you probably missed the last point in 1)]
+3) Open the Command Prompt window as user
 
 4) Change directory to Ortho4XP folder (freshly downloaded from Github) and launch:
 
 pip install -r requirements.txt
 
-4) Execute the following command as administrator:
+4) Execute the following command as administrator using PowerShell:
 
 pip install /path to GDAL-***.whl file, downloaded at Step 2)
 
