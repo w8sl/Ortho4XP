@@ -79,7 +79,7 @@ IMPORTANT NOTICE
 Ortho4XP uses Python installed via Homebrew. 
 Access path to Homebrew must be on the top of the list.
 See: 3) for fresh install. If other version of Python has been installed before,
-it may be necessary to manualy edit hidden file ".zprofile" in your user directory, 
+it may be necessary to manually edit hidden file ".zprofile" in your user directory, 
 so at the only content is:
 
 eval $(/opt/homebrew/bin/brew shellenv)
