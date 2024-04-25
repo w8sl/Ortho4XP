@@ -13,13 +13,11 @@ Linux (Ubuntu/Debian-based, names might slightly differ for other distros)
 
 sudo apt-get install python3 python3-pip python3-requests python3-numpy python3-pyproj python3-gdal python3-shapely python3-rtree python3-pil python3-pil.imagetk p7zip-full libnvtt-bin freeglut3 gdal-bin python3-scikit-fmm
 
-
 Arch-based distributions
 
 sudo pacman -S python python-pip python-requests python-numpy python-pyproj python-gdal python-shapely python-rtree python-pillow p7zip freeglut tk
 
 (if some of them were not packaged for your distro you can use pip instead, like say, pip install scikit-fmm)
-
 
 On some Arch-based distributions it may be necessary to build scikit-fmm from source:
 
@@ -76,36 +74,39 @@ and launch "python Ortho4XP.py".
 macOS
 ------------------------------------------------------------------------------------------
 IMPORTANT NOTICE
-Ortho4XP uses Python installed via Homebrew. 
-Access path to Homebrew should be on the top of the list.
+Ortho4XP uses Python installed via Homebrew. Access path to Homebrew should be on the top of the list.
 For a fresh install - see 3). If other version of Python has been installed previously,
 it may be necessary to manually edit hidden file ".zprofile" in your user directory.
-The only content of ".zprofile" file, required for proper functionality of Homebrew on M1-M3 Macs is:
+The only content of ".zprofile" file, required for proper functionality of Homebrew and Python:
 
+Apple Silicon Mac:
 eval $(/opt/homebrew/bin/brew shellenv)
 
+Intel Mac:
+eval $(/usr/local/bin/brew shellenv)
 ------------------------------------------------------------------------------------------
 
-1) In a Terminal window, install Xcode Command Line Tools:
-
-xcode-select --install   
-
-2) Install Homebrew (brew.sh), a package manager:
+1) In a Terminal window, install Homebrew (brew.sh), a package manager:
 
 /bin/bash -c "$(curl -fsSL https://raw.githubusercontent.com/Homebrew/install/HEAD/install.sh)"
 
-3) Set up PATH. Follow instructions given by Homebrew installer. On M1/M2/M3 Mac it should look like this:  
+2) Set up PATH. Follow instructions given by Homebrew installer. It should look like this:  
 
    Run these two commands in your terminal to add Homebrew to your PATH (replace ??? with your user account name):
 
+    Apple Silicon Mac:
     echo 'eval "$(/opt/homebrew/bin/brew shellenv)"' >> /Users/???/.zprofile
     eval "$(/opt/homebrew/bin/brew shellenv)"
-   
+
+    Intel Mac:
+    echo 'eval "$(/usr/local/bin/brew shellenv)"' >> /Users/???/.zprofile
+    eval "$(/usr/local/bin/brew shellenv)"
+
    Restart the terminal and verify that the path to Homebrew is at the beginning of the list:
     
     echo $PATH
 
-4) On M1/M2/M3 Mac (if not done already) install Rosetta:
+3) On Apple Silicon Mac (if not done already) install Rosetta:
 
 softwareupdate --install-rosetta
    
