@@ -77,14 +77,13 @@ macOS
 ------------------------------------------------------------------------------------------
 IMPORTANT NOTICE
 Ortho4XP uses Python installed via Homebrew. 
-Access path to Homebrew must be on the top of the list.
-See: 3) for fresh install. If other version of Python has been installed before,
-it may be necessary to manually edit hidden file ".zprofile" in your user directory, 
-so at the only content is:
+Access path to Homebrew should be on the top of the list.
+For a fresh install - see 3). If other version of Python has been installed previously,
+it may be necessary to manually edit hidden file ".zprofile" in your user directory.
+The only content of ".zprofile" file, required for proper functionality of Homebrew on M1-M3 Macs is:
 
 eval $(/opt/homebrew/bin/brew shellenv)
 
-(tested on M1 Mac)
 ------------------------------------------------------------------------------------------
 
 1) In a Terminal window, install Xcode Command Line Tools:
