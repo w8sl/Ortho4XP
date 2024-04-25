@@ -61,7 +61,7 @@ https://learn.microsoft.com/en-US/cpp/windows/latest-supported-vc-redist?view=ms
 
 pip install -r requirements.txt
 
-4) Execute the following command as administrator using PowerShell:
+4) Open the Command Prompt window as administrator and execute the following command:
 
 pip install /path to GDAL-***.whl file, downloaded at Step 2)
 
