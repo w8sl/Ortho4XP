@@ -105,7 +105,7 @@ xcode-select --install
     
     echo $PATH
 
-4) On M1/M2/M3 Mac - if not done already, install Rosetta:
+4) On M1/M2/M3 Mac (if not done already) install Rosetta:
 
 softwareupdate --install-rosetta
    
