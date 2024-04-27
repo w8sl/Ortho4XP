@@ -99,7 +99,7 @@ Intel Mac:
 eval $(/usr/local/bin/brew shellenv)
 ------------------------------------------------------------------------------------------
 
-1) In a Terminal window, install Homebrew (brew.sh), a package manager:
+1) In a Terminal window, install Homebrew (https://brew.sh), a package manager:
 
 /bin/bash -c "$(curl -fsSL https://raw.githubusercontent.com/Homebrew/install/HEAD/install.sh)"
 
