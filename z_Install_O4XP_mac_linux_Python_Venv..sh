@@ -4,6 +4,8 @@
 
 #brew install gdal python python-tk proj spatialindex p7zip
 
+#On Linux - install system packages as per Install_Instructions.txt
+
 SCRIPT_DIR=$(cd -- "$(dirname -- "${BASH_SOURCE[0]}")" &> /dev/null && pwd)
 
 venv_path=$SCRIPT_DIR/venv-ortho
