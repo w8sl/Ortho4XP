@@ -28,7 +28,7 @@ pip install scikit-fmm
 echo " "
 echo "Preparation complete!"
 echo " "
-echo "Use $SCRIPT_DIR/z_Start_O4XP_Venv_Mac.sh to start O4XP"
+echo "Use $SCRIPT_DIR/z_Start_O4XP_Venv_mac_linux.sh to start O4XP"
 echo " "
 echo " "
 
