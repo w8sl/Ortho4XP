@@ -1,6 +1,6 @@
 #! /bin/bash
 
-#Uncomment the nest line for complete install
+#Uncomment the next line for a complete install on macOS
 
 #brew install gdal python python-tk proj spatialindex p7zip
 
