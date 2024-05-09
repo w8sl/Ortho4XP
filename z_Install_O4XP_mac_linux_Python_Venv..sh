@@ -10,7 +10,11 @@ venv_path=$SCRIPT_DIR/venv-ortho
 
 # 1. Create a Python virtual environment
 
+# macOS and Ubuntu/Debian Linux:
 python3 -m venv $venv_path
+
+# Arch based Linux distributions:
+#python -m venv $venv_path
 
 # 2. Activate Python venv
 
