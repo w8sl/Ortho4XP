@@ -1,6 +1,6 @@
 #! /bin/bash
 
-#Uncomment the next line for a complete install on macOS
+#Uncomment the next line for a complete install on macOS, comment for PythonVenv-only install
 
 #brew install gdal python python-tk proj spatialindex p7zip
 
@@ -43,7 +43,7 @@ pip install $venv_path/scikit-fmm
 echo " "
 echo "Preparation complete!"
 echo " "
-echo "Use $SCRIPT_DIR/z_Start_O4XP_Venv_mac_linux.sh to start O4XP"
+echo "Use $SCRIPT_DIR/z_Start_O4XP_PythonVenv.sh to start O4XP"
 echo " "
 echo " "
 
