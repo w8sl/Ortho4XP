@@ -27,7 +27,7 @@ source $venv_path/bin/activate
 cd $SCRIPT_DIR
 
 pip install -r requirements.txt
-pip install gdal
+ARCHFLAGS="-arch arm64" pip install gdal==$(gdal-config --version)  --compile --no-cache-dir
 pip install build
 
 # 4. Download scikit-fmm's "meson" branch, compile and install it
