@@ -9,4 +9,4 @@ pip3.11 install scikit-fmm
 
 # Install GDAL/Python bindings for Python 3.11
 
-pip3.11 install gdal
+pip3.11 install gdal=="$(gdal-config --version).*"
