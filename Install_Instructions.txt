@@ -11,15 +11,15 @@ The following instructions are for the script install :
 Linux (Ubuntu/Debian-based, names might slightly differ for other distros)
 -----
 
-sudo apt-get install python3 python3-pip python3-requests python3-numpy python3-pyproj python3-gdal python3-shapely python3-rtree python3-pil python3-pil.imagetk p7zip-full libnvtt-bin freeglut3 gdal-bin python3-scikit-fmm
+sudo apt-get install python3 python3-pip python3-requests python3-numpy python3-pyproj python3-gdal python3-shapely python3-rtree python3-pil python3-pil.imagetk p7zip-full libnvtt-bin freeglut3 gdal-bin libgdal-dev python3-scikit-fmm
 
 Arch-based distributions
 
-sudo pacman -S python python-pip python-requests python-numpy python-pyproj python-gdal python-shapely python-rtree python-pillow p7zip freeglut tk
+sudo pacman -S python python-pip python-requests python-numpy python-pyproj python-gdal python-shapely python-rtree python-pillow p7zip freeglut tk podofo netcdf mariadb hdf5 cfitsio postgresql
 
-(if some of them were not packaged for your distro you can use pip instead, like say, pip install scikit-fmm)
+(if some of them were not packaged for your distro you can use pip instead, like say, pip install pyproj)
 
-On some Arch-based distributions it may be necessary to build scikit-fmm from source:
+On Arch-based distributions it is necessary to build scikit-fmm from source:
 
 git clone https://github.com/scikit-fmm/scikit-fmm.git
 
@@ -49,6 +49,7 @@ During the installation, check the following options:
 ->Next, Advanced Options:
 "Install Python 3.11 for all users"
 "Add Python to environment variables"
+"Precompile standard library"
 
 
 2) Download binary wheel for GDAL from https://github.com/cgohlke/geospatial-wheels/releases
