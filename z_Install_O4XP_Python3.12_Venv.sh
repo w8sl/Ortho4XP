@@ -13,10 +13,10 @@ venv_path=$SCRIPT_DIR/venv-ortho
 # 1. Create a Python virtual environment
 
 # macOS and Ubuntu/Debian Linux:
-python3 -m venv $venv_path
+python3 -m venv --system-site-packages $venv_path
 
 # Arch based Linux distributions:
-#python -m venv $venv_path
+#python -m venv --system-site-packages $venv_path
 
 # 2. Activate Python venv
 
@@ -27,7 +27,6 @@ source $venv_path/bin/activate
 cd $SCRIPT_DIR
 
 pip install -r requirements.txt
-ARCHFLAGS="-arch arm64" pip install gdal==$(gdal-config --version)  --compile --no-cache-dir
 pip install build
 
 # 4. Download scikit-fmm's "meson" branch, compile and install it
