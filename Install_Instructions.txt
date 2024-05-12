@@ -11,7 +11,13 @@ The following instructions are for the script install :
 Linux (Ubuntu/Debian-based, names might slightly differ for other distros)
 -----
 
-sudo apt-get install python3 python3-pip python3-requests python3-numpy python3-pyproj python3-gdal python3-shapely python3-rtree python3-pil python3-pil.imagetk p7zip-full libnvtt-bin freeglut3 gdal-bin libgdal-dev python3-scikit-fmm
+sudo apt-get install python3 python3-pip python3-requests python3-numpy python3-pyproj python3-gdal python3-shapely python3-rtree python3-pil python3-pil.imagetk p7zip-full libnvtt-bin freeglut3 gdal-bin 
+
+Python 3.11 and below:
+sudo apt-get install python3-scikit-fmm
+
+Python 3.12:
+Use included z_Install_O4XP_PythonVenv.sh script
 
 Arch-based distributions
 
@@ -26,6 +32,10 @@ git clone https://github.com/scikit-fmm/scikit-fmm.git
 cd scikit-fmm
 
 python setup.py install
+
+For Python 3.12:
+
+Use included z_Install_O4XP_PythonVenv.sh script
 
 
 Windows
