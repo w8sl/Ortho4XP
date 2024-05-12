@@ -5,4 +5,6 @@ venv_path=$SCRIPT_DIR/venv-ortho
 
 cd $SCRIPT_DIR
 
-$venv_path/bin/python Ortho4XP.py
+source $venv_path/bin/activate
+
+python Ortho4XP.py
