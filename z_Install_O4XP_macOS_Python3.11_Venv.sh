@@ -20,7 +20,7 @@ source $venv_path/bin/activate
 
 cd $SCRIPT_DIR
 pip install -r requirements.txt
-pip install gdal
+pip install gdal=="$(gdal-config --version).*"
 pip install scikit-fmm
 
 # 6. DONE
