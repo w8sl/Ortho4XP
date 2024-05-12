@@ -26,7 +26,7 @@ source $venv_path/bin/activate
 
 cd $SCRIPT_DIR
 
-pip install -r requirements.txt
+pip install -I -r requirements.txt
 pip install build
 
 # 4. Download scikit-fmm's "meson" branch, compile and install it
