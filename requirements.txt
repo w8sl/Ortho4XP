@@ -1,4 +1,3 @@
-chardet
 numpy
 Pillow
 pyproj
