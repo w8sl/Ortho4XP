@@ -40,7 +40,7 @@ redo any prior step; Level 0 keeps every single file.",
     "overpass_server_choice": {
         "module": "OSM",
         "type": str,
-        "default": "random",
+        "default": "DE",
         "values": ["random"] + sorted(OSM.overpass_servers.keys()),
         "hint": 
 "The (country) of the Overpass OSM server used to grab vector data. It can be \
