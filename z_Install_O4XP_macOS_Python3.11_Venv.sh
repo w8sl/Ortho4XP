@@ -2,7 +2,7 @@
 
 #Uncomment the next line for a complete install on macOS, comment for PythonVenv only install
 
-brew install gdal python@3.11 python-tk@3.11 proj spatialindex p7zip
+#brew install gdal python@3.11 python-tk@3.11 proj spatialindex p7zip
 
 SCRIPT_DIR=$(cd -- "$(dirname -- "${BASH_SOURCE[0]}")" &> /dev/null && pwd)
 
