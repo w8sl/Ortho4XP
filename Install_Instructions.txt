@@ -19,6 +19,7 @@ sudo apt-get install python3-scikit-fmm
 Python 3.12:
 Use included z_Install_O4XP_PythonVenv.sh script
 
+
 Arch-based distributions
 
 sudo pacman -S python python-pip python-requests python-numpy python-pyproj python-gdal python-shapely python-rtree python-pillow p7zip freeglut tk podofo netcdf mariadb hdf5 cfitsio postgresql
@@ -27,13 +28,16 @@ sudo pacman -S python python-pip python-requests python-numpy python-pyproj pyth
 
 On Arch-based distributions it is necessary to build scikit-fmm from source:
 
+Python 3.11:
+
 git clone https://github.com/scikit-fmm/scikit-fmm.git
 
 cd scikit-fmm
 
 python setup.py install
 
-For Python 3.12:
+
+Python 3.12:
 
 Use included z_Install_O4XP_PythonVenv.sh script
 
@@ -115,7 +119,8 @@ eval $(/usr/local/bin/brew shellenv)
 
 /bin/bash -c "$(curl -fsSL https://raw.githubusercontent.com/Homebrew/install/HEAD/install.sh)"
 
-2) Set up PATH. Follow instructions given by Homebrew installer. It should look like this:  
+2) Read the terminal messages carefully and follow the PATH setting instructions ! 
+   It should look like this:  
 
    Run these two commands in your terminal to add Homebrew to your PATH (replace ??? with your user account name):
 
@@ -141,7 +146,7 @@ cd /path/to/Ortho4XP (cd, space, drag-and-drop Ortho4XP folder into the terminal
 5) Execute the install script (you have to run "chmod +x ./install_mac.sh" first)
 ./install_mac.sh
 
-6) Double-click each of the executable files in Ortho4XP-master/Utils/mac folder and approve the execution in Security&Privacy settings
+6) Double-click on each of the executable files in Ortho4XP-master/Utils/mac folder and confirm opening in Security&Privacy settings
 
 7) Launch Ortho4XP
 python3.11 Ortho4XP.py
