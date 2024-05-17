@@ -1,7 +1,6 @@
-numpy==1.26.4
-Pillow==10.3.0
-pyproj==3.6.1
-requests==2.31.0
-Rtree==1.2.0
-shapely==2.0.3
-scikit-fmm
+numpy
+Pillow
+pyproj
+requests
+Rtree
+shapely
