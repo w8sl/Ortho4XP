@@ -111,7 +111,7 @@ class Ortho4XP_GUI(tk.Tk):
         self.rowconfigure(1, weight=1)
 
         # Resources
-        self.title("Ortho4XP Progressive zl" + O4_Version.version)
+        self.title("Ortho4XP Progressive zl " + O4_Version.version)
         self.folder_icon = tk.PhotoImage(
             file=os.path.join(FNAMES.Utils_dir, "Folder.gif")
         )
