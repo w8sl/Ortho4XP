@@ -3,7 +3,7 @@ to read or modify Ortho4XP related files. Notepad doesn't understand linux
 line-ends and will create a mess.
 ------------------------------------------------------------------------
 NOTICE 2. A copy of X-Plane 12 is required.
-During the first run of Ortho4XP, configuration variable "custom_overlay_src" should be set to: "../X-Plane 12/Global Scenery/X-Plane 12 Global Scenery" directory
+The "custom_overlay_src" variable should be set to the: "../X-Plane 12/Global Scenery/X-Plane 12 Global Scenery" directory
 ------------------------------------------------------------------------
 The following instructions are for the script install :
 
