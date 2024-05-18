@@ -6,7 +6,9 @@ https://github.com/oscarpilote/Ortho4XP
 
 "Progressive_zl/feature" mod created by **Artesim** -  updated, recut and merged with Ortho4XP 1.40
 
-Original install instructions with suggested changes are included:
+Bugfixes from https://github.com/voyageur/Ortho4XP are included
+
+Updated install instructions:
 
 https://github.com/w8sl/Ortho4XP/blob/Progressive_XP12/Install_Instructions.txt
 
