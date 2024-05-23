@@ -19,4 +19,4 @@ Special thanks to all !!!
 
 Install instructions included:
 
-https://github.com/w8sl/Ortho4XP/blob/Progressive_XP11/Install_Instructions.txt
+https://github.com/w8sl/Ortho4XP/blob/Progressive_130/Install_Instructions.txt
