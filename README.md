@@ -10,7 +10,7 @@ Bugfixes from https://github.com/voyageur/Ortho4XP are included
 
 Updated install instructions:
 
-https://github.com/w8sl/Ortho4XP/blob/Progressive_XP12/Install_Instructions.txt
+https://github.com/w8sl/Ortho4XP/blob/Progressive_140/Install_Instructions.txt
 
 Special features were described by Artesim in this thread:
 
