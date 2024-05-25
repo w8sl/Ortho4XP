@@ -36,7 +36,14 @@ pip install $venv_path/scikit-fmm
 # 6. DONE
 
 echo " "
-echo "Python 3.12 virtual environment has been created in $SCRIPT_DIR/venv-ortho directory"
+
+if [ -d "$venv_path/bin" ]; then
+  echo "Python virtual environment has been created in $venv_path directory"
+fi
+
+echo " "
+echo "Python version:"
+python --version
 echo " "
 echo "Installed packages:"
 pip list
