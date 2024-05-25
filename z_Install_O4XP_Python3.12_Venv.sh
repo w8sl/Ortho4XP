@@ -1,6 +1,6 @@
 #! /bin/bash
 
-#Uncomment the next line for a complete install on macOS, comment for PythonVenv-only install
+#Uncomment the next line for a complete install on macOS
 
 #brew install gdal python python-tk proj spatialindex p7zip
 
@@ -10,13 +10,9 @@ SCRIPT_DIR=$(cd -- "$(dirname -- "${BASH_SOURCE[0]}")" &> /dev/null && pwd)
 
 venv_path=$SCRIPT_DIR/venv-ortho
 
-# 1. Create a Python virtual environment
+# 1. Create a Python 3.12 virtual environment
 
-# macOS and Ubuntu/Debian Linux:
-python3 -m venv --system-site-packages $venv_path
-
-# Arch based Linux distributions:
-#python -m venv --system-site-packages $venv_path
+python3.12 -m venv --system-site-packages $venv_path
 
 # 2. Activate Python venv
 
@@ -40,15 +36,16 @@ pip install $venv_path/scikit-fmm
 # 6. DONE
 
 echo " "
-echo "Preparation complete!"
+echo "Python 3.12 virtual environment has been created in $SCRIPT_DIR/venv-ortho directory"
+echo " "
+echo "Installed packages:"
+pip list
+echo " "
+echo "GDAL version:"
+gdal-config --version
+echo " "
 echo " "
 echo "Use $SCRIPT_DIR/z_Start_O4XP_PythonVenv.sh to start O4XP"
 echo " "
 echo " "
 
-# Function: Pause
-function pause(){
-   read -p "$*"
-}
-
-pause "Press enter to continue... "
