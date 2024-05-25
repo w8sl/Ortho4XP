@@ -1,6 +1,6 @@
 #! /bin/bash
 
-#Uncomment the next line for a complete install on macOS, comment for PythonVenv only install
+#Uncomment the next line for a complete install on macOS
 
 #brew install gdal python@3.11 python-tk@3.11 proj spatialindex p7zip
 
@@ -26,15 +26,15 @@ pip install scikit-fmm
 # 6. DONE
 
 echo " "
-echo "Preparation complete!"
+echo "Python 3.11 virtual environment has been created in $SCRIPT_DIR/venv-ortho directory"
+echo " "
+echo "Installed packages:"
+pip list
+echo " "
+echo "GDAL version:"
+gdal-config --version
+echo " "
 echo " "
 echo "Use $SCRIPT_DIR/z_Start_O4XP_PythonVenv.sh to start O4XP"
 echo " "
 echo " "
-
-# Function: Pause
-function pause(){
-   read -p "$*"
-}
-
-pause "Press enter to continue... "
