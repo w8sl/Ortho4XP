@@ -28,14 +28,12 @@ pip install scikit-fmm
 echo " "
 
 if [ -d "$venv_path/bin" ]; then
-  echo "Python virtual environment has been installed in $venv_path directory"
+  echo "$(python --version) virtual environment has been created in $venv_path directory"
 fi
 
 echo " "
-echo "Python version:"
-python --version
-echo " "
 echo "Installed packages:"
+echo " "
 pip list
 echo " "
 echo "GDAL version:"
@@ -43,5 +41,4 @@ gdal-config --version
 echo " "
 echo " "
 echo "Use $SCRIPT_DIR/z_Start_O4XP_PythonVenv.sh to start O4XP"
-echo " "
 echo " "
