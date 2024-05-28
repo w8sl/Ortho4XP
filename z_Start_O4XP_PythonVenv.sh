@@ -12,7 +12,7 @@ if [ ! -f "$SCRIPT_DIR/Ortho4XP.py" ]; then
   exit 1 
 fi
 
-if [ ! -f $venv_path ]; then
+if [ ! -d $venv_path ]; then
   echo " "
   echo "Virtual environment not available. Install Python venv!"
   echo " "
