@@ -1,21 +1,35 @@
 #! /bin/bash
 
-if ! [ -x "$(command -v brew)" ]; then
-  echo 'Homebrew is required but is not installed or is not in PATH! See: https://brew.sh' >&2
-  exit 1
-fi
-
 SCRIPT_DIR=$(cd -- "$(dirname -- "${BASH_SOURCE[0]}")" &> /dev/null && pwd)
 
 venv_path=$SCRIPT_DIR/venv-ortho
 
-if [ -f "$SCRIPT_DIR/Ortho4XP.py" ]; then
-  echo " "
-else
+if [ ! -f "$SCRIPT_DIR/Ortho4XP.py" ]; then
   echo " "
   echo "Error: file Ortho4XP.py not found!"
   echo " "
   echo "Place z_Install_O4XP_macOS_Python3.11_Venv.sh in the main O4XP direcory !"
+  echo " "
+  exit 1 
+fi
+
+
+if [[ "$OSTYPE" == "darwin"* ]]; then
+   echo "Mac OSX"
+fi
+
+if ! [ -x "$(command -v brew)" ]; then
+   echo "Homebrew is required but is not installed or is not in PATH!"
+   echo "Install Homebrew. Read the terminal messages carefully and follow the PATH setting instructions"  
+   echo "See: https://brew.sh"
+   exit 1
+fi
+
+if [! -f "$SCRIPT_DIR/Ortho4XP.py" ]; then
+  echo " "
+  echo "Error: file \"Ortho4XP.py\" not found!"
+  echo " "
+  echo "Place \"z_Install_O4XP_macOS_Python3.11_Venv.sh\" in the main O4XP direcory !"
   echo " "
   exit 1 
 fi
@@ -33,10 +47,9 @@ package_exists(){
 
 package_exists python@3.11
 string="$(which python3.11)"
-if [[ $string == *"homebrew"* ]]; then
+if [[ $string != *"homebrew"* ]]; then
   echo " "
-else
-  echo "Python installed by Homebrew is required. Remove alternative Python from PATH!"
+  echo "Python installed via Homebrew is required. Remove alternative Python from PATH!"
   exit 1
 fi
 package_exists gdal
