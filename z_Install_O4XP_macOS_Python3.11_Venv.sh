@@ -13,25 +13,19 @@ if [ ! -f "$SCRIPT_DIR/Ortho4XP.py" ]; then
   exit 1 
 fi
 
-
-if [[ "$OSTYPE" == "darwin"* ]]; then
-   echo "Mac OSX"
-fi
-
-if ! [ -x "$(command -v brew)" ]; then
-   echo "Homebrew is required but is not installed or is not in PATH!"
-   echo "Install Homebrew. Read the terminal messages carefully and follow the PATH setting instructions"  
-   echo "See: https://brew.sh"
+if [[ "$OSTYPE" != "darwin"* ]]; then
+   echo "This script is for macOS only!"
    exit 1
 fi
 
-if [! -f "$SCRIPT_DIR/Ortho4XP.py" ]; then
-  echo " "
-  echo "Error: file \"Ortho4XP.py\" not found!"
-  echo " "
-  echo "Place \"z_Install_O4XP_macOS_Python3.11_Venv.sh\" in the main O4XP direcory !"
-  echo " "
-  exit 1 
+# Semi-automated install for macOS
+if ! [ -x "$(command -v brew)" ]; then
+   echo " "
+   echo "Homebrew is required but is not installed or is not in PATH!"
+   echo "Install Homebrew. Read the terminal messages carefully and follow the PATH setting instructions!"  
+   echo "See included Install_Instructions.txt and: https://brew.sh"
+   echo " "
+   exit 1
 fi
 
 package_exists(){
@@ -50,6 +44,8 @@ string="$(which python3.11)"
 if [[ $string != *"homebrew"* ]]; then
   echo " "
   echo "Python installed via Homebrew is required. Remove alternative Python from PATH!"
+  echo "See included Install_Instructtions.txt for more information"
+  echo " "
   exit 1
 fi
 package_exists gdal
@@ -58,28 +54,29 @@ package_exists proj
 package_exists spatialindex
 package_exists p7zip
 
+# Remove existing venv
 
 if [ -d $venv_path ]; then
   echo "Removing existing venv: $venv_path"
   rm -rf $venv_path
 fi
 
-# 1. Create a Python virtual environment
+# Create a Python virtual environment
 
 python3.11 -m venv $venv_path
 
-# 2. Activate Python venv
+# Activate Python venv
 
 source $venv_path/bin/activate
 
-# 3. Install packages with pip
+# Install packages with pip
 
 cd $SCRIPT_DIR
 pip install -r requirements.txt
 pip install gdal=="$(gdal-config --version).*"
 pip install scikit-fmm
 
-# 6. DONE
+# DONE
 
 echo " "
 
