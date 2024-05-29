@@ -98,7 +98,7 @@ pip install build
 
 # Download scikit-fmm's "meson" branch, compile and install it
 
-git clone -b meson https://github.com/scikit-fmm/scikit-fmm.git $venv_path/scikit-fmm
+git clone https://github.com/scikit-fmm/scikit-fmm.git $venv_path/scikit-fmm
 
 python -m build $venv_path/scikit-fmm
 
