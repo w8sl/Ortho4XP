@@ -94,15 +94,6 @@ source $venv_path/bin/activate
 cd $SCRIPT_DIR
 
 pip install -I -r requirements.txt
-pip install build
-
-# Download scikit-fmm's "meson" branch, compile and install it
-
-git clone https://github.com/scikit-fmm/scikit-fmm.git $venv_path/scikit-fmm
-
-python -m build $venv_path/scikit-fmm
-
-pip install $venv_path/scikit-fmm
 
 # DONE
 
