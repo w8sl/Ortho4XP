@@ -94,7 +94,6 @@ source $venv_path/bin/activate
 cd $SCRIPT_DIR
 
 pip install -I -r requirements.txt
-pip install scikit-fmm
 
 # DONE
 
