@@ -14,32 +14,36 @@ Linux (Ubuntu/Debian-based, names might slightly differ for other distros)
 sudo apt-get install python3 python3-pip python3-requests python3-numpy python3-pyproj python3-gdal python3-shapely python3-rtree python3-pil python3-pil.imagetk p7zip-full libnvtt-bin freeglut3 gdal-bin 
 
 Python 3.11 and below:
+
 sudo apt-get install python3-scikit-fmm
 
 Python 3.12:
-Use included z_Install_O4XP_PythonVenv.sh script
 
+Run:
+chmod +x z_Install_O4XP_Python3.12_Venv.sh
+chmod +x z_Start_O4XP_PythonVenv.sh
+
+Install venv:
+z_Install_O4XP_Python3.12_Venv.sh
+
+Use "z_Start_O4XP_PythonVenv.sh" to run O4XP
+
+Both script will find working directory automatically. Just drag-and_drop into terminal
 
 Arch-based distributions
 
 sudo pacman -S python python-pip python-requests python-numpy python-pyproj python-gdal python-shapely python-rtree python-pillow p7zip freeglut tk podofo netcdf mariadb hdf5 cfitsio postgresql
 
-(if some of them were not packaged for your distro you can use pip instead, like say, pip install pyproj)
+Run:
+chmod +x z_Install_O4XP_Python3.12_Venv.sh
+chmod +x z_Start_O4XP_PythonVenv.sh
 
-On Arch-based distributions it is necessary to build scikit-fmm from source:
+Install venv:
+z_Install_O4XP_Python3.12_Venv.sh
 
-Python 3.11:
+Use "z_Start_O4XP_PythonVenv.sh" to run O4XP
 
-git clone https://github.com/scikit-fmm/scikit-fmm.git
-
-cd scikit-fmm
-
-python setup.py install
-
-
-Python 3.12:
-
-Use included z_Install_O4XP_PythonVenv.sh script
+Both script will find working directory automatically. Just drag-and_drop into terminal
 
 
 Windows
@@ -85,7 +89,6 @@ https://learn.microsoft.com/en-US/cpp/windows/latest-supported-vc-redist?view=ms
 4) Change directory to Ortho4XP folder (freshly downloaded from Github) and launch:
 
 pip install -r requirements.txt
-pip install scikit-fmm
 
 4) Open Command Prompt window as administrator and execute the following command:
 
@@ -150,3 +153,15 @@ cd /path/to/Ortho4XP (cd, space, drag-and-drop Ortho4XP folder into the terminal
 
 7) Launch Ortho4XP
 python3.11 Ortho4XP.py
+-----------------------------------------------------------------------------------------------
+Alternative install on macOS using Python venv:
+
+Open the terminal
+
+type chmod +x, space, drag-and-drop z_Install_O4XP_Python3.11_Venv.sh into the terminal window, enter
+
+type chmod +x, space, drag-and-drop z_Start_O4XP_PythonVenv.sh into the terminal window, enter
+
+drag-and-drop z_Install_O4XP_Python3.11_Venv.sh into the terminal window, enter
+
+Follow the terminal output!
