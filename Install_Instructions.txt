@@ -89,7 +89,6 @@ https://learn.microsoft.com/en-US/cpp/windows/latest-supported-vc-redist?view=ms
 4) Change directory to Ortho4XP folder (freshly downloaded from Github) and launch:
 
 pip install -r requirements.txt
-pip install scikit-fmm
 
 4) Open Command Prompt window as administrator and execute the following command:
 
