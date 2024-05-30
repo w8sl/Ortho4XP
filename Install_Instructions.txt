@@ -2,21 +2,48 @@ NOTICE 1. Windows users: Only use Notepad++ or an equivalent decent editor
 to read or modify Ortho4XP related files. Notepad doesn't understand linux
 line-ends and will create a mess.
 ------------------------------------------------------------------------
-
+NOTICE 2. A copy of X-Plane 12 is required.
+The "custom_overlay_src" variable should be set to the: "../X-Plane 12/Global Scenery/X-Plane 12 Global Scenery" directory
+------------------------------------------------------------------------
 The following instructions are for the script install :
 
 
 Linux (Ubuntu/Debian-based, names might slightly differ for other distros)
 -----
 
-sudo apt-get install python3 python3-pip python3-requests python3-numpy python3-pyproj python3-gdal python3-shapely python3-rtree python3-pil python3-pil.imagetk p7zip-full libnvtt-bin freeglut3 gdal-bin imagemagick
+sudo apt-get install python3 python3-pip python3-requests python3-numpy python3-pyproj python3-gdal python3-shapely python3-rtree python3-pil python3-pil.imagetk p7zip-full libnvtt-bin freeglut3 gdal-bin 
 
+Python 3.11 and below:
+
+sudo apt-get install python3-scikit-fmm
+
+Python 3.12:
+
+Run:
+chmod +x z_Install_O4XP_Python3.12_Venv.sh
+chmod +x z_Start_O4XP_PythonVenv.sh
+
+Install venv:
+z_Install_O4XP_Python3.12_Venv.sh
+
+Use "z_Start_O4XP_PythonVenv.sh" to run O4XP
+
+Both script will find working directory automatically. Just drag-and_drop into terminal
 
 Arch-based distributions
 
-sudo pacman -S python python-pip python-requests python-numpy python-pyproj python-gdal python-shapely python-rtree python-pillow p7zip freeglut tk imagemagick
+sudo pacman -S python python-pip python-requests python-numpy python-pyproj python-gdal python-shapely python-rtree python-pillow p7zip freeglut tk podofo netcdf mariadb hdf5 cfitsio postgresql
 
-(if some of them were not packaged for your distro you can use pip instead, like say, pip install pyproj)
+Run:
+chmod +x z_Install_O4XP_Python3.12_Venv.sh
+chmod +x z_Start_O4XP_PythonVenv.sh
+
+Install venv:
+z_Install_O4XP_Python3.12_Venv.sh
+
+Use "z_Start_O4XP_PythonVenv.sh" to run O4XP
+
+Both script will find working directory automatically. Just drag-and_drop into terminal
 
 
 Windows
@@ -26,11 +53,22 @@ Windows
 
 Just select one for your Windows OS, there is no benefit in our case to
 download the pretty lastest version of Python, since you might get difficulties
-further down to find modules already built for it. As of 02/2024, Python 3.11. is recommended.
+further down to find modules already built for it. As of 04/2024, Python 3.11. is recommended.
 
-Make sure during the process that "pip" (package management system for Python)
-is installed along and made accessible from your PATH [there is a checkbox
-for this during the Python install process]. Check the "Add Python to environment variables" option.
+During the installation, check the following options:
+
+"Use admin privileges when installing py.exe"
+"Add python.exe to PATH"
+->Customize installation, Optional Features:
+"pip"
+"tcl/tk and IDLE"
+"py launcher"
+"for all users"
+->Next, Advanced Options:
+"Install Python 3.11 for all users"
+"Add Python to environment variables"
+"Precompile standard library"
+
 
 2) Download binary wheel for GDAL from https://github.com/cgohlke/geospatial-wheels/releases
 
@@ -40,66 +78,90 @@ As an example, if Python 3.11.*  was selected at Step 1) above and you
 have a 64bit windows, then you would choose file that contains -cp311- and _amd64
 within filename.
 
+
 Download and install The Microsoft Visual C++ Redistributable packages for Visual Studio 2022:
 
 https://learn.microsoft.com/en-US/cpp/windows/latest-supported-vc-redist?view=msvc-170
 
 
-3) From a command window launch:
-
-pip install --upgrade pip  [if this goes wrong you probably missed the last point in 1)]
+3) Open Command Prompt window as a standard user
 
 4) Change directory to Ortho4XP folder (freshly downloaded from Github) and launch:
 
 pip install -r requirements.txt
 
-4) Execute the following command as administrator:
+4) Open Command Prompt window as administrator and execute the following command:
 
 pip install /path to GDAL-***.whl file, downloaded at Step 2)
 
-In order to use the build geotiff feature of the custom_zl map or custom_dem source you will need to
+In order to use the built-in GeoTIFF feature of the custom_zl map or custom_dem source you will need to
 add the directory containing gdal.py, gdal_translate and gdalwarp (***/python**/lib/site-packages/osgeo/)
 into the system PATH variable.
 
-You should be done. Open a command window in the Ortho4XP directory 
+You should be done. Open Command Prompt window in the Ortho4XP directory 
 and launch "python Ortho4XP.py".
 
 
 macOS
 ------------------------------------------------------------------------------------------
 IMPORTANT NOTICE
-Ortho4XP uses Python installed via Homebrew. 
-Access path to Homebrew must be set correctly - see 3)
+Ortho4XP uses Python installed via Homebrew. Access path to Homebrew should be on the top of the list. 
+For a fresh install - just go to 1) and proceed with the installation. 
+
+If other version of Python has been installed previously, it may be necessary to manually edit hidden file ".zprofile" in your user directory.
+The only content of ".zprofile" file, required for proper functionality of Homebrew and Python should be:
+
+Apple Silicon Mac:
+eval $(/opt/homebrew/bin/brew shellenv)
+
+Intel Mac:
+eval $(/usr/local/bin/brew shellenv)
 ------------------------------------------------------------------------------------------
 
-1) In a Terminal window, install Xcode Command Line Tools:
-
-xcode-select --install   
-
-2) Install Homebrew (brew.sh), a package manager:
+1) In a Terminal window, install Homebrew (https://brew.sh), a package manager:
 
 /bin/bash -c "$(curl -fsSL https://raw.githubusercontent.com/Homebrew/install/HEAD/install.sh)"
 
-3) Set up PATH. Follow instructions given by Homebrew installer. On M1/M2/M3 Mac it should look like this:  
+2) Read the terminal messages carefully and follow the PATH setting instructions ! 
+   It should look like this:  
 
    Run these two commands in your terminal to add Homebrew to your PATH (replace ??? with your user account name):
 
+    Apple Silicon Mac:
     echo 'eval "$(/opt/homebrew/bin/brew shellenv)"' >> /Users/???/.zprofile
     eval "$(/opt/homebrew/bin/brew shellenv)"
-   
+
+    Intel Mac:
+    echo 'eval "$(/usr/local/bin/brew shellenv)"' >> /Users/???/.zprofile
+    eval "$(/usr/local/bin/brew shellenv)"
+
    Restart the terminal and verify that the path to Homebrew is at the beginning of the list:
     
     echo $PATH
 
-4) On M1/M2/M3 Mac - if not done already, install Rosetta:
+3) On Apple Silicon Mac (if not done already) install Rosetta:
 
 softwareupdate --install-rosetta
    
 4) Go to the Ortho4XP folder
-cd /path/to/Ortho4XP
+cd /path/to/Ortho4XP (cd, space, drag-and-drop Ortho4XP folder into the terminal window, enter)
 
 5) Execute the install script (you have to run "chmod +x ./install_mac.sh" first)
 ./install_mac.sh
 
-6) Launch Ortho4XP
+6) Double-click on each of the executable files in Ortho4XP-master/Utils/mac folder and confirm opening in Security&Privacy settings
+
+7) Launch Ortho4XP
 python3.11 Ortho4XP.py
+-----------------------------------------------------------------------------------------------
+Alternative install on macOS using Python venv:
+
+Open the terminal
+
+type chmod +x, space, drag-and-drop z_Install_O4XP_Python3.11_Venv.sh into the terminal window, enter
+
+type chmod +x, space, drag-and-drop z_Start_O4XP_PythonVenv.sh into the terminal window, enter
+
+drag-and-drop z_Install_O4XP_Python3.11_Venv.sh into the terminal window, enter
+
+Follow the terminal output!
