@@ -4,3 +4,4 @@ pyproj
 requests
 Rtree
 shapely
+scikit-fmm
