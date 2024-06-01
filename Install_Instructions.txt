@@ -123,14 +123,14 @@ cd /path/to/Ortho4XP (cd, space, drag-and-drop Ortho4XP folder into the terminal
 7) Launch Ortho4XP
 python3.11 Ortho4XP.py
 -----------------------------------------------------------------------------------------------
-Alternative install on macOS using Python venv:
+Semi-automated, guided  Ortho4XP-Python 3.12 venv installation on macOS:
 
 Open the terminal
 
-type chmod +x, space, drag-and-drop z_Install_O4XP_Python3.11_Venv.sh into the terminal window, enter
+type chmod +x, space, drag-and-drop z_Install_O4XP_Python3.12_Venv.sh into the terminal window, enter
 
 type chmod +x, space, drag-and-drop z_Start_O4XP_PythonVenv.sh into the terminal window, enter
 
-drag-and-drop z_Install_O4XP_Python3.11_Venv.sh into the terminal window, enter
+drag-and-drop z_Install_O4XP_Python3.12_Venv.sh into the terminal window, enter
 
-Follow the terminal output!
+Follow the terminal output messages for instructions!
