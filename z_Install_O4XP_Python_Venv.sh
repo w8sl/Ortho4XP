@@ -194,9 +194,9 @@ else
   exit 1
 fi
 
-# Finding python command on older distrivbutions
+# Finding python command on older distributions
 
-if ! [ -x "$(command -v python$py_ver)" ]; then
+if ! [ -x "$(command -v python$py_ver)" ] && [[ "$OSTYPE" == "linux-gnu"* ]]; then
       if  [ -x "$(command -v python)" ]; then
           py_ver=""
       else
