@@ -159,16 +159,16 @@ read -p "Install for distribution based on Arch? (a) Debian? (d) Skip installati
 echo " "
 case $ads in
 	s ) echo "ok, we will proceed without installation of system packages";;
-        a ) echo "Updating system and installing packages for Arch-based distribution";
-	    py_ver="3.12";
-	    sudo pacman -Syu;
+    a ) echo "Updating system and installing packages for Arch-based distribution";
+		py_ver="3.12";
+		sudo pacman -Syu
         sudo $Arch;;
 	d ) echo "Updating system and installing packages for Debian-based distribution";
-	    py_ver="3";
-	    sudo apt-get update;
-            sudo $Debian;;		
+		py_ver="3";
+		sudo apt-get update
+        sudo $Debian;;		
 	* ) echo invalid response;
-	    exit 1;;
+		exit 1;;
 esac
 
 
@@ -179,27 +179,29 @@ read -p "Do you want to run update and install system packages for $OS required 
 case $yn in
 	n ) echo "ok, we will proceed without installation of system packages";;
 	y ) echo "Updating system and installing packages required by O4XP";
-	    $update;
-            sudo $system_packages;;
+		 $update
+         sudo $system_packages;;
 	* ) echo invalid response;
-	    exit 1;;
+		exit 1;;
 esac
 
 fi
 
 echo " "
+      
+else 
+  echo "Unsupported system!"
+  exit 1
+fi
 
-   if ! [ -x "$(command -v python$py_ver)" ]; then
+# Finding python command on older distrivbutions
+
+if ! [ -x "$(command -v python$py_ver)" ]; then
       if  [ -x "$(command -v python)" ]; then
           py_ver=""
       else
           py_ver="3"
       fi   
-   fi
-   
-else 
-  echo "Unsupported system!"
-  exit 1
 fi
 
 # Remove existing venv
