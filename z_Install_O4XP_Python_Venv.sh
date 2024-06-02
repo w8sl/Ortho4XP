@@ -179,8 +179,8 @@ read -p "Do you want to run update and install system packages for $OS required 
 case $yn in
 	n ) echo "ok, we will proceed without installation of system packages";;
 	y ) echo "Updating system and installing packages required by O4XP";
-		 $update
-         sudo $system_packages;;
+		$update
+                sudo $system_packages;;
 	* ) echo invalid response;
 		exit 1;;
 esac
