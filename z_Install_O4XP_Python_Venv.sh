@@ -130,8 +130,10 @@ fi
       py_ver="3"
       system_packages=$Debian
  elif [[ "$OS" == *"Arch"* ]]; then
+      py_ver="3.12"
       system_packages=$Arch
  elif [[ "$OS" == *"Manjaro"* ]]; then
+      py_ver="3.12"
       system_packages=$Arch 
  else
      OS="Unknown"
