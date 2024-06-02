@@ -215,6 +215,10 @@ cd $SCRIPT_DIR
 
 pip install -I -r requirements.txt
 
+if [[ "$OSTYPE" == "darwin"* ]] && [[ $py_ver != "3.12" ]] ; then
+   pip install -I gdal==$(gdal-config --version)
+fi
+
 echo " "
 
 if [ -d "$venv_path/bin" ]; then
