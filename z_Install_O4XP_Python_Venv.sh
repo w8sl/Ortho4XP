@@ -110,12 +110,13 @@ fi
 
 
  Ubuntu24="apt-get install python3 python3-pip python3-venv python3-gdal python3-pil.imagetk p7zip-full libnvtt-bin freeglut3-dev gdal-bin"
- Debian="apt install python3 python3-venv python3-pip python3-gdal python3-pil.imagetk p7zip-full libnvtt-bin freeglut3 gdal-bin"
+ Debian="apt-get install python3 python3-venv python3-pip python3-gdal python3-pil.imagetk p7zip-full libnvtt-bin freeglut3 gdal-bin"
  Arch="pacman -S python python-pip python-gdal p7zip freeglut tk podofo netcdf mariadb hdf5 cfitsio postgresql"
 
  
  if [[ "$OS" == *"Ubuntu"* ]]; then
    py_ver="3"
+   update="sudo apt-get update"
    if [[ "$VER" == *"24"* ]]; then
       system_packages=$Ubuntu24
    else
@@ -124,16 +125,20 @@ fi
  
  elif [[ "$OS" == *"Mint"* ]]; then
       py_ver="3"
+      update="sudo apt-get update"
       system_packages=$Debian
  
  elif [[ "$OS" == *"Debian"* ]]; then
       py_ver="3"
+      update="sudo apt-get update"
       system_packages=$Debian
  elif [[ "$OS" == *"Arch"* ]]; then
       py_ver="3.12"
+      update="sudo pacman -Syu"
       system_packages=$Arch
  elif [[ "$OS" == *"Manjaro"* ]]; then
       py_ver="3.12"
+      update="sudo pacman -Syu"
       system_packages=$Arch 
  else
      OS="Unknown"
@@ -149,17 +154,19 @@ fi
 
 if [[ "$OS" == "Unknown" ]]; then
 echo " "
-echo "Do you want to install system packages required by Ortho4XP ?"
+echo "Do you want to run update and install system packages required by O4XP ?"
 read -p "Install for distribution based on Arch? (a) Debian? (d) Skip installation? (s) " ads 
 echo " "
 case $ads in
-	s ) echo ok, we will proceed without installation of system packages;;
-        a ) echo Installing system packages for Arch-based distribution ;
+	s ) echo "ok, we will proceed without installation of system packages";;
+        a ) echo "Updating system and installing packages for Arch-based distribution";
 		py_ver="3.12";
-		sudo $Arch;;
-	d ) echo Installing system packages for Debian-based distribution ;
+		sudo pacman -Syu
+        sudo $Arch;;
+	d ) echo "Updating system and installing packages for Debian-based distribution";
 		py_ver="3";
-		sudo $Debian;;		
+		sudo apt-get update
+        sudo $Debian;;		
 	* ) echo invalid response;
 		exit 1;;
 esac
@@ -167,12 +174,13 @@ esac
 
 else
 
-read -p "Do you want to install system packages for $OS required by Ortho4XP? (y/n) " yn
+read -p "Do you want to run update and install system packages for $OS required by O4XP? (y/n) " yn
 
 case $yn in
-	n ) echo ok, we will proceed without installation of system packages;;
-	y ) echo Installing system packages ;
-		sudo $system_packages;;
+	n ) echo "ok, we will proceed without installation of system packages";;
+	y ) echo "Updating system and installing packages required by O4XP";
+		 $update
+         sudo $system_packages;;
 	* ) echo invalid response;
 		exit 1;;
 esac
