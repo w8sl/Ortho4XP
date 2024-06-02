@@ -1,14 +1,16 @@
 #! /bin/bash
 
+py_ver="3.12"
+
 SCRIPT_DIR=$(cd -- "$(dirname -- "${BASH_SOURCE[0]}")" &> /dev/null && pwd)
 
 venv_path=$SCRIPT_DIR/venv-ortho
 
 if [ ! -f "$SCRIPT_DIR/Ortho4XP.py" ]; then
   echo " "
-  echo "Error: file Ortho4XP.py not found!"
+  echo "Error !"
   echo " "
-  echo "Place z_Install_O4XP_Python3.12_Venv.sh in the main O4XP direcory !"
+  echo "Place z_Install_O4XP_Python_Venv.sh in the main O4XP direcory !"
   echo " "
   exit 1 
 fi
@@ -47,9 +49,12 @@ package_exists(){
     fi
 }
 
-package_exists python@3.12
+ if ! [ -x "$(command -v python$py_ver)" ]; then
+   echo "Python $py_ver not found! Installing ..."
+   brew install python@$py_ver
+ fi 
 
- if [[ "$(which python3.12)" != *"homebrew"* ]]; then
+ if [[ "$(which python$py_ver)" != *"homebrew"* ]]; then
    echo " "
    echo "Python installed via Homebrew is required !" 
    echo "Remove the PATH for Python in the hidden file .zprofile in your user directory !"
@@ -64,28 +69,124 @@ package_exists python@3.12
    echo " "
    exit 1
  fi
-package_exists gdal
-package_exists python-tk@3.12
+
+if ! [ -x "$(command -v gdalwarp)" ]; then
+   echo "GDAL not found! Installing..."
+   brew install gdal
+fi
+
+if ! [ -x "$(command -v 7z)" ]; then
+   echo "p7zip not found! Installing..."
+   brew install p7zip
+fi
+
+package_exists python-tk@$py_ver
 package_exists proj
 package_exists spatialindex
-package_exists p7zip
+
+# Semi-automated, guided installation for Linux
 
 elif [[ "$OSTYPE" == "linux-gnu"* ]]; then
-   echo "LINUX"
-   
-   if ! [ -x "$(command -v python3.12)" ]; then
-    echo " "
-    echo "Python 3.12 is not installed. Aborting! "
-    echo " "
-    exit 1
-   fi
-   if ! [ -x "$(command -v gdalwarp)" ]; then
-    echo " "
-    echo "Install system packages required by Ortho4XP as per included Install_Instructions.txt!"
-    echo " "
-    exit 1
-   fi
 
+ 
+if type lsb_release >/dev/null 2>&1; then
+    # linuxbase.org
+    OS=$(lsb_release -si)
+    VER=$(lsb_release -sr)
+elif [ -f /etc/lsb-release ]; then
+    # For some versions of Debian/Ubuntu without lsb_release command
+    . /etc/lsb-release
+    OS=$DISTRIB_ID
+    VER=$DISTRIB_RELEASE
+elif [ -f /etc/debian_version ]; then
+    # Older Debian/Ubuntu/etc.
+    OS=Debian
+    VER=$(cat /etc/debian_version)
+
+fi
+
+ echo "Linux $OS"
+ echo "Version: $VER"
+
+
+ Ubuntu24="apt-get install python3 python3-pip python3-venv python3-gdal python3-pil.imagetk p7zip-full libnvtt-bin freeglut3-dev gdal-bin"
+ Debian="apt install python3 python3-venv python3-pip python3-gdal python3-pil.imagetk p7zip-full libnvtt-bin freeglut3 gdal-bin"
+ Arch="pacman -S python python-pip python-gdal p7zip freeglut tk podofo netcdf mariadb hdf5 cfitsio postgresql"
+
+ 
+ if [[ "$OS" == *"Ubuntu"* ]]; then
+   py_ver="3"
+   if [[ "$VER" == *"24"* ]]; then
+      system_packages=$Ubuntu24
+   else
+      system_packages=$Debian
+   fi
+ 
+ elif [[ "$OS" == *"Mint"* ]]; then
+      py_ver="3"
+      system_packages=$Debian
+ 
+ elif [[ "$OS" == *"Debian"* ]]; then
+      py_ver="3"
+      system_packages=$Debian
+ elif [[ "$OS" == *"Arch"* ]]; then
+      system_packages=$Arch
+ elif [[ "$OS" == *"Manjaro"* ]]; then
+      system_packages=$Arch 
+ else
+     OS="Unknown"
+ fi
+
+
+if ! [ -x "$(command -v gdalwarp)" ]; then
+    echo " "
+    echo "It looks like system packages required by Ortho4XP are not installed!"
+    echo " "
+fi
+
+
+if [[ "$OS" == "Unknown" ]]; then
+echo " "
+echo "Do you want to install system packages required by Ortho4XP ?"
+read -p "Install for distribution based on Arch? (a) Debian? (d) Skip installation? (s) " ads 
+echo " "
+case $ads in
+	s ) echo ok, we will proceed without installation of system packages;;
+        a ) echo Installing system packages for Arch-based distribution ;
+		py_ver="3.12";
+		sudo $Arch;;
+	d ) echo Installing system packages for Debian-based distribution ;
+		py_ver="3";
+		sudo $Debian;;		
+	* ) echo invalid response;
+		exit 1;;
+esac
+
+
+else
+
+read -p "Do you want to install system packages for $OS required by Ortho4XP? (y/n) " yn
+
+case $yn in
+	n ) echo ok, we will proceed without installation of system packages;;
+	y ) echo Installing system packages ;
+		sudo $system_packages;;
+	* ) echo invalid response;
+		exit 1;;
+esac
+
+fi
+
+echo " "
+
+   if ! [ -x "$(command -v python$py_ver)" ]; then
+      if  [ -x "$(command -v python)" ]; then
+          py_ver=""
+      else
+          py_ver="3"
+      fi   
+   fi
+   
 else 
   echo "Unsupported system!"
   exit 1
@@ -98,9 +199,9 @@ if [ -d $venv_path ]; then
   rm -rf $venv_path
 fi
 
-# Create a Python 3.12 virtual environment
+# Create a Python virtual environment
 
-python3.12 -m venv --system-site-packages $venv_path
+python$py_ver -m venv --system-site-packages $venv_path
 
 # Activate Python venv
 
@@ -112,8 +213,6 @@ cd $SCRIPT_DIR
 
 pip install -I -r requirements.txt
 
-# DONE
-
 echo " "
 
 if [ -d "$venv_path/bin" ]; then
@@ -123,8 +222,6 @@ fi
 echo " "
 echo "Installed packages:"
 pip list
-echo " "
-echo "GDAL version: $(gdal-config --version)"
 echo " "
 echo " "
 echo "Use $SCRIPT_DIR/z_Start_O4XP_PythonVenv.sh to start O4XP"
