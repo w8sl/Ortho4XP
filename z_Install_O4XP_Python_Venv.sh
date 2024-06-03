@@ -1,5 +1,6 @@
 #! /bin/bash
 
+# Define Python version (tested with 3.10; 3.11; 3.12)
 py_ver="3.12"
 
 SCRIPT_DIR=$(cd -- "$(dirname -- "${BASH_SOURCE[0]}")" &> /dev/null && pwd)
@@ -108,15 +109,15 @@ fi
  echo "Linux $OS"
  echo "Version: $VER"
 
-
- Ubuntu24="apt-get install python3 python3-pip python3-venv python3-gdal python3-pil.imagetk p7zip-full libnvtt-bin freeglut3-dev gdal-bin"
- Debian="apt-get install python3 python3-venv python3-pip python3-gdal python3-pil.imagetk p7zip-full libnvtt-bin freeglut3 gdal-bin"
- Arch="pacman -S python python-pip python-gdal p7zip freeglut tk podofo netcdf mariadb hdf5 cfitsio postgresql"
+# Required system packages
+ Ubuntu24="apt install python3 python3-pip python3-venv python3-gdal python3-pil.imagetk p7zip-full libnvtt-bin freeglut3-dev gdal-bin gcc"
+ Debian="apt install python3 python3-venv python3-pip python3-gdal python3-pil.imagetk p7zip-full libnvtt-bin freeglut3 gdal-bin gcc"
+ Arch="pacman -S python python-pip python-gdal p7zip freeglut tk podofo netcdf mariadb hdf5 cfitsio postgresql gcc"
 
  
  if [[ "$OS" == *"Ubuntu"* ]]; then
    py_ver="3"
-   update="sudo apt-get update"
+   update="sudo apt update"
    if [[ "$VER" == *"24"* ]]; then
       system_packages=$Ubuntu24
    else
@@ -125,12 +126,12 @@ fi
  
  elif [[ "$OS" == *"Mint"* ]]; then
       py_ver="3"
-      update="sudo apt-get update"
+      update="sudo apt update"
       system_packages=$Debian
  
  elif [[ "$OS" == *"Debian"* ]]; then
       py_ver="3"
-      update="sudo apt-get update"
+      update="sudo apt update"
       system_packages=$Debian
  elif [[ "$OS" == *"Arch"* ]]; then
       py_ver="3.12"
@@ -165,7 +166,7 @@ case $ads in
             sudo $Arch;;
 	d ) echo "Updating system and installing packages for Debian-based distribution";
             py_ver="3"; 
-	    sudo apt-get update;
+	    sudo apt update;
             sudo $Debian;;		
 	* ) echo invalid response;
 	    exit 1;;
@@ -194,7 +195,7 @@ else
   exit 1
 fi
 
-# Finding python command on older distributions
+# Finding python command on "Unknown" distribution
 
 if ! [ -x "$(command -v python$py_ver)" ] && [[ "$OSTYPE" == "linux-gnu"* ]]; then
       if  [ -x "$(command -v python)" ]; then
