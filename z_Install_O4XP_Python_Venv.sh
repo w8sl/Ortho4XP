@@ -113,12 +113,12 @@ package_exists(){
                       echo " ";
 	              exit 1;;
 	          y ) echo " ";
-	              echo "Renaming the original file to .zprofile.bak";
+	              echo "Renaming the original file to .zprofile_bak";
 	              echo " ";
 	              echo "Saving changes to:  /Users/$USER/.zprofile";
 	              
 	              if [ -f "/Users/$USER/.zprofile" ]; then                   
-                      mv /Users/$USER/.zprofile /Users/$USER/.zprofile.bak
+                      mv /Users/$USER/.zprofile /Users/$USER/.zprofile_bak
                       fi
 	              
 	              update_path;
