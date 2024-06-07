@@ -11,7 +11,7 @@ The following instructions are for the script install :
 Linux (Ubuntu/Debian-based, names might slightly differ for other distros)
 -----
 
-sudo apt-get install python3 python3-pip python3-requests python3-numpy python3-pyproj python3-gdal python3-shapely python3-rtree python3-pil python3-pil.imagetk p7zip-full libnvtt-bin freeglut3 gdal-bin 
+sudo apt-get install python3 python3-pip python3-requests python3-numpy python3-pyproj python3-gdal python3-shapely python3-rtree python3-pil python3-pil.imagetk p7zip-full libnvtt-bin freeglut3-dev gdal-bin gcc
 
 Python 3.11 and below:
 
@@ -20,11 +20,11 @@ sudo apt-get install python3-scikit-fmm
 Python 3.12:
 
 Run:
-chmod +x z_Install_O4XP_Python3.12_Venv.sh
+chmod +x z_Install_O4XP_Python_Venv.sh
 chmod +x z_Start_O4XP_PythonVenv.sh
 
 Install venv:
-z_Install_O4XP_Python3.12_Venv.sh
+z_Install_O4XP_Python_Venv.sh
 
 Use "z_Start_O4XP_PythonVenv.sh" to run O4XP
 
@@ -32,14 +32,14 @@ Both scripts will find working directory automatically. Just drag-and_drop into 
 
 Arch-based distributions
 
-sudo pacman -S python python-pip python-requests python-numpy python-pyproj python-gdal python-shapely python-rtree python-pillow p7zip freeglut tk podofo netcdf mariadb hdf5 cfitsio postgresql
+sudo pacman -S python python-pip python-gdal p7zip freeglut tk podofo netcdf mariadb hdf5 cfitsio postgresql gcc
 
 Run:
-chmod +x z_Install_O4XP_Python3.12_Venv.sh
+chmod +x z_Install_O4XP_Python_Venv.sh
 chmod +x z_Start_O4XP_PythonVenv.sh
 
 Install venv:
-z_Install_O4XP_Python3.12_Venv.sh
+z_Install_O4XP_Python_Venv.sh
 
 Use "z_Start_O4XP_PythonVenv.sh" to run O4XP
 
@@ -154,14 +154,15 @@ cd /path/to/Ortho4XP (cd, space, drag-and-drop Ortho4XP folder into the terminal
 7) Launch Ortho4XP
 python3.11 Ortho4XP.py
 -----------------------------------------------------------------------------------------------
-Semi-automated, guided  Ortho4XP-Python 3.12 venv installation on macOS:
+-----------------------------------------------------------------------------------------------
+Semi-automated, guided  Ortho4XP-Python venv installation on macOS:
 
 Open the terminal
 
-type chmod +x, space, drag-and-drop z_Install_O4XP_Python3.12_Venv.sh into the terminal window, enter
+type chmod +x, space, drag-and-drop z_Install_O4XP_Python_Venv.sh into the terminal window, enter
 
 type chmod +x, space, drag-and-drop z_Start_O4XP_PythonVenv.sh into the terminal window, enter
 
-drag-and-drop z_Install_O4XP_Python3.12_Venv.sh into the terminal window, enter
+drag-and-drop z_Install_O4XP_Python_Venv.sh into the terminal window, enter
 
 Follow the terminal output messages for instructions!
