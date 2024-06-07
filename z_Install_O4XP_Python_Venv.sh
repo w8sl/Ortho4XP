@@ -176,9 +176,9 @@ fi
 
 # Required system packages
  
- Debian="apt install python3 python3-venv python3-pip python3-gdal python3-pil.imagetk p7zip-full libnvtt-bin freeglut3-dev gdal-bin gcc"
- Arch="pacman -S python python-pip python-gdal p7zip freeglut tk podofo netcdf mariadb hdf5 cfitsio postgresql gcc"
-
+ Debian="sudo apt install python3 python3-venv python3-pip python3-gdal python3-pil.imagetk p7zip-full libnvtt-bin freeglut3-dev gdal-bin gcc"
+ Arch="sudo pacman -S python python-pip python-gdal p7zip freeglut tk podofo netcdf mariadb hdf5 cfitsio postgresql gcc"
+ Fedora="sudo dnf install python3 python3-devel python3-pip python3-gdal python3-tkinter p7zip freeglut gcc-c++"
  
  if [[ "$OS" == *"Ubuntu"* ]]; then
       py_ver="3"
@@ -204,6 +204,11 @@ fi
       py_ver="3.12"
       update="sudo pacman -Syu"
       system_packages=$Arch 
+ 
+ elif [[ "$OS" == *"Fedora"* ]]; then
+      py_ver="3.12"
+      update="sudo dnf update"
+      system_packages=$Fedora 
 
  else
      OS="Unknown"
@@ -228,11 +233,11 @@ case $ads in
         a ) echo "Updating system and installing packages for Arch-based distribution";
 	    py_ver="3.12";
 	    sudo pacman -Syu;
-            sudo $Arch;;
+            $Arch;;
 	d ) echo "Updating system and installing packages for Debian-based distribution";
             py_ver="3"; 
 	    sudo apt update;
-            sudo $Debian;;		
+            $Debian;;		
 	* ) echo invalid response;
 	    exit 1;;
 esac
@@ -246,9 +251,9 @@ case $yn in
 	n ) echo "ok, we will proceed without installation of system packages";;
 	y ) echo "Updating system and installing packages required by O4XP";
 	    $update;
-            sudo $system_packages;;
+            $system_packages;;
 	* ) echo invalid response;
-		exit 1;;
+            exit 1;;
 esac
 
 fi
