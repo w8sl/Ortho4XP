@@ -21,7 +21,6 @@ Python 3.12:
 
 Run:
 chmod +x z_Install_O4XP_Python_Venv.sh
-chmod +x z_Start_O4XP_PythonVenv.sh
 
 Install venv:
 z_Install_O4XP_Python_Venv.sh
@@ -36,7 +35,6 @@ sudo pacman -S python python-pip python-gdal p7zip freeglut tk podofo netcdf mar
 
 Run:
 chmod +x z_Install_O4XP_Python_Venv.sh
-chmod +x z_Start_O4XP_PythonVenv.sh
 
 Install venv:
 z_Install_O4XP_Python_Venv.sh
@@ -122,6 +120,7 @@ eval $(/usr/local/bin/brew shellenv)
 
 /bin/bash -c "$(curl -fsSL https://raw.githubusercontent.com/Homebrew/install/HEAD/install.sh)"
 
+
 2) Read the terminal messages carefully and follow the PATH setting instructions ! 
    It should look like this:  
 
@@ -135,12 +134,15 @@ eval $(/usr/local/bin/brew shellenv)
     echo 'eval "$(/usr/local/bin/brew shellenv)"' >> /Users/???/.zprofile
     eval "$(/usr/local/bin/brew shellenv)"
 
+
 3) On Apple Silicon Mac (if not done already) install Rosetta:
 
 softwareupdate --install-rosetta
    
+
 4) Go to the Ortho4XP folder
 cd /path/to/Ortho4XP (cd, space, drag-and-drop Ortho4XP folder into the terminal window, enter)
+
 
 5) Copy paste into the terminal window, line by line, hit enter:
 
@@ -149,6 +151,7 @@ brew install gdal python@3.11 proj spatialindex p7zip python-tk@3.11
 pip3.11 install -r ./requirements.txt
 
 pip3.11 install gdal==$(gdal-config --version)
+
 
 6) Run in the terminal:  xattr -dr com.apple.quarantine ./Utils/mac/*
 
@@ -165,28 +168,3 @@ type chmod +x, space, drag-and-drop z_Install_O4XP_Python_Venv.sh into the termi
 drag-and-drop z_Install_O4XP_Python_Venv.sh into the terminal window, enter
 
 Follow the terminal output messages for instructions!
-
-_______________________________________________________________________________________________
-_______________________________________________________________________________________________
-Pyinstaller instructions to create an executable package:
-
-1. Install Python script version of Ortho4XP with all required dependencies
-2. Install Pyinstaller
-3. Run in terminal:
-
-pyinstaller --noconfirm \
-    --paths=src \
-    --add-data="./Utils:./Ortho4XP_Data/Utils" \
-    --add-data="./Extents:./Ortho4XP_Data/Extents" \
-    --add-data="./Filters:./Ortho4XP_Data/Filters" \
-    --add-data="./Licence:./Ortho4XP_Data/Licence" \
-    --add-data="./Patches:./Ortho4XP_Data/Patches" \
-    --add-data="./Previews:./Ortho4XP_Data/Previews" \
-    --add-data="./Providers:./Ortho4XP_Data/Providers" \
-    --add-data="./src:./Ortho4XP_Data/src" \
-    --add-data="Ortho4XP.py:./Ortho4XP_Data/" \
-    --add-data="Ortho4XP.cfg:./Ortho4XP_Data/" \
-    --add-data="community_server.txt:./Ortho4XP_Data/" \
-    --hidden-import=PIL \
-    --collect-submodules=PIL \
-Ortho4XP.py
