@@ -307,6 +307,9 @@ if [ -d "$venv_path/bin" ]; then
   echo "$(python --version) venv has been created in the $venv_path directory"
 fi
 
+# Make "z_Start_O4XP_PythonVenv.sh" an executable file
+chmod +x z_Start_O4XP_PythonVenv.sh
+
 echo " "
 echo "Installed packages:"
 pip list
