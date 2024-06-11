@@ -11,7 +11,7 @@ if [ ! -f "$SCRIPT_DIR/Ortho4XP.py" ]; then
   echo " "
   echo "Error !"
   echo " "
-  echo "Place z_Install_O4XP_Python_Venv.sh in the main O4XP direcory !"
+  echo "z_Install_O4XP_Python_Venv.sh should be in the main O4XP direcory !"
   echo " "
   exit 1 
 fi
@@ -27,7 +27,6 @@ if [[ "$OSTYPE" == "darwin"* ]]; then
      brew_path="/usr/local/bin/brew"
    fi
 
-
 update_path(){
     
     if [[ "$(uname -m)" == "arm64" ]]; then
@@ -40,14 +39,12 @@ update_path(){
 }
 
 
-
-
  if ! [ -x "$(command -v brew)" ]; then
    
    echo " "
        
      if [ -f $brew_path ]; then
-       echo "It looks like Homebrew is installed but it is not in PATH !"
+       echo "It looks like Homebrew is installed but it is not in the PATH !"
        echo " "
        
        read -p "Would you like to update the PATH automatically by this script? (y/n) " yn
@@ -76,22 +73,11 @@ update_path(){
    echo " "      
  fi
 
-package_exists(){
-    package=$1
-    if brew list | grep $package; then
-        echo "$package found"
-    else
-        echo "$package not found"
-        echo "Installing $package"
-        brew install $package
-    fi
-}
-
  if ! [ -x "$(command -v python$py_ver)" ]; then
-   echo "Python $py_ver not found! Installing ..."
-   brew install python@$py_ver
+   echo "Python $py_ver not found! "
  fi 
 
+ 
  if [[ "$(which python$py_ver)" != *"homebrew"* ]]; then
    echo " "
    echo "Python installed via Homebrew is required !" 
@@ -120,31 +106,38 @@ package_exists(){
 	              if [ -f "/Users/$USER/.zprofile" ]; then                   
                       mv /Users/$USER/.zprofile /Users/$USER/.zprofile_bak
                       fi
+	              echo " ";
+	              echo "In the next step, (re)install Homebrew packages required by Ortho4XP !";
 	              
-	              update_path;
-	              package_exists python@$py_ver;;
+	              update_path;;
 	                           
 	          * ) echo invalid response;
 		      exit 1;;
       esac 
    
-   echo " "
 
  fi
 
 if ! [ -x "$(command -v gdalwarp)" ]; then
-   echo "GDAL not found! Installing..."
-   brew install gdal
+   echo "GDAL not found!" 
 fi
 
 if ! [ -x "$(command -v 7z)" ]; then
-   echo "p7zip not found! Installing..."
-   brew install p7zip
+   echo "p7zip not found!"
 fi
 
-package_exists python-tk@$py_ver
-package_exists proj
-package_exists spatialindex
+echo " "
+read -p "Do you want to install Homebrew packages required by O4XP? (y/n) " yn
+
+case $yn in
+	n ) echo "ok, we will proceed without installation of Homebrew packages";;
+	y ) echo "Installing Homebrew packages required by O4XP...";
+	    brew install gdal python@$py_ver proj spatialindex p7zip python-tk@$py_ver;;
+	* ) echo invalid response;
+            exit 1;;
+esac
+
+
 
 # Semi-automated, guided installation for Linux
 
@@ -285,7 +278,21 @@ fi
 
 # Create a Python virtual environment
 
-python$py_ver -m venv --system-site-packages $venv_path
+# Using --system-site-packages for other configurations than macOS & GDAL 3.9
+
+ssp=1
+if [[ "$OSTYPE" == "darwin"* ]]; then
+   if [[ "$(gdal-config --version)" == *"3.9"* ]]; then
+   ssp=0
+   fi
+fi   
+
+
+if [[ "$ssp" == 0 ]]; then
+   python$py_ver -m venv $venv_path
+else
+   python$py_ver -m venv --system-site-packages $venv_path
+fi
 
 # Activate Python venv
 
@@ -295,10 +302,12 @@ source $venv_path/bin/activate
 
 cd $SCRIPT_DIR
 
-pip install -I -r requirements.txt
 
-if [[ "$OSTYPE" == "darwin"* ]] && [[ $py_ver != "3.12" ]] ; then
-   pip install -I gdal==$(gdal-config --version)
+if [[ "$ssp" == 0 ]]; then
+   pip install -r requirements.txt
+   pip install gdal==$(gdal-config --version)
+else
+   pip install -I -r requirements.txt
 fi
 
 echo " "
@@ -306,6 +315,9 @@ echo " "
 if [ -d "$venv_path/bin" ]; then
   echo "$(python --version) venv has been created in the $venv_path directory"
 fi
+
+# Make "z_Start_O4XP_PythonVenv.sh" an executable file
+chmod +x z_Start_O4XP_PythonVenv.sh
 
 echo " "
 echo "Installed packages:"
@@ -315,4 +327,3 @@ echo " "
 echo " "
 echo "Use $SCRIPT_DIR/z_Start_O4XP_PythonVenv.sh to start O4XP"
 echo " "
-echo "Restart the terminal !"
