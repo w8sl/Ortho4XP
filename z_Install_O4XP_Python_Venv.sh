@@ -146,6 +146,9 @@ package_exists python-tk@$py_ver
 package_exists proj
 package_exists spatialindex
 
+echo "Approving the use of executables from the ./Utils/mac directory..."
+xattr -dr com.apple.quarantine $SCRIPT_DIR/Utils/mac/*
+
 # Semi-automated, guided installation for Linux
 
 elif [[ "$OSTYPE" == "linux-gnu"* ]]; then
