@@ -19,8 +19,10 @@ import O4_UI_Utils as UI
 import O4_File_Names as FNAMES
 
 available_sources = (
+    "View3",
+    "Viewfinderpanoramas (J. de Ferranti) 3\" - mostly worldwide",
     "View",
-    "Viewfinderpanoramas (J. de Ferranti) - mostly worldwide",
+    "Viewfinderpanoramas (J. de Ferranti) 1\"(EU) or 3\" - mostly worldwide",
     "SRTM",
     "SRTMv3 (from OpenTopography) - NOW REQUIRES MANUAL DOWNLOAD",
     "NED1",
@@ -31,7 +33,7 @@ available_sources = (
     "ALOS 3W30 (from OpenTopography) - NOW REQUIRES MANUAL DOWNLOAD",
 )
 
-global_sources = ("View", "SRTM", "ALOS")
+global_sources = ("View", "View3", "SRTM", "ALOS")
 
 ################################################################################
 class DEM:
@@ -351,7 +353,7 @@ def build_combined_raster(source, lat, lon, info_only):
     world_tiles = numpy.array(
         Image.open(os.path.join(FNAMES.Utils_dir, "world_tiles.png"))
     )
-    if source in ("View", "SRTM"):
+    if source in ("View", "View3", "SRTM"):
         base = 3601
         overlap = 1
         beyond = 36
@@ -591,7 +593,7 @@ def read_elevation_from_file(
 
 ##############################################################################
 def ensure_elevation(source, lat, lon, verbose=True):
-    if source == "View":
+    if source in ("View", "View3"):
         # Viewfinderpanorama grouping of files and resolutions is a
         # bit complicated...
 
@@ -606,7 +608,7 @@ def ensure_elevation(source, lat, lon, verbose=True):
         )
         if lat < 0:
             deferranti_letter = "S" + deferranti_letter
-        if deferranti_letter + deferranti_nbr in (
+        if source == "View" and deferranti_letter + deferranti_nbr in (
                 "L31",
                 "L32",
                 "L33",
