@@ -17,6 +17,6 @@ https://github.com/oscarpilote/Ortho4XP
 
 Special thanks to all !!!
 
-Install instructions included:
+[Install instructions](https://github.com/w8sl/Ortho4XP/blob/Progressive_130/Install_Instructions.md)
 
-https://github.com/w8sl/Ortho4XP/blob/Progressive_130/Install_Instructions.txt
+[Detailed install instructions](https://github.com/w8sl/Ortho4XP/blob/Progressive_130/Install_Instructions.txt)
