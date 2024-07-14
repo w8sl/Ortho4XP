@@ -21,7 +21,6 @@ Python 3.12:
 
 Run:
 chmod +x z_Install_O4XP_Python_Venv.sh
-chmod +x z_Start_O4XP_PythonVenv.sh
 
 Install venv:
 z_Install_O4XP_Python_Venv.sh
@@ -36,7 +35,6 @@ sudo pacman -S python python-pip python-gdal p7zip freeglut tk podofo netcdf mar
 
 Run:
 chmod +x z_Install_O4XP_Python_Venv.sh
-chmod +x z_Start_O4XP_PythonVenv.sh
 
 Install venv:
 z_Install_O4XP_Python_Venv.sh
@@ -53,22 +51,16 @@ Windows
 
 Just select one for your Windows OS, there is no benefit in our case to
 download the pretty lastest version of Python, since you might get difficulties
-further down to find modules already built for it. As of 04/2024, Python 3.11. is recommended.
+further down to find modules already built for it. Python 3.11. is recommended.
 
-During the installation, check the following options:
+Customize installation, check the following options:
 
-"Use admin privileges when installing py.exe"
 "Add python.exe to PATH"
-->Customize installation, Optional Features:
 "pip"
 "tcl/tk and IDLE"
 "py launcher"
-"for all users"
-->Next, Advanced Options:
 "Install Python 3.11 for all users"
 "Add Python to environment variables"
-"Precompile standard library"
-
 
 2) Download binary wheel for GDAL from https://github.com/cgohlke/geospatial-wheels/releases
 
@@ -88,7 +80,7 @@ https://learn.microsoft.com/en-US/cpp/windows/latest-supported-vc-redist?view=ms
 
 4) Change directory to Ortho4XP folder (freshly downloaded from Github) and launch:
 
-pip install -r requirements.txt
+pip install -r requirements_win.txt
 
 4) Open Command Prompt window as administrator and execute the following command:
 
@@ -122,6 +114,7 @@ eval $(/usr/local/bin/brew shellenv)
 
 /bin/bash -c "$(curl -fsSL https://raw.githubusercontent.com/Homebrew/install/HEAD/install.sh)"
 
+
 2) Read the terminal messages carefully and follow the PATH setting instructions ! 
    It should look like this:  
 
@@ -135,21 +128,26 @@ eval $(/usr/local/bin/brew shellenv)
     echo 'eval "$(/usr/local/bin/brew shellenv)"' >> /Users/???/.zprofile
     eval "$(/usr/local/bin/brew shellenv)"
 
-   Restart the terminal and verify that the path to Homebrew is at the beginning of the list:
-    
-    echo $PATH
 
 3) On Apple Silicon Mac (if not done already) install Rosetta:
 
 softwareupdate --install-rosetta
    
+
 4) Go to the Ortho4XP folder
 cd /path/to/Ortho4XP (cd, space, drag-and-drop Ortho4XP folder into the terminal window, enter)
 
-5) Execute the install script (you have to run "chmod +x ./install_mac.sh" first)
-./install_mac.sh
 
-6) Double-click on each of the executable files in Ortho4XP-master/Utils/mac folder and confirm opening in Security&Privacy settings
+5) Copy paste into the terminal window, line by line, hit enter:
+
+brew install gdal python@3.11 proj spatialindex p7zip python-tk@3.11
+
+pip3.11 install -r ./requirements.txt
+
+pip3.11 install gdal==$(gdal-config --version)
+
+
+6) Run in the terminal:  xattr -dr com.apple.quarantine ./Utils/mac/*
 
 7) Launch Ortho4XP
 python3.11 Ortho4XP.py
@@ -160,8 +158,6 @@ Semi-automated, guided  Ortho4XP-Python venv installation on macOS:
 Open the terminal
 
 type chmod +x, space, drag-and-drop z_Install_O4XP_Python_Venv.sh into the terminal window, enter
-
-type chmod +x, space, drag-and-drop z_Start_O4XP_PythonVenv.sh into the terminal window, enter
 
 drag-and-drop z_Install_O4XP_Python_Venv.sh into the terminal window, enter
 
