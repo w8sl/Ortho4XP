@@ -22,7 +22,7 @@ Windows
 
 Download and install **Python 3.11** from www.python.org
 
-During the installation, check the following options:
+Customize installation, check the following options:
 
 "Add python.exe to PATH",
 "pip",
@@ -33,7 +33,7 @@ During the installation, check the following options:
 
 Download binary wheel [GDAL for Python 3.11](https://github.com/cgohlke/geospatial-wheels/releases/download/v2024.2.18/GDAL-3.8.4-cp311-cp311-win_amd64.whl)
 
-Download and install [The Microsoft Visual C++ Redistributable packages for Visual Studio 2022](https://aka.ms/vs/17/release/vc_redist.x86.exe)
+Download and install [The Microsoft Visual C++ Redistributable packages for Visual Studio 2022](https://aka.ms/vs/17/release/vc_redist.x64.exe)
 
 Open Command Prompt window as a standard user
 
