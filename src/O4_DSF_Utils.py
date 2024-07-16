@@ -381,12 +381,9 @@ def create_terrain_file(
         # Hack/TODO
         # Should we use decals on ocean floor ? 
         #if (not tri_type) and (tile.use_decal_on_terrain):        
-        #if (tri_type != 1) and (tile.use_decal_on_terrain):
-        #   f.write("DECAL_LIB lib/g10/decals/maquify_2_green_key.dcl\n")
-        if (tri_type != 1): 
-            decal = tile.use_decal_on_terrain.decal_for(zoomlevel)
-            if decal:
-                f.write('DECAL_LIB lib/g10/decals/{}\n'.format(decal))
+        if (tri_type != 1) and (tile.use_decal_on_terrain):
+            f.write("DECAL_LIB lib/g10/decals/maquify_2_green_key.dcl\n")
+            
         if tri_type in (1, 2):
             f.write("WET\n")
         else:
