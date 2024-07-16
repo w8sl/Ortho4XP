@@ -181,7 +181,7 @@ fi
       update="sudo apt update"
       system_packages=$Debian
  
- elif [[ "$OS" == *"Mint"* ]]; then
+ elif [[ "$OS" == *"Linuxmint"* ]]; then
       py_ver="3"
       update="sudo apt update"
       system_packages=$Debian
