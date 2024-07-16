@@ -13,7 +13,7 @@ import O4_Tile_Utils as TILE
 import O4_Overlay_Utils as OVL
 import O4_Airport_Data_Source as APT_SRC
 
-from O4_Common_Types import CoverZLConfig, DecalConfig, ScreenRes
+from O4_Common_Types import CoverZLConfig, ScreenRes
 
 
 cfg_vars = {
@@ -343,21 +343,9 @@ too low to grab these details.",
         "hint": "Distance until which overlay imageries (that is orthophotos over water) are drawn. Lower distances have a positive impact on frame rate and VRAM usage, and IFR flyers will probably need a higher value than VFR ones.",
     },
     "use_decal_on_terrain": {
-        "type": DecalConfig,
+        "type": bool,
         "default": False,
-        "hint": "\n".join(
-            [
-                "Terrain files for all but water triangles will or will not contain a decal directive according to this value.",
-                "The effect is noticeable at very low altitude and helps to overcome the orthophoto blur at such levels.",
-                "Can be slightly distracting at higher altitude.",
-                "Can be either :",
-                "- a boolean : if True, apply default decals according to the ZL",
-                "- an int : if the ZL is at or above this value, a default decal is applied",
-                '- a dict of {"zl": "<dcl_file_from_XP11/Resources/default scenery/1000 decals>"} :',
-                "  => both zl and the decal file must be enclosed in double-quotes",
-                "  => the corresponding decal is applied to each specified zl, or no decal if omitted",
-            ]
-        ),
+        "hint": "Terrain files for all but water triangles will contain the maquify_1_green_key.dcl decal directive. The effect is noticeable at very low altitude and helps to overcome the orthophoto blur at such levels. Can be slightly distracting at higher altitude.",
     },
     # Other
     "custom_dem": {
