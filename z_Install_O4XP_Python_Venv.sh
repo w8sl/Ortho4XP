@@ -292,7 +292,7 @@ fi
 
 if [[ "$OSTYPE" == "darwin"* ]]; then
    if [[ "$(gdal-config --version)" == *"3.9"* ]]; then
-   ssp=0
+   ssp=1
    fi
 fi   
 
