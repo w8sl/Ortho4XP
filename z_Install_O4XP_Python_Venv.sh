@@ -78,47 +78,6 @@ update_path(){
    echo "Python $py_ver not found! "
  fi 
 
- 
- if [[ "$(which python$py_ver)" != *"homebrew"* ]]; then
-   echo " "
-   echo "Python installed via Homebrew is required !" 
-   echo " "
-   echo "The PATH for Python in the hidden file .zprofile in your user directory should be removed !"
-   echo " "
-   echo "Contents of /Users/$USER/.zprofile: "
-   echo " "
-   echo "$(</Users/$USER/.zprofile )"
-   echo " "
-   echo "But only this line is required by Homebrew: "
-   echo " "
-   echo "eval \"\$($brew_path shellenv)\""
-   echo " "
-   read -p "Would you like the changes to be made automatically by this script? (y/n)  " yn
-      case $yn in
-	          n ) echo " ";
-	              echo "You can edit /Users/$USER/.zprofile manually using TextEdit ";
-                      echo " ";
-	              exit 1;;
-	          y ) echo " ";
-	              echo "Renaming the original file to .zprofile_bak";
-	              echo " ";
-	              echo "Saving changes to:  /Users/$USER/.zprofile";
-	              
-	              if [ -f "/Users/$USER/.zprofile" ]; then                   
-                      mv /Users/$USER/.zprofile /Users/$USER/.zprofile_bak
-                      fi
-	              echo " ";
-	              echo "In the next step, (re)install Homebrew packages required by Ortho4XP !";
-	              
-	              update_path;;
-	                           
-	          * ) echo invalid response;
-		      exit 1;;
-      esac 
-   
-
- fi
-
 if ! [ -x "$(command -v gdalwarp)" ]; then
    echo "GDAL not found!" 
 fi
@@ -291,9 +250,9 @@ fi
 # Using --system-site-packages for other configurations than macOS & GDAL 3.9
 
 if [[ "$OSTYPE" == "darwin"* ]]; then
-   #if [[ "$(gdal-config --version)" == *"3.9"* ]]; then
-   ssp=1
-   #fi
+   if [[ "$(gdal-config --version)" == *"3.9"* ]]; then
+   ssp=0
+   fi
 fi   
 
 
