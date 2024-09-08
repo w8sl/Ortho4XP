@@ -1,14 +1,36 @@
 #! /bin/bash
 
 # Define Python version for macOS (tested with 3.10; 3.11; 3.12)
-py_ver="3.12"
 
+read -p "Which version of Python to install? (a) 3.10, (b) 3.11, (c) 3.12  " abc
+
+         case $abc in
+	          a ) echo " ";
+	              echo "Proceeding with Python 3.10";
+                  py_ver="3.10" 
+	              echo " " ;;
+	          b ) echo " ";
+	              echo "Proceeding with Python 3.11";
+                  py_ver="3.11" 
+	              echo " " ;;
+	          c ) echo " ";
+	              echo "Proceeding with Python 3.12";
+                  py_ver="3.12" 
+	              echo " " ;;                      
+	          * ) echo invalid response;
+		      exit 1;;
+          esac 
 ssp=1
+
+#Get path to the Ortho4XP directory
 SCRIPT_DIR=$(cd -- "$(dirname -- "${BASH_SOURCE[0]}")" &> /dev/null && pwd)
 
-venv_path=$SCRIPT_DIR/venv-ortho
+#Change to the Ortho4XP directory
+cd "$(dirname "${BASH_SOURCE[0]}")"
 
-if [ ! -f "$SCRIPT_DIR/Ortho4XP.py" ]; then
+venv_path="./venv-ortho"
+
+if [ ! -f ./Ortho4XP.py ]; then
   echo " "
   echo "Error !"
   echo " "
@@ -78,6 +100,39 @@ update_path(){
    echo "Python $py_ver not found! "
  fi 
 
+
+   echo "Contents of /Users/$USER/.zprofile: "
+   echo " "
+   echo "$(</Users/$USER/.zprofile )"
+   echo " "
+   echo "But only this line is required by Homebrew: "
+   echo " "
+   echo "eval \"\$($brew_path shellenv)\""
+   echo " "
+   read -p "Is it equal? If not - would you like to correct .zprofile file automatically by this script? (y/n)  " yn
+      case $yn in
+	          n ) echo " ";
+	              echo "You can edit /Users/$USER/.zprofile manually using TextEdit ";
+                      echo " ";
+	              echo ;;
+	          y ) echo " ";
+	              echo "Renaming the original file to .zprofile_bak";
+	              echo " ";
+	              echo "Saving changes to:  /Users/$USER/.zprofile";
+	              
+	              if [ -f "/Users/$USER/.zprofile" ]; then                   
+                      mv /Users/$USER/.zprofile /Users/$USER/.zprofile_bak
+                      fi
+	              echo " ";
+	              echo "In the next step, (re)install Homebrew packages required by Ortho4XP !";
+	              
+	              update_path;;
+	                           
+	          * ) echo invalid response;
+		      exit 1;;
+      esac 
+   
+
 if ! [ -x "$(command -v gdalwarp)" ]; then
    echo "GDAL not found!" 
 fi
@@ -98,7 +153,7 @@ case $yn in
 esac
 
 echo "Approving the use of executables from $SCRIPT_DIR/Utils/mac directory"
-xattr -dr com.apple.quarantine $SCRIPT_DIR/Utils/mac/*
+xattr -dr com.apple.quarantine ./Utils/mac/*
 
 # Semi-automated, guided installation for Linux
 
@@ -268,8 +323,6 @@ source $venv_path/bin/activate
 
 # Install packages with pip
 
-cd $SCRIPT_DIR
-
 
 if [[ "$ssp" == 0 ]]; then
    pip install -r requirements.txt
@@ -295,3 +348,4 @@ echo " "
 echo " "
 echo "Use $SCRIPT_DIR/z_Start_O4XP_PythonVenv.sh to start O4XP"
 echo " "
+

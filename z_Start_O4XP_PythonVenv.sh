@@ -1,9 +1,11 @@
 #!/bin/bash
-SCRIPT_DIR=$(cd -- "$(dirname -- "${BASH_SOURCE[0]}")" &> /dev/null && pwd)
 
-venv_path=$SCRIPT_DIR/venv-ortho
+cd "$(dirname "${BASH_SOURCE[0]}")"
 
-if [ ! -f "$SCRIPT_DIR/Ortho4XP.py" ]; then
+
+venv_path="./venv-ortho"
+
+if [ ! -f ./Ortho4XP.py ]; then
   echo " "
   echo "Error: file Ortho4XP.py not found!"
   echo " "
@@ -19,7 +21,6 @@ if [ ! -d $venv_path ]; then
   exit 1 
 fi
 
-cd $SCRIPT_DIR
 
 source $venv_path/bin/activate
 
