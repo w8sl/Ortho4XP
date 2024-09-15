@@ -3,5 +3,5 @@ Pillow
 pyproj
 requests
 Rtree
-Shapely==2.0.4
+Shapely
 scikit-fmm
