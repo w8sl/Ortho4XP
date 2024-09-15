@@ -1,25 +1,6 @@
 #! /bin/bash
 
-# Define Python version for macOS (tested with 3.10; 3.11; 3.12)
-
-read -p "Which version of Python to install? (a) 3.10, (b) 3.11, (c) 3.12  " abc
-
-         case $abc in
-	          a ) echo " ";
-	              echo "Proceeding with Python 3.10";
-                  py_ver="3.10" 
-	              echo " " ;;
-	          b ) echo " ";
-	              echo "Proceeding with Python 3.11";
-                  py_ver="3.11" 
-	              echo " " ;;
-	          c ) echo " ";
-	              echo "Proceeding with Python 3.12";
-                  py_ver="3.12" 
-	              echo " " ;;                      
-	          * ) echo invalid response;
-		      exit 1;;
-          esac 
+#Set up the default "system-site packages" option for Python venv
 ssp=1
 
 #Get path to the Ortho4XP directory
@@ -34,7 +15,7 @@ if [ ! -f ./Ortho4XP.py ]; then
   echo " "
   echo "Error !"
   echo " "
-  echo "z_Install_O4XP_Python_Venv.sh should be in the main O4XP direcory !"
+  echo "z_Install_O4XP_Python_Venv.sh should be in the main O4XP directory !"
   echo " "
   exit 1 
 fi
@@ -43,6 +24,30 @@ fi
 
 if [[ "$OSTYPE" == "darwin"* ]]; then
    echo "macOS"
+
+
+# Define Python version for macOS (tested with 3.10; 3.11; 3.12)
+
+read -p "Which version of Python would you like to use with Ortho4XP? (0) 3.10, (1) 3.11, (2) 3.12  " nr
+
+         case $nr in
+	          0 ) echo " ";
+	              echo "Proceeding with Python 3.10";
+                  py_ver="3.10" 
+	              echo " " ;;
+	          1 ) echo " ";
+	              echo "Proceeding with Python 3.11";
+                  py_ver="3.11" 
+	              echo " " ;;
+	          2 ) echo " ";
+	              echo "Proceeding with Python 3.12";
+                  py_ver="3.12" 
+	              echo " " ;;                      
+	          * ) echo invalid response;
+		      exit 1;;
+          esac 
+
+# Path to Homebrew
 
    if [[ "$(uname -m)" == "arm64" ]]; then
      brew_path="/opt/homebrew/bin/brew"
@@ -60,7 +65,6 @@ update_path(){
         eval "$(/usr/local/bin/brew shellenv)"
     fi
 }
-
 
  if ! [ -x "$(command -v brew)" ]; then
    
@@ -100,22 +104,32 @@ update_path(){
    echo "Python $py_ver not found! "
  fi 
 
-
-   echo "Contents of /Users/$USER/.zprofile: "
+   
+   if [ -f "/Users/$USER/.zprofile" ]; then
+   
+   echo "------------------------------------------------- "
+   echo "Veryfying the contents of .zprofile "
+   echo "------------------------------------------------- "
    echo " "
-   echo "$(</Users/$USER/.zprofile )"
+   echo "There should NOT be a PATH to Python $py_ver in .zprofile"
    echo " "
-   echo "But only this line is required by Homebrew: "
+   echo "This line is required by Homebrew: "
    echo " "
    echo "eval \"\$($brew_path shellenv)\""
    echo " "
-   read -p "Is it equal? If not - would you like to correct .zprofile file automatically by this script? (y/n)  " yn
+   echo "Actual contents of /Users/$USER/.zprofile file: "
+   echo "------------------------------------------------- "
+   echo "$(</Users/$USER/.zprofile )"
+   echo "------------------------------------------------- "
+   echo " "
+   
+   read -p "(1) Proceed ? (2) Replace the contens with: eval \"\$($brew_path shellenv)\" ? " yn
       case $yn in
-	          n ) echo " ";
-	              echo "You can edit /Users/$USER/.zprofile manually using TextEdit ";
+	          1 ) echo " ";
+	              echo "You can also edit /Users/$USER/.zprofile manually using TextEdit ";
                       echo " ";
 	              echo ;;
-	          y ) echo " ";
+	          2 ) echo " ";
 	              echo "Renaming the original file to .zprofile_bak";
 	              echo " ";
 	              echo "Saving changes to:  /Users/$USER/.zprofile";
@@ -131,7 +145,7 @@ update_path(){
 	          * ) echo invalid response;
 		      exit 1;;
       esac 
-   
+   fi
 
 if ! [ -x "$(command -v gdalwarp)" ]; then
    echo "GDAL not found!" 
@@ -348,4 +362,3 @@ echo " "
 echo " "
 echo "Use $SCRIPT_DIR/z_Start_O4XP_PythonVenv.sh to start O4XP"
 echo " "
-
