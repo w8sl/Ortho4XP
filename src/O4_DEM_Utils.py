@@ -375,7 +375,7 @@ def ensure_elevation(source,lat,lon,verbose=True):
             "T12", "S12", "R12", "Q12", "P12", "O12", "N12", "M12", "L12", "K12", "J12", "I12", "H12",
             "T13", "S13", "R13", "Q13", "P13", "O13", "N13", "M13", "L13", "K13", "J13", "I13", "H13",
             "U14", "T14", "S14", "R14", "Q14", "P14", "O14", "N14", "M14", "L14", "K14", "J14", "I14", "H14", "G14",
-            "U15", "T15", "S15", "R15", "Q15", "P15", "O15", "N15", "M15", "L15", "K15", "J15", "I15", "H15",
+            "U15", "T15", "S15", "R15", "Q15", "P15", "O15", "N15", "M15", "L15", "K15", "J15", "I15", "H15 
             "U16", "T16", "S16", "R16", "Q16", "P16", "O16", "N16", "M16", "L16", "K16", "J16", "I16", "H16",
             "U17", "T17", "S17", "R17", "Q17", "P17", "O17", "N17", "M17", "L17", "K17", "J17", "I17", "H17", "G17",
             "U18", "T18", "S18", "R18", "Q18", "P18", "O18", "N18", "M18", "L18", "K18", "J18", "I18",
@@ -402,7 +402,10 @@ def ensure_elevation(source,lat,lon,verbose=True):
         if deferranti_letter+str(deferranti_nbr) == "P29":
             deferranti_letter = "FAR"
             deferranti_nbr = ""
-
+        # fix download elevation data for Island
+        if deferranti_letter+str(deferranti_nbr) in ("Q27","Q28"):
+            deferranti_letter = "ISL"
+            deferranti_nbr = ""
         url=f"http://viewfinderpanoramas.org/dem{resol}/{deferranti_letter}{deferranti_nbr}.zip"
         if os.path.exists(FNAMES.viewfinderpanorama(lat,lon)) and (resol==3 or os.path.getsize(FNAMES.viewfinderpanorama(lat,lon))>=25934402):
             UI.vprint(1,"   Recycling ",FNAMES.viewfinderpanorama(lat,lon))
