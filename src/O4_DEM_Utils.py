@@ -637,7 +637,7 @@ def ensure_elevation(source, lat, lon, verbose=True):
                 resol = 1
         else:
                 resol = 3
-                # fix download elevation data for Island
+                # 3" DEM elevation data for Iceland
                 if deferranti_letter+str(deferranti_nbr) in ("Q27","Q28"):
                    deferranti_letter = "ISL"
                    deferranti_nbr = ""
