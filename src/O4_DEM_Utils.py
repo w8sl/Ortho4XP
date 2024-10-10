@@ -26,7 +26,7 @@ except ImportError:
 
 available_sources = (
     'View3','Viewfinderpanoramas (J. de Ferranti) 3" - mostly worldwide',
-    'View', 'Viewfinderpanoramas (J. de Ferranti) 1" (USA,CA,EU,NZ) or 3" - mostly worldwide',
+    'View', 'Viewfinderpanoramas (J. de Ferranti) 1" (USA,CA,Greenland,EU,NZ) or 3" - mostly worldwide',
     'SRTM', 'SRTMv3 (from OpenTopography) - worldwide at latitudes < 60',
     'NED1', 'NED 1" (from USGS) - USA, Canada, Mexico',
     'NED1/3', 'NED 1/3" (from USGS) - USA',
@@ -360,7 +360,7 @@ def ensure_elevation(source,lat,lon,verbose=True):
             "SL58",
             "SI59", "SJ59", "SK59", "SL59",
             "SI60", "SJ60", "SK60", "SL60",
-            # North America
+            # North America + Greenland
             "N01", "M01",
             "O02", "N02",
             "R03", "Q03", "P03", "O03", "N03",
@@ -375,7 +375,7 @@ def ensure_elevation(source,lat,lon,verbose=True):
             "T12", "S12", "R12", "Q12", "P12", "O12", "N12", "M12", "L12", "K12", "J12", "I12", "H12",
             "T13", "S13", "R13", "Q13", "P13", "O13", "N13", "M13", "L13", "K13", "J13", "I13", "H13",
             "U14", "T14", "S14", "R14", "Q14", "P14", "O14", "N14", "M14", "L14", "K14", "J14", "I14", "H14", "G14",
-            "U15", "T15", "S15", "R15", "Q15", "P15", "O15", "N15", "M15", "L15", "K15", "J15", "I15", "H15 
+            "U15", "T15", "S15", "R15", "Q15", "P15", "O15", "N15", "M15", "L15", "K15", "J15", "I15", "H15", 
             "U16", "T16", "S16", "R16", "Q16", "P16", "O16", "N16", "M16", "L16", "K16", "J16", "I16", "H16",
             "U17", "T17", "S17", "R17", "Q17", "P17", "O17", "N17", "M17", "L17", "K17", "J17", "I17", "H17", "G17",
             "U18", "T18", "S18", "R18", "Q18", "P18", "O18", "N18", "M18", "L18", "K18", "J18", "I18",
@@ -402,7 +402,7 @@ def ensure_elevation(source,lat,lon,verbose=True):
         if deferranti_letter+str(deferranti_nbr) == "P29":
             deferranti_letter = "FAR"
             deferranti_nbr = ""
-        # fix download elevation data for Island
+        # 3" DEM elevation data for Iceland
         if deferranti_letter+str(deferranti_nbr) in ("Q27","Q28"):
             deferranti_letter = "ISL"
             deferranti_nbr = ""
