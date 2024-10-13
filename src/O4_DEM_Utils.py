@@ -360,7 +360,7 @@ def ensure_elevation(source,lat,lon,verbose=True):
             "SL58",
             "SI59", "SJ59", "SK59", "SL59",
             "SI60", "SJ60", "SK60", "SL60",
-            # North America + Greenland
+            # North America incl. Greenland
             "N01", "M01",
             "O02", "N02",
             "R03", "Q03", "P03", "O03", "N03",
