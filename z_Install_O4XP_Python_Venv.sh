@@ -130,10 +130,10 @@ fi
 
 # Required system packages
  
- Debian="sudo apt install python3 python3-venv python3-pip python3-gdal python3-pil.imagetk p7zip-full libnvtt-bin freeglut3-dev gdal-bin gcc"
- Arch="sudo pacman -S python python-pip python-gdal p7zip freeglut tk podofo netcdf mariadb hdf5 cfitsio postgresql gcc"
- Fedora="sudo dnf install python3 python3-devel python3-pip python3-gdal python3-tkinter p7zip freeglut gcc-c++"
- openSUSE="sudo zypper install python311 python311-tk python311-devel gdal python3-GDAL p7zip freeglut-devel gcc-c++"
+ Debian="sudo apt install python3 python3-venv python3-pip python3-gdal python3-pil.imagetk p7zip-full libnvtt-bin freeglut3-dev gdal-bin imagemagick"
+ Arch="sudo pacman -S python python-pip python-gdal p7zip freeglut tk podofo netcdf mariadb hdf5 cfitsio postgresql imagemagick"
+ Fedora="sudo dnf install python3 python3-devel python3-pip python3-gdal python3-tkinter p7zip freeglut imagemagick"
+ openSUSE="sudo zypper install python311 python311-tk python311-devel gdal python3-GDAL p7zip freeglut-devel imagemagick"
  
  if [[ "$OS" == *"Ubuntu"* ]]; then
       py_ver="3"
