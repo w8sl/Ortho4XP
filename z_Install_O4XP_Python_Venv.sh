@@ -133,7 +133,7 @@ fi
  Debian="sudo apt install python3 python3-venv python3-pip python3-gdal python3-pil.imagetk p7zip-full libnvtt-bin freeglut3-dev gdal-bin imagemagick"
  Arch="sudo pacman -S python python-pip python-gdal p7zip freeglut tk podofo netcdf mariadb hdf5 cfitsio postgresql imagemagick"
  Fedora="sudo dnf install python3 python3-devel python3-pip python3-gdal python3-tkinter p7zip freeglut imagemagick"
- openSUSE="sudo zypper install python311 python311-tk python311-devel gdal python3-GDAL p7zip freeglut-devel imagemagick"
+ openSUSE="sudo zypper install python312 python312-tk python312-devel gdal python3-GDAL p7zip freeglut-devel ImageMagick"
  
  if [[ "$OS" == *"Ubuntu"* ]]; then
       py_ver="3"
@@ -168,10 +168,11 @@ fi
       system_packages=$Fedora 
 
 elif [[ "$OS" == *"openSUSE"* ]]; then
-      py_ver="3.11"
+      py_ver="3.12"
       update="sudo zypper dup"
       system_packages=$openSUSE
-
+      ssp=0
+      
  else
      OS="Unknown"
  fi
