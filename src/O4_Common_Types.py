@@ -358,9 +358,7 @@ class DecalConfig:
         if isinstance(self._value, bool) and self._value is True:
             # If decals are enabled, in boolean mode, choose default decals for each ZL
             self._zl_decal = dict()
-            for zl in range(ZoomLevels.__ZL_MIN__, ZoomLevels.__ZL_HIGH__):
-                self._zl_decal[zl] = None
-            for zl in range(ZoomLevels.__ZL_HIGH__, ZoomLevels.__ZL_OVERKILL__ + 1):
+            for zl in range(ZoomLevels.__ZL_MIN__, ZoomLevels.__ZL_OVERKILL__ + 1):
                 self._zl_decal[zl] = self.__DEFAULT_DECAL__
 
         elif (isinstance(self._value, int) and
