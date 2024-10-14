@@ -10,10 +10,13 @@ import numpy
 
 try:
     from osgeo import gdal
-    has_gdal = True
+    from osgeo import gdal_array
     gdal.UseExceptions()
+    has_gdal = True
 except:
+    print("GDAL not available!")
     has_gdal = False
+    
 from PIL import Image
 import O4_UI_Utils as UI
 import O4_File_Names as FNAMES
@@ -639,7 +642,7 @@ def ensure_elevation(source, lat, lon, verbose=True):
                 resol = 1
         else:
                 resol = 3
-                # fix download elevation data for Island
+                # fix download elevation data for Iceland
                 if deferranti_letter+str(deferranti_nbr) in ("Q27","Q28"):
                    deferranti_letter = "ISL"
                    deferranti_nbr = ""
