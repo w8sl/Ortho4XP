@@ -11,18 +11,14 @@ from PIL import Image
 import O4_UI_Utils as UI
 import O4_File_Names as FNAMES
 
-has_gdal = False
 try:
     from osgeo import gdal
+    from osgeo import gdal_array
     gdal.UseExceptions()
     has_gdal = True
-except ImportError:
-    try:
-        import gdal
-        gdal.UseExceptions()
-        has_gdal = True
-    except ImportError:
-        pass
+except:
+    print("GDAL not available!")
+    has_gdal = False
 
 available_sources = (
     'View3','Viewfinderpanoramas (J. de Ferranti) 3" - mostly worldwide',
