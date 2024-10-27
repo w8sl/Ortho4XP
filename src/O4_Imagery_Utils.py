@@ -44,7 +44,8 @@ request_headers_generic={
             'Connection':'keep-alive',
             'Accept-Encoding':'gzip, deflate'
             }
-imagemagick = False
+imagemagick=False
+native_nvcompress=False
 if 'dar' in sys.platform:
     dds_convert_cmd = os.path.join(UI.Ortho4XP_dir,"Utils","nvcompress","nvcompress")
     gdal_transl_cmd = "gdal_translate"
@@ -56,8 +57,11 @@ elif 'win' in sys.platform:
     gdalwarp_cmd    = "gdalwarp.exe"
     devnull_rdir    = " > nul  2>&1"
 else:
-    imagemagick = True
-    dds_convert_cmd = "convert"
+    if native_nvcompress is True:
+       dds_convert_cmd = "nvcompress"
+    else:       
+       imagemagick = True
+       dds_convert_cmd = "magick"
     gdal_transl_cmd = "gdal_translate"
     gdalwarp_cmd = "gdalwarp"
     devnull_rdir = " >/dev/null 2>&1 "
