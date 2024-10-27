@@ -3,16 +3,22 @@
 # Define Python version for macOS (tested with 3.10; 3.11; 3.12)
 py_ver="3.12"
 
+#Set up the default "system-site packages" option for Python venv
 ssp=1
+
+#Get path to the Ortho4XP directory
 SCRIPT_DIR=$(cd -- "$(dirname -- "${BASH_SOURCE[0]}")" &> /dev/null && pwd)
 
-venv_path=$SCRIPT_DIR/venv-ortho
+#Change to the Ortho4XP directory
+cd "$(dirname "${BASH_SOURCE[0]}")"
 
-if [ ! -f "$SCRIPT_DIR/Ortho4XP.py" ]; then
+venv_path="./venv-ortho"
+
+if [ ! -f ./Ortho4XP.py ]; then
   echo " "
   echo "Error !"
   echo " "
-  echo "z_Install_O4XP_Python_Venv.sh should be in the main O4XP direcory !"
+  echo "z_Install_O4XP_Python_Venv.sh should be in the main O4XP directory !"
   echo " "
   exit 1 
 fi
@@ -98,7 +104,7 @@ case $yn in
 esac
 
 echo "Approving the use of executables from $SCRIPT_DIR/Utils/ directory"
-xattr -dr com.apple.quarantine $SCRIPT_DIR/Utils/*
+xattr -dr com.apple.quarantine ./Utils/*
 
 # Semi-automated, guided installation for Linux
 
@@ -130,10 +136,10 @@ fi
 
 # Required system packages
  
- Debian="sudo apt install python3 python3-venv python3-pip python3-gdal python3-pil.imagetk p7zip-full libnvtt-bin freeglut3-dev gdal-bin imagemagick"
- Arch="sudo pacman -S python python-pip python-gdal p7zip freeglut tk podofo netcdf mariadb hdf5 cfitsio postgresql imagemagick"
- Fedora="sudo dnf install python3 python3-devel python3-pip python3-gdal python3-tkinter p7zip freeglut imagemagick"
- openSUSE="sudo zypper install python312 python312-tk python312-devel gdal python3-GDAL p7zip freeglut-devel ImageMagick"
+ Debian="sudo apt install python3 python3-venv python3-pip python3-gdal python3-pil.imagetk p7zip-full libnvtt-bin freeglut3-dev gdal-bin imagemagick gcc"
+ Arch="sudo pacman -S python python-pip python-gdal p7zip freeglut tk podofo netcdf mariadb hdf5 cfitsio postgresql imagemagick gcc"
+ Fedora="sudo dnf install python3 python3-devel python3-pip python3-gdal python3-tkinter p7zip freeglut ImageMagick gcc"
+ openSUSE="sudo zypper install python312 python312-tk python312-devel gdal python3-GDAL p7zip freeglut-devel ImageMagick gcc"
  
  if [[ "$OS" == *"Ubuntu"* ]]; then
       py_ver="3"
@@ -177,6 +183,30 @@ elif [[ "$OS" == *"openSUSE"* ]]; then
      OS="Unknown"
  fi
 
+if [ "$(uname -m)" = "aarch64" ]; then
+
+    #compile triangle and Triangle4XP from source on Linux aarch64
+    echo "Linux aarch64 - compiling triangle and Triangle4XP from source..."
+    gcc -O2 ./Utils/triangle.c -lm -o ./Utils/triangle_linux
+    gcc -O2 ./Utils/Triangle4XP.c -lm -o ./Utils/Triangle4XP_linux
+fi
+
+if [ "$system_packages" = "$Debian" ]; then
+    
+    #Use native nvcompress on Ubuntu/Debian based distributions
+    echo "Configuring Ortho4XP to use OS native nvcompress..."
+    echo ""
+    search="native_nvcompress=False"
+    replace="native_nvcompress=True"
+    inputfile="./src/O4_Imagery_Utils.py"
+    tempfile=$(mktemp)
+
+    # Replace string in the file
+    sed "s/$search/$replace/g" "$inputfile" > "$tempfile"
+
+    # Move temp file to original file
+    mv "$tempfile" "$inputfile"
+fi
 
 if ! [ -x "$(command -v gdalwarp)" ]; then
     echo " "
@@ -268,9 +298,6 @@ fi
 source $venv_path/bin/activate
 
 # Install packages with pip
-
-cd $SCRIPT_DIR
-
 
 if [[ "$ssp" == 0 ]]; then
    pip install -r requirements.txt
