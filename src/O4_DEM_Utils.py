@@ -308,6 +308,12 @@ def read_elevation_from_file(file_name,lat,lon,info_only=False,base_if_error=360
             except:
                 UI.vprint(1,"    WARNING: raster DEM does not advertise its EPSG code, assuming 4326.") 
                 epsg=4326
+            
+            #replace "nan" if present in array with "nodata" value
+            nan_mask=numpy.isnan(alt_dem)
+            alt_dem_filled=numpy.where(nan_mask,nodata,alt_dem)
+            alt_dem=alt_dem_filled
+            
             if epsg not in (4326,4269): # let's be blind about 4269 which might be sufficiently close to 4326 for our purposes
                 UI.lvprint(1,"    WARNING: unsupported EPSG code ",epsg,". Only EPSG:4326 is supported, result is likely to be non sense.") 
             geo=ds.GetGeoTransform()
