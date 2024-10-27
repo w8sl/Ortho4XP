@@ -269,8 +269,7 @@
 /* #define CPU86 */
 /* #define LINUX */
 
-#define INEXACT /* Nothing */
-/* #define INEXACT volatile */
+#define INEXACT volatile
 
 /* Maximum number of characters in a file name (including the null).         */
 
