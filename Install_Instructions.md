@@ -32,26 +32,12 @@ Customize installation, check the following options:
 "Install Python 3.11 for all users",
 "Add Python to environment variables",
 
-Download binary wheel [GDAL for Python 3.11](https://github.com/cgohlke/geospatial-wheels/releases/download/v2024.2.18/GDAL-3.8.4-cp311-cp311-win_amd64.whl)
-
 Download and install: 
 
 [The Microsoft Visual C++ Redistributable packages for Visual Studio 2022](https://aka.ms/vs/17/release/vc_redist.x64.exe)
 
 [Visual C++ Redistributable Packages for Visual Studio 2013](https://www.microsoft.com/en-us/download/details.aspx?id=40784)
 
-Right-click Windows Start menu, then click "Terminal"(PowerShell)
+For installation use **win_install** script
 
-Change directory to Ortho4XP (cd \path to\Ortho4XP folder [downloaded from GitHub](https://github.com/w8sl/Ortho4XP/archive/refs/heads/Progressive_130.zip)) and run:
-
-**pip install -r requirements.txt**
-
-Open Terminal(Admin) and execute the following command:
-
-pip install /path to downloaded GDAL-***.whl file
-
-Add the directory containing gdal.py, gdal_translate and gdalwarp (usually: *Program Files/Python311/Lib/site-packages/osgeo/*)
-into the system PATH variable (right-click Windows Start menu -> System -> Advanced system settings -> Environment variables)
-
-Open Terminal window in the Ortho4XP directory and run: **python Ortho4XP.py**
-
+Use **win_start** script to run Ortho4XP
