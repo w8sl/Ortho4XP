@@ -5,3 +5,4 @@ requests
 Rtree
 shapely
 scikit-fmm==2023.4.2
+rasterio
