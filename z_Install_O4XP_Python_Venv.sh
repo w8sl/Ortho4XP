@@ -1,9 +1,5 @@
 #! /bin/bash
 
-#Set up the default "system-site packages" option for Python venv
-ssp=1
-gdal=1
-
 #Get path to the Ortho4XP directory
 SCRIPT_DIR=$(cd -- "$(dirname -- "${BASH_SOURCE[0]}")" &> /dev/null && pwd)
 
@@ -25,7 +21,6 @@ fi
 
 if [[ "$OSTYPE" == "darwin"* ]]; then
    echo "macOS"
-
 
 # Define Python version for macOS (tested with 3.10; 3.11; 3.12)
 
@@ -175,10 +170,8 @@ echo " "
 read -p "Do you want to install GDAL - required when creating GeoTIFFs ? (y/n) " yn
 
 case $yn in
-	n ) echo "";
-	    gdal=0;;
+	n ) echo "Proceeding without GDAL. It can be installed later (brew install gdal) ";;
 	y ) echo "Installing GDAL. Be patient - it may take some time ...";
-	    gdal=1
 	    brew install gdal ;;
 	* ) echo invalid response;
             exit 1;;
@@ -243,19 +236,16 @@ fi
       py_ver="3.12"
       update="sudo pacman -Syu"
       system_packages=$Arch
-      ssp=0
 
  elif [[ "$OS" == *"Manjaro"* ]]; then
       py_ver="3.12"
       update="sudo pacman -Syu"
       system_packages=$Arch
-      ssp=0 
  
  elif [[ "$OS" == *"Fedora"* ]]; then
       py_ver="3"
       update="sudo dnf update"
       system_packages=$Fedora 
-      ssp=0
 
 elif [[ "$OS" == *"openSUSE"* ]]; then
       py_ver="3.12"
@@ -379,33 +369,15 @@ fi
 
 # Create a Python virtual environment
 
-# Using --system-site-packages for other configurations than macOS & GDAL 3.9
-
-if [[ "$OSTYPE" == "darwin"* ]]; then
-   ssp=0
-fi   
-
-if [[ "$ssp" == 0 ]]; then
-   python$py_ver -m venv $venv_path
-else
-   python$py_ver -m venv --system-site-packages $venv_path
-fi
+python$py_ver -m venv $venv_path
 
 # Activate Python venv
 
 source $venv_path/bin/activate
 
-# Install packages with pip
+# Install required packages with pip
 
-
-if [[ "$ssp" == 0 ]]; then
-   pip install -r requirements.txt
-   if [[ "$gdal" == 1 ]]; then
-      pip install gdal==$(gdal-config --version)
-   fi
-else
-   pip install -I -r requirements.txt
-fi
+pip install -r requirements.txt
 
 echo " "
 
