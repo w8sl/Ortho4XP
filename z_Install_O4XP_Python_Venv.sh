@@ -138,7 +138,7 @@ fi
  
  Debian="sudo apt install python3 python3-venv python3-pip python3-gdal python3-pil.imagetk p7zip-full libnvtt-bin freeglut3-dev gdal-bin imagemagick gcc"
  Arch="sudo pacman -S python python-pip python-gdal p7zip freeglut tk podofo netcdf mariadb hdf5 cfitsio postgresql imagemagick gcc"
- Fedora="sudo dnf install python3 python3-devel python3-pip python3-gdal python3-tkinter p7zip freeglut ImageMagick gcc"
+ Fedora="sudo dnf install python3 python3-devel python3-pip python3-gdal gdal-devel python3-tkinter p7zip freeglut ImageMagick gcc"
  openSUSE="sudo zypper install python312 python312-tk python312-devel gdal python3-GDAL p7zip freeglut-devel ImageMagick gcc"
  
  if [[ "$OS" == *"Ubuntu"* ]]; then
@@ -169,9 +169,10 @@ fi
       ssp=0 
  
  elif [[ "$OS" == *"Fedora"* ]]; then
-      py_ver="3.12"
+      py_ver="3"
       update="sudo dnf update"
       system_packages=$Fedora 
+      ssp=0
 
 elif [[ "$OS" == *"openSUSE"* ]]; then
       py_ver="3.12"
@@ -182,31 +183,6 @@ elif [[ "$OS" == *"openSUSE"* ]]; then
  else
      OS="Unknown"
  fi
-
-if [ "$(uname -m)" = "aarch64" ]; then
-
-    #compile triangle and Triangle4XP from source on Linux aarch64
-    echo "Linux aarch64 - compiling triangle and Triangle4XP from source..."
-    gcc -O2 ./Utils/triangle.c -lm -o ./Utils/triangle_linux
-    gcc -O2 ./Utils/Triangle4XP.c -lm -o ./Utils/Triangle4XP_linux
-fi
-
-if [ "$system_packages" = "$Debian" ]; then
-    
-    #Use native nvcompress on Ubuntu/Debian based distributions
-    echo "Configuring Ortho4XP to use OS native nvcompress..."
-    echo ""
-    search="native_nvcompress=False"
-    replace="native_nvcompress=True"
-    inputfile="./src/O4_Imagery_Utils.py"
-    tempfile=$(mktemp)
-
-    # Replace string in the file
-    sed "s/$search/$replace/g" "$inputfile" > "$tempfile"
-
-    # Move temp file to original file
-    mv "$tempfile" "$inputfile"
-fi
 
 if ! [ -x "$(command -v gdalwarp)" ]; then
     echo " "
@@ -258,6 +234,30 @@ else
   exit 1
 fi
 
+if [ "$(uname -m)" = "aarch64" ]; then
+
+    #compile triangle and Triangle4XP from source on Linux aarch64
+    echo "Linux aarch64 - compiling triangle and Triangle4XP from source..."
+    gcc -O2 ./Utils/triangle.c -lm -o ./Utils/triangle_linux
+    gcc -O2 ./Utils/Triangle4XP.c -lm -o ./Utils/Triangle4XP_linux
+fi
+
+if [ "$system_packages" = "$Debian" ]; then
+    
+    #Use native nvcompress on Ubuntu/Debian based distributions
+    echo "Configuring Ortho4XP to use OS native nvcompress..."
+    echo ""
+    search="native_nvcompress=False"
+    replace="native_nvcompress=True"
+    inputfile="./src/O4_Imagery_Utils.py"
+    tempfile=$(mktemp)
+
+    # Replace string in the file
+    sed "s/$search/$replace/g" "$inputfile" > "$tempfile"
+
+    # Move temp file to original file
+    mv "$tempfile" "$inputfile"
+fi
 
 # Finding python command on "Unknown" distribution
 
