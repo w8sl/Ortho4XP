@@ -2,6 +2,7 @@
 
 #Set up the default "system-site packages" option for Python venv
 ssp=1
+gdal=1
 
 #Get path to the Ortho4XP directory
 SCRIPT_DIR=$(cd -- "$(dirname -- "${BASH_SOURCE[0]}")" &> /dev/null && pwd)
@@ -28,7 +29,7 @@ if [[ "$OSTYPE" == "darwin"* ]]; then
 
 # Define Python version for macOS (tested with 3.10; 3.11; 3.12)
 
-read -p "Which version of Python would you like to use with Ortho4XP? (0) 3.10, (1) 3.11, (2) 3.12  " nr
+read -p "Which version of Python would you like to use with Ortho4XP? (0) 3.10, (1) 3.11, (2) 3.12 (3) 3.13  " nr
 
          case $nr in
 	          0 ) echo " ";
@@ -42,7 +43,11 @@ read -p "Which version of Python would you like to use with Ortho4XP? (0) 3.10, 
 	          2 ) echo " ";
 	              echo "Proceeding with Python 3.12";
                   py_ver="3.12" 
-	              echo " " ;;                      
+	              echo " " ;; 
+	          3 ) echo " ";
+	              echo "Proceeding with Python 3.13";
+                  py_ver="3.13" 
+	              echo " " ;;                               
 	          * ) echo invalid response;
 		      exit 1;;
           esac 
@@ -161,10 +166,25 @@ read -p "Do you want to install Homebrew packages required by O4XP? (y/n) " yn
 case $yn in
 	n ) echo "ok, we will proceed without installation of Homebrew packages";;
 	y ) echo "Installing Homebrew packages required by O4XP...";
-	    brew install gdal python@$py_ver proj spatialindex p7zip python-tk@$py_ver;;
+	    brew install python@$py_ver proj geos spatialindex p7zip python-tk@$py_ver;;
 	* ) echo invalid response;
             exit 1;;
 esac
+
+echo " "
+read -p "Do you want to install GDAL - required when creating GeoTIFFs ? (y/n) " yn
+
+case $yn in
+	n ) echo "";
+	    gdal=0;;
+	y ) echo "Installing GDAL. Be patient - it may take some time ...";
+	    gdal=1
+	    brew install gdal ;;
+	* ) echo invalid response;
+            exit 1;;
+esac
+
+
 
 echo "Approving the use of executables from $SCRIPT_DIR/Utils/mac directory"
 xattr -dr com.apple.quarantine ./Utils/mac/*
@@ -201,8 +221,8 @@ fi
  
  Debian="sudo apt install python3 python3-venv python3-pip python3-gdal python3-pil.imagetk p7zip-full libnvtt-bin freeglut3-dev gdal-bin gcc imagemagick"
  Arch="sudo pacman -S python python-pip python-gdal p7zip freeglut tk podofo netcdf mariadb hdf5 cfitsio postgresql gcc imagemagick"
- Fedora="sudo dnf install python3 python3-devel python3-pip python3-gdal gdal-devel python3-tkinter p7zip freeglut gcc-c++ ImageMagick"
- openSUSE="sudo zypper install python312 python312-tk python312-devel gdal python3-GDAL p7zip freeglut-devel gcc-c++ ImageMagick"
+ Fedora="sudo dnf install python3 python3-devel python3-pip python3-gdal python3-tkinter p7zip freeglut gcc-c++ ImageMagick"
+ openSUSE="sudo zypper install python311 python311-tk python311-devel gdal python3-GDAL p7zip freeglut-devel gcc-c++ ImageMagick"
  
  if [[ "$OS" == *"Ubuntu"* ]]; then
       py_ver="3"
@@ -232,10 +252,9 @@ fi
       ssp=0 
  
  elif [[ "$OS" == *"Fedora"* ]]; then
-      py_ver="3"
+      py_ver="3.12"
       update="sudo dnf update"
       system_packages=$Fedora 
-      ssp=0
 
 elif [[ "$OS" == *"openSUSE"* ]]; then
       py_ver="3.11"
@@ -245,6 +264,51 @@ elif [[ "$OS" == *"openSUSE"* ]]; then
  else
      OS="Unknown"
  fi
+
+
+if [ "$(uname -m)" = "aarch64" ]; then
+
+    #compile triangle and Triangle4XP from source on Linux aarch64
+    echo "Linux aarch64 - compiling triangle and Triangle4XP from source..."
+    gcc -O2 ./Utils/src/triangle.c -lm -o ./Utils/lin/triangle
+    gcc -O2 ./Utils/src/Triangle4XP.c -lm -o ./Utils/lin/Triangle4XP
+       
+  if [ "$system_packages" = "$Debian" ]; then
+    
+    #Use native nvcompress on Ubuntu/Debian based distributions    
+    echo "Configuring Ortho4XP to use native nvcompress..."
+    echo ""
+    search="native_nvcompress=False"
+    replace="native_nvcompress=True"
+    inputfile="./src/O4_Imagery_Utils.py"
+    tempfile=$(mktemp)
+
+    # Replace string in the file
+    sed "s/$search/$replace/g" "$inputfile" > "$tempfile"
+
+    # Move temp file to original file
+    mv "$tempfile" "$inputfile"
+    
+  else
+
+    #Use Imagemagick on linux aarch64
+    # Variables
+    echo "Configuring Ortho4XP to use ImageMagick..."
+    echo ""
+    search="imagemagick=False"
+    replace="imagemagick=True"
+    inputfile="./src/O4_Imagery_Utils.py"
+    tempfile=$(mktemp)
+
+    # Replace string in the file
+    sed "s/$search/$replace/g" "$inputfile" > "$tempfile"
+
+    # Move temp file to original file
+    mv "$tempfile" "$inputfile"
+     
+  fi
+
+fi 
 
 if ! [ -x "$(command -v gdalwarp)" ]; then
     echo " "
@@ -296,48 +360,6 @@ else
   exit 1
 fi
 
-if [ "$(uname -m)" = "aarch64" ]; then
-
-    #compile triangle and Triangle4XP from source on Linux aarch64
-    echo "Linux aarch64 - compiling triangle and Triangle4XP from source..."
-    gcc -O2 ./Utils/src/triangle.c -lm -o ./Utils/lin/triangle
-    gcc -O2 ./Utils/src/Triangle4XP.c -lm -o ./Utils/lin/Triangle4XP
-       
-  if [ "$system_packages" = "$Debian" ]; then
-    
-    #Use native nvcompress on Linux aarch64 if Ubuntu/Debian based distribution
-    echo "Configuring Ortho4XP to use OS native nvcompress..."
-    echo ""
-    search="native_nvcompress=False"
-    replace="native_nvcompress=True"
-    inputfile="./src/O4_Imagery_Utils.py"
-    tempfile=$(mktemp)
-
-    # Replace string in the file
-    sed "s/$search/$replace/g" "$inputfile" > "$tempfile"
-
-    # Move temp file to original file
-    mv "$tempfile" "$inputfile"
-    
-  else
-
-    #Use Imagemagick on Linux aarch64
-    echo "Configuring Ortho4XP to use ImageMagick..."
-    echo ""
-    search="imagemagick=False"
-    replace="imagemagick=True"
-    inputfile="./src/O4_Imagery_Utils.py"
-    tempfile=$(mktemp)
-
-    # Replace string in the file
-    sed "s/$search/$replace/g" "$inputfile" > "$tempfile"
-
-    # Move temp file to original file
-    mv "$tempfile" "$inputfile"
-     
-  fi
-
-fi 
 
 # Finding python command on "Unknown" distribution
 
@@ -361,11 +383,8 @@ fi
 # Using --system-site-packages for other configurations than macOS & GDAL 3.9
 
 if [[ "$OSTYPE" == "darwin"* ]]; then
-   if [[ "$(gdal-config --version)" == *"3.9"* ]]; then
    ssp=0
-   fi
 fi   
-
 
 if [[ "$ssp" == 0 ]]; then
    python$py_ver -m venv $venv_path
@@ -382,7 +401,9 @@ source $venv_path/bin/activate
 
 if [[ "$ssp" == 0 ]]; then
    pip install -r requirements.txt
-   pip install gdal==$(gdal-config --version)
+   if [[ "$gdal" == 1 ]]; then
+      pip install gdal==$(gdal-config --version)
+   fi
 else
    pip install -I -r requirements.txt
 fi
