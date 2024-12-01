@@ -280,10 +280,8 @@ fi
 
 # Using --system-site-packages for other configurations than macOS & GDAL 3.9
 
-if [[ "$OSTYPE" == "darwin"* ]]; then
-   if [[ "$(gdal-config --version)" == *"3.9"* ]]; then
-   ssp=0
-   fi
+if [[ "$OSTYPE" == "darwin"* ]]; then   
+   ssp=0   
 fi   
 
 
