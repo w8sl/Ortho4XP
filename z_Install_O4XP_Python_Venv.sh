@@ -83,49 +83,6 @@ update_path(){
    echo "Python $py_ver not found! "
  fi 
 
-   
-   if [ -f "/Users/$USER/.zprofile" ]; then
-   
-   echo "------------------------------------------------- "
-   echo "Veryfying the contents of .zprofile "
-   echo "------------------------------------------------- "
-   echo " "
-   echo "There should NOT be a PATH to Python $py_ver in .zprofile"
-   echo " "
-   echo "This line is required by Homebrew: "
-   echo " "
-   echo "eval \"\$($brew_path shellenv)\""
-   echo " "
-   echo "Actual contents of /Users/$USER/.zprofile file: "
-   echo "------------------------------------------------- "
-   echo "$(</Users/$USER/.zprofile )"
-   echo "------------------------------------------------- "
-   echo " "
-   
-   read -p "(1) Proceed ? (2) Replace the contens with: eval \"\$($brew_path shellenv)\" ? " yn
-      case $yn in
-	          1 ) echo " ";
-	              echo "You can also edit /Users/$USER/.zprofile manually using TextEdit ";
-                      echo " ";
-	              echo ;;
-	          2 ) echo " ";
-	              echo "Renaming the original file to .zprofile_bak";
-	              echo " ";
-	              echo "Saving changes to:  /Users/$USER/.zprofile";
-	              
-	              if [ -f "/Users/$USER/.zprofile" ]; then                   
-                      mv /Users/$USER/.zprofile /Users/$USER/.zprofile_bak
-                      fi
-	              echo " ";
-	              echo "In the next step, (re)install Homebrew packages required by Ortho4XP !";
-	              
-	              update_path;;
-	                           
-	          * ) echo invalid response;
-		      exit 1;;
-      esac 
-   fi
-
 if ! [ -x "$(command -v gdalwarp)" ]; then
    echo "GDAL not found!" 
 fi
