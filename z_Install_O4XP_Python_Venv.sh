@@ -1,7 +1,7 @@
 #! /bin/bash
 
-# Define Python version for macOS (tested with 3.10; 3.11; 3.12)
-py_ver="3.12"
+# Define Python version for macOS (tested with 3.10; 3.11)
+py_ver="3.11"
 
 #Set up the default "system-site packages" option for Python venv
 ssp=1
