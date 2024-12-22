@@ -1,6 +1,6 @@
 #! /bin/bash
 
-# Define Python version for macOS (only 3.10 and 3.11 work on macOS Sequoia)
+# Define Python version for macOS (3.10, 3.11 and 3.13 work on macOS Sequoia)
 py_ver="3.11"
 
 #Set up the default "system-site packages" option for Python venv
@@ -242,7 +242,7 @@ if [ "$(uname -m)" = "aarch64" ]; then
     gcc -O2 ./Utils/Triangle4XP.c -lm -o ./Utils/Triangle4XP_linux
 fi
 
-if [ "$system_packages" = "$Debian" ]; then
+if [ -n "$system_packages" ] && [ "$system_packages" = "$Debian" ]; then
     
     #Use native nvcompress on Ubuntu/Debian based distributions
     echo "Configuring Ortho4XP to use OS native nvcompress..."
