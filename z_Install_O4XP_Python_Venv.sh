@@ -22,9 +22,29 @@ fi
 if [[ "$OSTYPE" == "darwin"* ]]; then
    echo "macOS"
 
-# Define Python version for macOS (only 3.10 and 3.11 work on macOS Sequoia)
+# Choose the Python version for macOS installation
 
-py_ver="3.11"
+read -p "Which version of Python would you like to use with Ortho4XP? (0) 3.10, (1) 3.11, (2) 3.12 (3) 3.13  " nr
+         case $nr in
+	          0 ) echo " ";
+	              echo "Proceeding with Python 3.10";
+                  py_ver="3.10" 
+	              echo " " ;;
+	          1 ) echo " ";
+	              echo "Proceeding with Python 3.11";
+                  py_ver="3.11" 
+	              echo " " ;;
+	          2 ) echo " ";
+	              echo "Proceeding with Python 3.12";
+                  py_ver="3.12" 
+	              echo " " ;; 
+	          3 ) echo " ";
+	              echo "Proceeding with Python 3.13";
+                  py_ver="3.13" 
+	              echo " " ;;                               
+	          * ) echo invalid response;
+		      exit 1;;
+          esac 
 
 # Path to Homebrew
 
