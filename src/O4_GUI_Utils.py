@@ -704,7 +704,7 @@ class Ortho4XP_Custom_ZL(tk.Toplevel):
 
     def configure_canvas(self):
         self.canvas.config(scrollregion=self.canvas.bbox(ALL))
-        if "dar" in sys.platform and sys.version_info<(3,12,8):
+        if "dar" in sys.platform and tk.TkVersion < 9:
             self.canvas.bind("<ButtonPress-2>", self.scroll_start)
             self.canvas.bind("<B2-Motion>", self.scroll_move)
             self.canvas.bind("<Control-ButtonPress-2>", self.delPol)
@@ -1093,7 +1093,7 @@ class Ortho4XP_Earth_Preview(tk.Toplevel):
         self.canvas.yview_moveto(y0/self.resolution)
         self.nx0=int((8*x0)//self.resolution)
         self.ny0=int((8*y0)//self.resolution)
-        if "dar" in sys.platform and sys.version_info<(3,12,8):
+        if "dar" in sys.platform and tk.TkVersion < 9:
             self.canvas.bind("<ButtonPress-2>", self.scroll_start)
             self.canvas.bind("<B2-Motion>", self.scroll_move)
         else:
