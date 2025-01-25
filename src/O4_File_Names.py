@@ -7,7 +7,7 @@ g2xpl_16_suffix=''
 
 Ortho4XP_dir  =  '..' if getattr(sys,'frozen',False) else '.'
 
-build_dir = "build/"
+build_dir = "DATA/"
 
 Airport_dir   =  os.path.join(Ortho4XP_dir, "Airport_data")
 Preview_dir = os.path.join(Ortho4XP_dir, "Previews")
