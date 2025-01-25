@@ -146,7 +146,7 @@ class ZoomLevelsMeta(type):
 
     # Common zoom level ranges
     ALL = list(range(__ZL_MIN__, __ZL_MAX__ + 1))
-    OSM_LEVELS = [11, 12, 13]
+    OSM_LEVELS = [11, 12, 13, 14]
     CUSTOM_LEVELS = list(range(__ZL_LOW__, __ZL_MAX__ + 1))
 
     __MAX_OPACITY__ = 0xFF * 0.70
