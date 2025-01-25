@@ -621,6 +621,7 @@ def build_dsf(tile,download_queue):
                 pos_in_pool=dsf_pool_length[idx_dsfpool]
                 textured_nodes[node_hash]=(idx_dsfpool,pos_in_pool)
                 dsf_pool_length[idx_dsfpool]+=1
+            pos_in_pool = min(pos_in_pool, 65535)
             tri_p.extend((idx_dsfpool,pos_in_pool))
         # some triangles could be reduced to nothing by the pool snapping,
         # we skip thme (possible killer to X-Plane's drapping of roads ?)
