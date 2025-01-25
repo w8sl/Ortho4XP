@@ -9,7 +9,7 @@ Ortho4XP_dir  =  '..' if getattr(sys,'frozen',False) else '.'
 
 build_dir = "DATA/"
 
-Airport_dir   =  os.path.join(Ortho4XP_dir, "Airport_data")
+Airport_dir   =  os.path.join(Ortho4XP_dir, build_dir, "Airport_data")
 Preview_dir = os.path.join(Ortho4XP_dir, "Previews")
 Provider_dir = os.path.join(Ortho4XP_dir, "Providers")
 Extent_dir = os.path.join(Ortho4XP_dir, "Extents")
