@@ -1,21 +1,19 @@
 # Ortho4XP
 A scenery generator for the X-Plane flight simulator created by **Oscar Pilote**
  
-Progressive mod created by **Artesim** forked from: https://github.com/oscarpilote/Ortho4XP/tree/feature/progressive_zl
+Unofficial fork of [progressive_zl branch](https://github.com/oscarpilote/Ortho4XP/tree/feature/progressive_zl) by **Artesim**
 
-Version 1.30 updated with modified: https://github.com/oscarpilote/Ortho4XP/pull/186
+[1.30 version, updated with adapted patch for compatibility with latest Python packages](https://github.com/oscarpilote/Ortho4XP/pull/186)
 
-Several bugfixes were done, some coming from: https://github.com/voyageur/Ortho4XP
+Numerous bugfixes, partially inspired by [Voyageur/Ortho4XP](https://github.com/voyageur/Ortho4XP)
 
-Providers were updated from the official master-branch
+Updated providers
 
-Description of progressive_zl feature:
-https://forums.x-plane.org/index.php?/forums/topic/147570-feature-automated-zoom-levels-around-airports/&page=2#comment-1670217
+[Description of progressive_zl feature](https://forums.x-plane.org/index.php?/forums/topic/147570-feature-automated-zoom-levels-around-airports/&page=2#comment-1670217)
 
-For complete list of original contributors - see:
-https://github.com/oscarpilote/Ortho4XP 
+[Original contributors](https://github.com/oscarpilote/Ortho4XP)
 
-Special thanks to all !!!
+Thanks to all !
 
 [Install instructions](https://github.com/w8sl/Ortho4XP/blob/Progressive_130/Install_Instructions.md)
 
