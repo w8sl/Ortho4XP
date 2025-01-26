@@ -3,7 +3,7 @@ A scenery generator for the X-Plane flight simulator created by **Oscar Pilote**
  
 Unofficial fork of [progressive_zl branch](https://github.com/oscarpilote/Ortho4XP/tree/feature/progressive_zl) by **Artesim**
 
-[1.30 version, updated with adapted patch for compatibility with latest Python packages](https://github.com/oscarpilote/Ortho4XP/pull/186)
+1.30 version, updated with [adapted patch](https://github.com/oscarpilote/Ortho4XP/pull/186) for compatibility with latest Python packages
 
 Numerous bugfixes, partially inspired by [Voyageur/Ortho4XP](https://github.com/voyageur/Ortho4XP)
 
