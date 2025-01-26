@@ -20,6 +20,6 @@ Windows:
 - Download and install Python 3.11 from www.python.org.
 - Customize the installation to include “Add python.exe to PATH”, “pip”, “tcl/tk and IDLE”, “py launcher”, “Install Python 3.11 for all users”, and “Add Python to environment variables”.
 - Download and install:
-- [Microsoft Visual C++ Redistributable packages for Visual Studio All-in-One](https://www.techpowerup.com/download/visual-c-redistributable-runtime-package-all-in-one/)
+- [Microsoft Visual C++ Redistributable Runtimes All-in-One](https://www.techpowerup.com/download/visual-c-redistributable-runtime-package-all-in-one/)
 - Use the **win_install.bat** script for installation and the **win_start.bat** script to run Ortho4XP
 
