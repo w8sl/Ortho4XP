@@ -16,5 +16,3 @@ Updated providers
 Thanks to all !
 
 [Install instructions](https://github.com/w8sl/Ortho4XP/blob/Progressive_130/Install_Instructions.md)
-
-[Detailed install instructions](https://github.com/w8sl/Ortho4XP/blob/Progressive_130/Install_Instructions.txt)
