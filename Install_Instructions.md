@@ -17,7 +17,7 @@ Installation on macOS and Linux
 Windows:
 -------------------------------
 - Use Notepad++ or a similar editor to open files from the [Ortho4XP download](https://github.com/w8sl/Ortho4XP/archive/refs/heads/Progressive_140.zip).
-- Download and install Python 3.11 from www.python.org.
+- Download and install Python 3.12 from www.python.org.
 - Customize the installation to include “Add python.exe to PATH”, “pip”, “tcl/tk and IDLE”, “py launcher”, “Install Python 3.11 for all users”, and “Add Python to environment variables”.
 - Download and install:
 - [Microsoft Visual C++ Redistributable Runtimes All-in-One](https://www.techpowerup.com/download/visual-c-redistributable-runtime-package-all-in-one/)
