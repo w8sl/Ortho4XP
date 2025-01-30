@@ -51,7 +51,7 @@ Windows
 
 Just select one for your Windows OS, there is no benefit in our case to
 download the pretty lastest version of Python, since you might get difficulties
-further down to find modules already built for it. Python 3.11. is recommended.
+further down to find modules already built for it. Python 3.12. is recommended.
 
 Customize installation, check the following options:
 
@@ -59,28 +59,26 @@ Customize installation, check the following options:
 "pip"
 "tcl/tk and IDLE"
 "py launcher"
-"Install Python 3.11 for all users"
+"Install Python 3.12 for all users"
 "Add Python to environment variables"
 
 2) Download binary wheel for GDAL from https://github.com/cgohlke/geospatial-wheels/releases
 
 Pay attention to take the one that corresponds to the Python version which you picked
 at Step 1) and to your OS nbr of bits (32 or 64, I guess 64 in all but a few cases).
-As an example, if Python 3.11.*  was selected at Step 1) above and you
-have a 64bit windows, then you would choose file that contains -cp311- and _amd64
+As an example, if Python 3.12.*  was selected at Step 1) above and you
+have a 64bit windows, then you would choose file that contains -cp312- and _amd64
 within filename.
 
+Microsoft Visual C++ Redistributable Runtimes All-in-One:
 
-Download and install The Microsoft Visual C++ Redistributable packages for Visual Studio 2022:
-
-https://learn.microsoft.com/en-US/cpp/windows/latest-supported-vc-redist?view=msvc-170
-
+https://www.techpowerup.com/download/visual-c-redistributable-runtime-package-all-in-one
 
 3) Open Command Prompt window as a standard user
 
 4) Change directory to Ortho4XP folder (freshly downloaded from Github) and launch:
 
-pip install -r requirements_win.txt
+pip install -r requirements.txt
 
 4) Open Command Prompt window as administrator and execute the following command:
 
