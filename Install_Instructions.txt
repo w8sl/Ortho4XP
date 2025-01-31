@@ -8,16 +8,14 @@ The "custom_overlay_src" variable should be set to the: "../X-Plane 12/Global Sc
 The following instructions are for the script install :
 
 
-Linux (Ubuntu/Debian-based, names might slightly differ for other distros)
+Linux
 -----
 
-sudo apt-get install python3 python3-pip python3-requests python3-numpy python3-pyproj python3-gdal python3-shapely python3-rtree python3-pil python3-pil.imagetk p7zip-full libnvtt-bin freeglut3-dev gdal-bin gcc
+Ubuntu 22 based distributions:
 
-Python 3.11 and below:
+sudo apt-get install python3 python3-pip python3-requests python3-numpy python3-pyproj python3-gdal python3-shapely python3-rtree python3-pil python3-pil.imagetk p7zip-full libnvtt-bin freeglut3-dev gdal-bin gcc python3-scikit-fmmpython3-scikit-fmm
 
-sudo apt-get install python3-scikit-fmm
-
-Python 3.12:
+Ubuntu 24, DebianTrixie, Arch-based distributions, Fedora, OpenSuse:
 
 Run:
 chmod +x z_Install_O4XP_Python_Venv.sh
@@ -27,22 +25,7 @@ z_Install_O4XP_Python_Venv.sh
 
 Use "z_Start_O4XP_PythonVenv.sh" to run O4XP
 
-Both scripts will find working directory automatically. Just drag-and_drop into terminal
-
-Arch-based distributions
-
-sudo pacman -S python python-pip python-gdal p7zip freeglut tk podofo netcdf mariadb hdf5 cfitsio postgresql gcc
-
-Run:
-chmod +x z_Install_O4XP_Python_Venv.sh
-
-Install venv:
-z_Install_O4XP_Python_Venv.sh
-
-Use "z_Start_O4XP_PythonVenv.sh" to run O4XP
-
-Both scripts will find working directory automatically. Just drag-and_drop into terminal
-
+Both scripts find working directory automatically. Just drag-and_drop into the terminal
 
 Windows
 -------
