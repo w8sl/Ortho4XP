@@ -2,8 +2,8 @@ NOTICE 1. Windows users: Only use Notepad++ or an equivalent decent editor
 to read or modify Ortho4XP related files. Notepad doesn't understand linux
 line-ends and will create a mess.
 ------------------------------------------------------------------------
-NOTICE 2. A copy of X-Plane 12 is required.
-The "custom_overlay_src" variable should be set to the: "../X-Plane 12/Global Scenery/X-Plane 12 Global Scenery" directory
+NOTICE 2. A copy of X-Plane 12 is required
+The "custom_overlay_src" config variable should be set to the: "../X-Plane 12/Global Scenery/X-Plane 12 Global Scenery" directory
 ------------------------------------------------------------------------
 The following instructions are for the script install :
 
@@ -15,7 +15,7 @@ Ubuntu 22 based distributions:
 
 sudo apt-get install python3 python3-pip python3-requests python3-numpy python3-pyproj python3-gdal python3-shapely python3-rtree python3-pil python3-pil.imagetk p7zip-full libnvtt-bin freeglut3-dev gdal-bin gcc python3-scikit-fmmpython3-scikit-fmm
 
-Ubuntu 24, DebianTrixie, Arch-based distributions, Fedora, OpenSuse:
+Ubuntu 24, DebianTrixie, Arch-based distributions, Fedora, OpenSuse (x86_64 or aarch64):
 
 Run:
 chmod +x z_Install_O4XP_Python_Venv.sh
@@ -27,8 +27,8 @@ Use "z_Start_O4XP_PythonVenv.sh" to run O4XP
 
 Both scripts find working directory automatically. Just drag-and_drop into the terminal
 
-Windows
--------
+Windows (amd64)
+---------------
 
 1) Download and install Python 3 from www.python.org
 
@@ -107,14 +107,17 @@ pip3.11 install gdal==$(gdal-config --version)
 
 7) Launch Ortho4XP
 python3.11 Ortho4XP.py
+
+For installing with Python 3.12 - 3.13, check out the below section:
 -----------------------------------------------------------------------------------------------
------------------------------------------------------------------------------------------------
-Semi-automated, guided  Ortho4XP-Python venv installation on macOS:
+Semi-automated installation on macOS:
 
 Open the terminal
 
-type chmod +x, space, drag-and-drop z_Install_O4XP_Python_Venv.sh into the terminal window, enter
+type chmod +x, space, drag-and-drop "z_Install_O4XP_Python_Venv.sh" into the terminal window, enter
 
-drag-and-drop z_Install_O4XP_Python_Venv.sh into the terminal window, enter
+drag-and-drop "z_Install_O4XP_Python_Venv.sh" into the terminal window, enter
 
 Follow the terminal output messages for step-by-step instructions !
+
+Use "z_Start_O4XP_PythonVenv.sh" to run O4XP
