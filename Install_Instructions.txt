@@ -98,47 +98,22 @@ and launch "python Ortho4XP.py".
 
 macOS
 ------------------------------------------------------------------------------------------
-IMPORTANT NOTICE
-Ortho4XP uses Python installed via Homebrew. Access path to Homebrew should be on the top of the list. 
-For a fresh install - just go to 1) and proceed with the installation. 
-
-If other version of Python has been installed previously, it may be necessary to manually edit hidden file ".zprofile" in your user directory.
-The only content of ".zprofile" file, required for proper functionality of Homebrew and Python should be:
-
-Apple Silicon Mac:
-eval $(/opt/homebrew/bin/brew shellenv)
-
-Intel Mac:
-eval $(/usr/local/bin/brew shellenv)
-------------------------------------------------------------------------------------------
-
-1) In a Terminal window, install Homebrew (https://brew.sh), a package manager:
+1) Open a Terminal window and install Homebrew (https://brew.sh), a package manager
 
 /bin/bash -c "$(curl -fsSL https://raw.githubusercontent.com/Homebrew/install/HEAD/install.sh)"
 
-
-2) Read the terminal messages carefully and follow the PATH setting instructions ! 
-   It should look like this:  
-
-   Run these two commands in your terminal to add Homebrew to your PATH (replace ??? with your user account name):
+2)  On Apple Silicon Mac, execute the following command in the terminal to add Homebrew to the PATH:
 
     Apple Silicon Mac:
-    echo 'eval "$(/opt/homebrew/bin/brew shellenv)"' >> /Users/???/.zprofile
+    echo 'eval "$(/opt/homebrew/bin/brew shellenv)"' >> /Users/$USER/.zprofile
     eval "$(/opt/homebrew/bin/brew shellenv)"
-
-    Intel Mac:
-    echo 'eval "$(/usr/local/bin/brew shellenv)"' >> /Users/???/.zprofile
-    eval "$(/usr/local/bin/brew shellenv)"
-
 
 3) On Apple Silicon Mac (if not done already) install Rosetta:
 
 softwareupdate --install-rosetta
    
-
 4) Go to the Ortho4XP folder
 cd /path/to/Ortho4XP (cd, space, drag-and-drop Ortho4XP folder into the terminal window, enter)
-
 
 5) Copy paste into the terminal window, line by line, hit enter:
 
@@ -148,8 +123,7 @@ pip3.11 install -r ./requirements.txt
 
 pip3.11 install gdal==$(gdal-config --version)
 
-
-6) Run in the terminal:  xattr -dr com.apple.quarantine ./Utils/*
+6)  Execute the following command in the terminal: xattr -dr com.apple.quarantine ./Utils/mac/*
 
 7) Launch Ortho4XP
 python3.11 Ortho4XP.py
@@ -163,4 +137,5 @@ type chmod +x, space, drag-and-drop z_Install_O4XP_Python_Venv.sh into the termi
 
 drag-and-drop z_Install_O4XP_Python_Venv.sh into the terminal window, enter
 
-Follow the terminal output messages for instructions!
+Follow the terminal output messages for step-by-step instructions !
+
