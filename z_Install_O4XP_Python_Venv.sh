@@ -123,7 +123,7 @@ case $yn in
 esac
 
 echo " "
-read -p "Do you want to install GDAL - required when creating GeoTIFFs ? (y/n) " yn
+read -p "Do you want to install GDAL, required only for creating GeoTIFFs?  (y/n) " yn
 
 case $yn in
 	n ) echo "Proceeding without GDAL. It can be installed later (brew install gdal) ";;
