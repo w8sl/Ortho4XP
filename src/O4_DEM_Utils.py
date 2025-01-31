@@ -16,7 +16,7 @@ available_sources = (
     "View3",
     "Viewfinderpanoramas (J. de Ferranti) 3\" - mostly worldwide",
     "View",
-    "Viewfinderpanoramas (J. de Ferranti) 1\"(EU) or 3\" - mostly worldwide",
+    "Viewfinderpanoramas (J. de Ferranti) 1\"(Alps, Greenland) or 3\" - mostly worldwide",
     "SRTM",
     "SRTMv3 (from OpenTopography) - NOW REQUIRES MANUAL DOWNLOAD",
     "NED1",
@@ -619,11 +619,23 @@ def ensure_elevation(source, lat, lon, verbose=True):
                 "P36",
                 "Q36",
                 "R36",
+                 #Greenland
+                "U19","U20","U21","U22","U23","U24","U25","U26","U27","U28","U29",
+                "T18","T19","T20","T21","T22","T23","T24","T25","T26","T27","T28",
+                "S19","S20","S21","S22","S23","S24","S25","S26","S27","S28",
+                "R21","R22","R23","R24","R25","R26","R27",
+                "Q22","Q23","Q24","Q25",
+                "P22","P23","P24",
+                "O23",       
             ):
                 resol = 1
         else:
                 resol = 3
-                # fix download elevation data for Iceland
+                #Faroe Islands
+                if deferranti_letter+str(deferranti_nbr) == "P29":
+                   deferranti_letter = "FAR"
+                   deferranti_nbr = ""
+                #Iceland
                 if deferranti_letter+str(deferranti_nbr) in ("Q27","Q28"):
                    deferranti_letter = "ISL"
                    deferranti_nbr = ""
