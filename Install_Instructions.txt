@@ -109,7 +109,7 @@ pip3.11 install gdal==$(gdal-config --version)
 7) Launch Ortho4XP
 python3.11 Ortho4XP.py
 
-For installing with Python 3.12 - 3.13, check out the below section:
+For Python 3.12 - 3.13, check out the below section:
 -----------------------------------------------------------------------------------------------
 Semi-automated installation on macOS:
 
