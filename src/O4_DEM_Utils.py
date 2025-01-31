@@ -396,11 +396,11 @@ def ensure_elevation(source,lat,lon,verbose=True):
                 resol=3
         else:
             resol=3
-        # Fix letter/number for Faroer Islands
+        # Faroe Islands
         if deferranti_letter+str(deferranti_nbr) == "P29":
             deferranti_letter = "FAR"
             deferranti_nbr = ""
-        # 3" DEM elevation data for Iceland
+        # Iceland
         if deferranti_letter+str(deferranti_nbr) in ("Q27","Q28"):
             deferranti_letter = "ISL"
             deferranti_nbr = ""
