@@ -732,6 +732,7 @@ def build_mesh(tile):
                 "will find in ",
                 str(tile.build_dir),
                 ".\n",
+                "You might also want to try with min_angle in the 2-5 range"
             )
             return 0
 
