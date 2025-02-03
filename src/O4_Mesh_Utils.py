@@ -707,8 +707,14 @@ def build_mesh(tile):
             "(min_angle), most probably due to an uncatched OSM error.\n",
             "It will be tempted now with no angle constraint ",
             "(i.e. min_angle=0).",
+            "You might also want to try with min_angle in the 2-5 range",
         )
-        mesh_cmd[-5] = "{:.9g}".format(0)
+        Tri_option = (
+        "-pq" + "{:.9g}".format(0) + do_refine + 
+        "uYB" + tri_verbosity + output_poly + limit_tris)
+       
+        mesh_cmd[1] =Tri_option
+        UI.vprint(2, "   Mesh command:", " ".join(mesh_cmd))
         fingers_crossed = subprocess.Popen(
             mesh_cmd, stdout=subprocess.PIPE, bufsize=0
         )
@@ -732,7 +738,6 @@ def build_mesh(tile):
                 "will find in ",
                 str(tile.build_dir),
                 ".\n",
-                "You might also want to try with min_angle in the 2-5 range"
             )
             return 0
 
