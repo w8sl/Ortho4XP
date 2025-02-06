@@ -26,7 +26,7 @@ available_sources = (
     'SRTM', 'SRTMv3 (from OpenTopography) - worldwide at latitudes < 60',
     'NED1', 'NED 1" (from USGS) - USA, Canada, Mexico',
     'NED1/3', 'NED 1/3" (from USGS) - USA',
-    'ALOS', 'ALOS 3W30 average (from OpenTopography) - mostly worldwide',
+    'ALOS', 'ALOS 3W30 average (manually downloaded from www.eorc.jaxa.jp) - mostly worldwide',
     'SRTMv3', 'SRTMv3 1" GeoTiffs (manually downloaded from USGS)',
 )
                  
