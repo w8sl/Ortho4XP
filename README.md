@@ -1,9 +1,9 @@
 # Ortho4XP
 A scenery generator for X-Plane 12
 
-Unofficial fork of a great tool created by **Oscar Pilote**
+Unofficial fork of [Ortho4XP 1.40](https://github.com/oscarpilote/Ortho4XP) with added functionality from [progressive_zl branch](https://github.com/oscarpilote/Ortho4XP/tree/feature/progressive_zl)
 
-[Progressive_zl/feature](https://github.com/oscarpilote/Ortho4XP/tree/feature/progressive_zl) mod by **Artesim**, updated with changes from [1.30 fork](https://github.com/w8sl/Ortho4XP/tree/Progressive_130), manually recut, and merged with [Ortho4XP 1.40 alfa](https://github.com/oscarpilote/Ortho4XP)
+Several updates including changes from [1.30 fork](https://github.com/w8sl/Ortho4XP/tree/Progressive_130)
 
 ![Picture](https://github.com/w8sl/Ortho4XP/blob/Progressive_140/src/Unused/Example.jpg)
 
