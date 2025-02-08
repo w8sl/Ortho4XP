@@ -342,7 +342,8 @@ if [ -d "$venv_path/bin" ]; then
 fi
 
 # Make "z_Start_O4XP_PythonVenv.sh" an executable file
-chmod +x z_Start_O4XP_PythonVenv.sh
+chmod +x ./z_Start_O4XP_PythonVenv.sh
+xattr -dr com.apple.quarantine ./z_Start_O4XP_PythonVenv.sh
 
 echo " "
 echo "Installed packages:"
