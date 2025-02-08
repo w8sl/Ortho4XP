@@ -1,7 +1,7 @@
 #! /bin/bash
 
 #Set up the default "system-site packages" option for Python venv
-ssp=1
+ssp=0
 
 #Get path to the Ortho4XP directory
 SCRIPT_DIR=$(cd -- "$(dirname -- "${BASH_SOURCE[0]}")" &> /dev/null && pwd)
@@ -168,16 +168,19 @@ fi
       py_ver="3"
       update="sudo apt update"
       system_packages=$Debian
+      ssp=1
  
  elif [[ "$OS" == *"Linuxmint"* ]]; then
       py_ver="3"
       update="sudo apt update"
       system_packages=$Debian
- 
+      ssp=1
+      
  elif [[ "$OS" == *"Debian"* ]]; then
       py_ver="3"
       update="sudo apt update"
       system_packages=$Debian
+      ssp=1
 
  elif [[ "$OS" == *"Arch"* ]]; then
       py_ver="3.12"
@@ -303,11 +306,7 @@ fi
 
 # Using --system-site-packages for other configurations than macOS & GDAL 3.9
 
-if [[ "$OSTYPE" == "darwin"* ]]; then   
-   ssp=0   
-fi   
-
-
+ 
 if [[ "$ssp" == 0 ]]; then
    python$py_ver -m venv $venv_path
 else
@@ -334,7 +333,8 @@ if [ -d "$venv_path/bin" ]; then
 fi
 
 # Make "z_Start_O4XP_PythonVenv.sh" an executable file
-chmod +x z_Start_O4XP_PythonVenv.sh
+chmod +x ./z_Start_O4XP_PythonVenv.sh
+xattr -dr com.apple.quarantine ./z_Start_O4XP_PythonVenv.sh
 
 echo " "
 echo "Installed packages:"
