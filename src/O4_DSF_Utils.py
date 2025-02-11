@@ -29,7 +29,8 @@ import O4_Bathymetry as BATHY
 quad_init_level = 3
 quad_capacity_high = 50000
 quad_capacity_low = 35000
-
+quad_capacity_custom = 100000
+quad_capacity_custom_list =[(30,-85)]
 # For Laminar test suite
 use_test_texture = False
 
@@ -533,7 +534,9 @@ def build_dsf(tile, download_queue):
     UI.vprint(1, "-> Computing point pools and texture requirements")
     
     # 5 Compute quadtree
-    if (tile.use_masks_for_inland):
+    if (tile.lat,tile.lon) in quad_capacity_custom_list:
+        quad_capacity = quad_capacity_custom
+    elif (tile.use_masks_for_inland):
         quad_capacity = quad_capacity_low
     else:
         quad_capacity = quad_capacity_high
@@ -562,11 +565,11 @@ def build_dsf(tile, download_queue):
         level = len(key[0])
         plist = sorted(list(pool_quadtree[key]["idx_nodes"]))
         node_icoords[[5 * idx_node for idx_node in plist]] = [
-            int(pool_quadtree.nodes[idx_node][0][level : level + 16], 2)
+            int(pool_quadtree.nodes[idx_node][0][level : level + 16], 2) if pool_quadtree.nodes[idx_node][0][level : level + 16] else 0
             for idx_node in plist
         ]
         node_icoords[[5 * idx_node + 1 for idx_node in plist]] = [
-            int(pool_quadtree.nodes[idx_node][1][level : level + 16], 2)
+            int(pool_quadtree.nodes[idx_node][1][level : level + 16], 2) if pool_quadtree.nodes[idx_node][1][level : level + 16] else 0
             for idx_node in plist
         ]
         altitudes = numpy.array(
