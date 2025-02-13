@@ -25,7 +25,7 @@ echo Installing requirements
 pip install -r requirements.txt
 
 
-echo Installing prebuild Python wheels for GDAL from:  https://github.com/cgohlke/geospatial-wheels/releases
+echo Downloading pre-built wheel for GDAL from:  https://github.com/cgohlke/geospatial-wheels/releases
 
 
 setlocal
