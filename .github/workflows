@@ -1,0 +1,29 @@
+name: Compile Triangle4XP.exe
+on:
+  workflow_dispatch:
+
+jobs:
+  build:
+    runs-on: windows-latest
+
+    steps:
+    - name: Checkout code
+      uses: actions/checkout@v4
+
+    - name: Set up Mingw64
+      run: echo "C:\tools\mingw64\bin" >> $env:GITHUB_PATH
+      shell: pwsh
+    
+    - name: Create dist directory
+      run: mkdir dist
+      shell: pwsh
+    
+    - name: Compile C code
+      run: |         
+         gcc Utils/src/Triangle4XP.c -o dist/Triangle4XP.exe -lm   
+    
+    - name: Upload artifact
+      uses: actions/upload-artifact@v4
+      with:
+        name: Trianlge4XP
+        path: dist
