@@ -266,13 +266,14 @@ if [ "$(uname -m)" = "aarch64" ]; then
 
     #compile triangle and Triangle4XP from source on Linux aarch64
     echo "Linux aarch64 - compiling triangle and Triangle4XP from source..."
-    gcc -O2 ./Utils/src/triangle.c -lm -o ./Utils/lin/triangle
-    gcc -O2 ./Utils/src/Triangle4XP.c -lm -o ./Utils/lin/Triangle4XP
-       
-  if [ "$system_packages" = "$Debian" ]; then
+    gcc -O2 ./Utils/triangle.c -lm -o ./Utils/triangle_linux
+    gcc -O2 ./Utils/Triangle4XP.c -lm -o ./Utils/Triangle4XP_linux
+fi
+
+if [ -n "$system_packages" ] && [ "$system_packages" = "$Debian" ]; then
     
-    #Use native nvcompress on Ubuntu/Debian based distributions    
-    echo "Configuring Ortho4XP to use native nvcompress..."
+    #Use native nvcompress on Ubuntu/Debian based distributions
+    echo "Configuring Ortho4XP to use OS native nvcompress..."
     echo ""
     search="native_nvcompress=False"
     replace="native_nvcompress=True"
@@ -284,27 +285,7 @@ if [ "$(uname -m)" = "aarch64" ]; then
 
     # Move temp file to original file
     mv "$tempfile" "$inputfile"
-    
-  else
-
-    #Use Imagemagick on linux aarch64
-    # Variables
-    echo "Configuring Ortho4XP to use ImageMagick..."
-    echo ""
-    search="imagemagick=False"
-    replace="imagemagick=True"
-    inputfile="./src/O4_Imagery_Utils.py"
-    tempfile=$(mktemp)
-
-    # Replace string in the file
-    sed "s/$search/$replace/g" "$inputfile" > "$tempfile"
-
-    # Move temp file to original file
-    mv "$tempfile" "$inputfile"
-     
-  fi
-
-fi 
+fi
 
 # Finding python command on "Unknown" distribution
 
