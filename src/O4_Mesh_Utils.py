@@ -18,7 +18,7 @@ if 'dar' in sys.platform:
     Triangle4XP_cmd = os.path.join(FNAMES.Utils_dir,"Triangle4XP ")
     triangle_cmd    = os.path.join(FNAMES.Utils_dir,"triangle ")
     sort_mesh_cmd   = os.path.join(FNAMES.Utils_dir,"moulinette ")
-    unzip_cmd       = "7z "
+    unzip_cmd       = os.path.join(FNAMES.Utils_dir,"7zz ")
 elif 'win' in sys.platform:
     Triangle4XP_cmd = os.path.join(FNAMES.Utils_dir,"Triangle4XP.exe ")
     triangle_cmd    = os.path.join(FNAMES.Utils_dir,"triangle.exe ")
