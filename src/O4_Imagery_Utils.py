@@ -1587,6 +1587,11 @@ def download_jpeg_ortho(
             "could not be obtained ",
             "(even at lower ZL), it was filled with white there.",
         )
+        if not os.path.exists(file_dir):
+            os.makedirs(file_dir)
+        # This will create an empty file with the .white extension     
+        with open(os.path.join(file_dir, file_name.replace(".jpg", ".white")), 'w') as file:
+             pass
     if not os.path.exists(file_dir):
         os.makedirs(file_dir)
     try:

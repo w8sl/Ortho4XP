@@ -48,6 +48,7 @@ def build_tile(tile):
     UI.logprint(
         "Step 3 for tile lat=", tile.lat, ", lon=", tile.lon, ": starting."
     )
+    delete_white_textures(tile)
     UI.vprint(
         0,
         "\nStep 3 : Building DSF/Imagery for tile "
@@ -188,6 +189,7 @@ def build_tile(tile):
             pass
     if UI.cleaning_level > 1 and not tile.grouped:
         remove_unwanted_textures(tile)
+    count_white_textures(tile)
     UI.timings_and_bottom_line(timer)
     UI.logprint(
         "Step 3 for tile lat=", tile.lat, ", lon=", tile.lon, ": normal exit."
@@ -303,3 +305,54 @@ def remove_unwanted_textures(tile):
                 os.remove(os.path.join(tile.build_dir, "textures", f))
             except:
                 pass
+################################################################################
+def delete_white_textures(tile):
+    jpg_path = os.path.join(FNAMES.Imagery_dir, FNAMES.long_latlon(tile.lat, tile.lon))
+    dds_path = os.path.join(tile.build_dir, "textures")
+    jpg_counter, dds_counter = 0, 0
+
+    if os.path.exists(jpg_path):
+        tag_list = glob.glob(os.path.join(jpg_path, "**", "*.white"), recursive=True)
+        if tag_list:
+            print("")
+            UI.vprint(
+                1,
+                len(tag_list),
+                "tag(s) for white textures detected. Removing corresponding .jpg and .dds files...",
+            )
+            print("")
+        for tag_file in tag_list:
+            os.remove(tag_file)
+
+            jpg_file = tag_file.replace(".white", ".jpg")
+            if os.path.exists(jpg_file):
+                os.remove(jpg_file)
+                print(f"Deleted: {jpg_file}")
+                jpg_counter += 1
+
+            dds_file = os.path.join(
+                dds_path, os.path.basename(tag_file).replace(".white", ".dds")
+            )
+            if os.path.exists(dds_file):
+                os.remove(dds_file)
+                print(f"Deleted: {dds_file}")
+                dds_counter += 1
+
+    message = (
+        f"Deleted {jpg_counter} jpeg and {dds_counter} DDS files, containing white textures for tile: {FNAMES.short_latlon(tile.lat, tile.lon)}"
+        if dds_counter or jpg_counter
+        else " "
+    )
+    UI.vprint(1, message)
+
+###################################################################################
+def count_white_textures(tile):
+    jpg_path = os.path.join(FNAMES.Imagery_dir, FNAMES.long_latlon(tile.lat, tile.lon))
+    tag_list = glob.glob(os.path.join(jpg_path, "**", "*.white"), recursive=True)
+    if len(tag_list):
+        print("")
+        UI.vprint(
+            1,
+            len(tag_list),
+            'orthophoto(s) containing white textures were tagged. Try running "Build Imagery/DSF" again to re-download the missing textures.',
+        )
