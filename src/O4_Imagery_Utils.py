@@ -49,7 +49,7 @@ native_nvcompress=False
 if 'dar' in sys.platform:
     dds_convert_cmd = os.path.join(UI.Ortho4XP_dir,"Utils","nvcompress","nvcompress")
     gdal_transl_cmd = "gdal_translate"
-    gdalwarp_cmd    = "gdalwarp"
+    gdalwarp_cmd = "gdalwarp"
     devnull_rdir    = " >/dev/null 2>&1"
 elif 'win' in sys.platform:
     dds_convert_cmd = os.path.join(UI.Ortho4XP_dir, "Utils", "nvcompress", "nvcompress.exe")
@@ -941,6 +941,12 @@ def download_jpeg_ortho(file_dir,file_name,til_x_left,til_y_top,zoomlevel,provid
     if UI.red_flag: return 0
     if not success:
         UI.lvprint(1,"Part of image",file_name,"could not be obtained (even at lower ZL), it was filled with white there.")
+        if not os.path.exists(file_dir):
+            os.makedirs(file_dir)
+        # This will create an empty file with the .white extension     
+        with open(os.path.join(file_dir, file_name.replace(".jpg", ".white")), 'w') as file:
+             pass  
+    
     if not os.path.exists(file_dir):
         os.makedirs(file_dir)
     try:
