@@ -7,19 +7,10 @@ import itertools
 from math import sqrt
 import array
 import numpy
+import rasterio
 from PIL import Image
 import O4_UI_Utils as UI
 import O4_File_Names as FNAMES
-
-try:
-    from osgeo import gdal
-    from osgeo import gdal_array
-
-    gdal.UseExceptions()
-    has_gdal = True
-except:
-    print("GDAL not available!")
-    has_gdal = False
 
 available_sources = (
     "View3",
@@ -479,46 +470,57 @@ def read_elevation_from_file(file_name, lat, lon, info_only=False, base_if_error
         x1 = y1 = 1
         epsg = 4326
         nodata = -32768
-    elif has_gdal:
+    else:
         try:
-            ds = gdal.Open(file_name)
-            rs = ds.GetRasterBand(1)
+            dataset = rasterio.open(file_name)
             if not info_only:
-                alt_dem = rs.ReadAsArray().astype(numpy.float32)
-            (nxdem, nydem) = (ds.RasterXSize, ds.RasterYSize)
-            nodata = rs.GetNoDataValue()
+                alt_dem= dataset.read(1).astype(numpy.float32)
+            (nxdem, nydem)=(dataset.width, dataset.height)
+            nodata=dataset.nodata
             if nodata is None:
                 UI.vprint(
                     1,
-                    "    WARNING: raster DEM does not advertise its no_data value, assuming -32768.",
+                    "    WARNING: raster DEM does not advertise its no_data ",
+                    "value, assuming -32768.",
                 )
                 nodata = -32768
-            else:  # elevations being stored as float32, we push the nodata to that framework too, and then replace no_data values by -32768 anyway for uniformity
+            else:
+                # elevations being stored as float32, we push the nodata to that
+                # framework too, and then replace no_data values by -32768
+                # anyway for uniformity
                 nodata = numpy.float32(nodata)
                 if not info_only:
                     alt_dem[alt_dem == nodata] = -32768
                 nodata = -32768
-            # Replace nan with nodata
-            alt_dem = numpy.nan_to_num(alt_dem, nan=nodata)
+                
+            #Replace nan with nodata
+            alt_dem=numpy.nan_to_num(alt_dem,nan=nodata)
+            
             try:
-                epsg = int(ds.GetProjection().split('"')[-2])
+                crs=dataset.crs
+                epsg=crs.to_epsg()
             except:
                 UI.vprint(
                     1,
-                    "    WARNING: raster DEM does not advertise its EPSG code, assuming 4326.",
+                    "    WARNING: raster DEM does not advertise its EPSG ",
+                    "code, assuming 4326.",
                 )
                 epsg = 4326
             if epsg not in (
                 4326,
                 4269,
-            ):  # let's be blind about 4269 which might be sufficiently close to 4326 for our purposes
+            ):
+            # let's be blind about 4269 which might be sufficiently close to
+            # 4326 for our purposes
                 UI.lvprint(
                     1,
                     "    WARNING: unsupported EPSG code ",
                     epsg,
-                    ". Only EPSG:4326 is supported, result is likely to be non sense.",
+                    ". Only EPSG:4326 is supported, result is likely to ",
+                    "be non sense.",
                 )
-            geo = ds.GetGeoTransform()
+            transform=dataset.transform
+            geo=(transform.c, transform.a, transform.b, transform.f, transform.d, transform.e)
             # We are assuming AREA_OR_POINT is area here
             x0 = geo[0] + 0.5 * geo[1] - lon
             y1 = geo[3] + 0.5 * geo[5] - lat
@@ -526,7 +528,10 @@ def read_elevation_from_file(file_name, lat, lon, info_only=False, base_if_error
             y0 = y1 + (nydem - 1) * geo[5]
         except:
             UI.lvprint(
-                1, "   ERROR: in reading ", file_name, "-> replaced with zero altitude."
+                1,
+                "   ERROR: in reading ",
+                file_name,
+                "-> replaced with zero altitude.",
             )
             nxdem = nydem = base_if_error
             if not info_only:
@@ -537,20 +542,7 @@ def read_elevation_from_file(file_name, lat, lon, info_only=False, base_if_error
             x1 = y1 = 1
             epsg = 4326
             nodata = -32768
-    elif not has_gdal:
-        UI.lvprint(
-            1,
-            "   WARNING: unsupported raster (install Gdal):",
-            file_name,
-            "-> replaced with zero altitude.",
-        )
-        nxdem = nydem = base_if_error
-        if not info_only:
-            alt_dem = numpy.zeros((base_if_error, base_if_error), dtype=numpy.float32)
-        x0 = y0 = 0
-        x1 = y1 = 1
-        epsg = 4326
-        nodata = -32768
+            
     return (epsg, x0, y0, x1, y1, nodata, nxdem, nydem, alt_dem)
 
 
