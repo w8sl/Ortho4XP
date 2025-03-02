@@ -22,6 +22,26 @@ fi
 if [[ "$OSTYPE" == "darwin"* ]]; then
    echo "macOS"
 
+# Function to install Rosetta
+install_rosetta() {
+  if /usr/bin/pgrep oahd >/dev/null 2>&1; then
+    echo " "
+  else
+    echo "Installing Rosetta (required for DDS conversion) ..."
+      softwareupdate --install-rosetta --agree-to-license
+
+    if [[ $? -eq 0 ]]; then
+      echo "Rosetta has been successfully installed."
+    else
+      echo "Failed to install Rosetta."
+    fi
+  fi
+}
+
+if [[ "$(uname -m)" == "arm64" ]]; then
+   install_rosetta
+fi
+
 # Choose the Python version for macOS installation
 
 read -p "Which version of Python would you like to use with Ortho4XP? (0) 3.10, (1) 3.11, (2) 3.12 (3) 3.13  " nr
@@ -103,16 +123,8 @@ update_path(){
    echo "Python $py_ver not found! "
  fi 
 
-if ! [ -x "$(command -v gdalwarp)" ]; then
-   echo "GDAL not found!" 
-fi
-
-if ! [ -x "$(command -v 7z)" ]; then
-   echo "p7zip not found!"
-fi
-
 echo " "
-read -p "Do you want to install Homebrew packages required by O4XP? (y/n) " yn
+read -p "Do you want to (re)install Homebrew packages required by O4XP? (y/n) " yn
 
 case $yn in
 	n ) echo "ok, we will proceed without installation of Homebrew packages";;
@@ -123,17 +135,22 @@ case $yn in
 esac
 
 echo " "
-read -p "Do you want to install GDAL, required only for creating GeoTIFFs?  (y/n) " yn
 
-case $yn in
-	n ) echo "Proceeding without GDAL. It can be installed later (brew install gdal) ";;
-	y ) echo "Installing GDAL. Be patient - it may take some time ...";
+if ! [ -x "$(command -v gdalwarp)" ]; then
+   
+   echo "GDAL not found!" 
+   echo" "
+   read -p "Do you want to install GDAL, required only for creating GeoTIFFs?  (y/n) " yn
+
+   case $yn in
+	 n ) echo "Proceeding without GDAL. It can be installed later (brew install gdal) ";;
+	 y ) echo "Installing GDAL. Be patient - it may take some time ...";
 	    brew install gdal ;;
-	* ) echo invalid response;
+	 * ) echo invalid response;
             exit 1;;
-esac
+   esac
 
-
+fi
 
 echo "Approving the use of executables from $SCRIPT_DIR/Utils/mac directory"
 xattr -dr com.apple.quarantine ./Utils/mac/*
@@ -341,15 +358,14 @@ if [ -d "$venv_path/bin" ]; then
   echo "$(python --version) venv has been created in the $venv_path directory"
 fi
 
-# Make "z_Start_O4XP_PythonVenv.sh" an executable file
-chmod +x ./z_Start_O4XP_PythonVenv.sh
-xattr -dr com.apple.quarantine ./z_Start_O4XP_PythonVenv.sh
+# Make "z_Start_O4XP.sh" an executable file
+chmod +x ./z_Start_O4XP.sh
+xattr -dr com.apple.quarantine ./z_Start_O4XP.sh
 
 echo " "
 echo "Installed packages:"
 pip list
 echo " "
 echo " "
-echo " "
-echo "Use $SCRIPT_DIR/z_Start_O4XP_PythonVenv.sh to start O4XP"
+echo "Use $SCRIPT_DIR/z_Start_O4XP.sh to start O4XP"
 echo " "

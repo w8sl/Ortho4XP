@@ -24,12 +24,12 @@ Ubuntu 24, DebianTrixie, Arch-based distributions, Fedora, OpenSuse (x86_64 or a
 ---------------------------------------------------------------------------------------
 Run in the terminal:
 
-chmod +x z_Install_O4XP_Python_Venv.sh
+chmod +x z_Install_O4XP.sh
 
 Install venv:
-z_Install_O4XP_Python_Venv.sh
+z_Install_O4XP.sh
 
-Use "z_Start_O4XP_PythonVenv.sh" to run O4XP
+Use "z_Start_O4XP.sh" to run O4XP
 
 Both scripts find working directory automatically. Just drag-and_drop into the terminal
 
@@ -98,6 +98,7 @@ macOS
     softwareupdate --install-rosetta
    
 4) Go to the Ortho4XP folder
+
 cd /path/to/Ortho4XP (cd, space, drag-and-drop Ortho4XP folder into the terminal window, enter)
 
 5) Copy paste into the terminal, line by line, hit enter:
@@ -105,8 +106,6 @@ cd /path/to/Ortho4XP (cd, space, drag-and-drop Ortho4XP folder into the terminal
 brew install gdal python@3.11 proj spatialindex p7zip python-tk@3.11
 
 pip3.11 install -r ./requirements.txt
-
-pip3.11 install gdal==$(gdal-config --version)
 
 6)  Execute the following command in the terminal: xattr -dr com.apple.quarantine ./Utils/mac/*
 
@@ -118,8 +117,8 @@ For installation on macOS with Python 3.12-3.13, please follow these steps:
 
 Open the terminal.
 
-Type “chmod +x”, space and drag-and-drop “z_Install_O4XP_Python_Venv.sh” into the terminal window. Enter.
+Type “chmod +x”, space and drag-and-drop “z_Install_O4XP.sh” into the terminal window. Enter.
 
 Follow the terminal output for instructions.
 
-Use “z_Start_O4XP_PythonVenv.sh” to run O4XP.
+Use “z_Start_O4XP.sh” to run O4XP.

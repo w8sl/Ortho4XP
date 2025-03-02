@@ -1,17 +1,18 @@
 [Download Ortho4XP](https://github.com/w8sl/Ortho4XP/archive/refs/heads/Progressive_140.zip)
 
-**Steps specific for macOS:**
+Installation on macOS without Homebrew
+---------------------------------------
+Download and install Python 3.12 from [www.python.org](https://www.python.org/downloads/macos/)
+- Use **“z_Install_Mac.sh”** script (run chmod +x z_Install_Mac.sh first)
+  
+- Click on **“z_Start_O4XP.sh”** to run Ortho4XP
 
-- [Install Homebrew](https://brew.sh)
+Installation on Linux, macOS with [Homebrew](https://brew.sh/)
+------------------------------------------
 
-- Install Rosetta on Apple silicon Mac (if not done) using the terminal: **softwareupdate —install-rosetta**.
-
-Installation on macOS and Linux
---------------------------------
-
-- Use **“z_Install_O4XP_Python_Venv.sh”** script (run chmod +x first)
+- Use **“z_Install_O4XP.sh”** script (run chmod +x first)
 - Follow terminal output for instructions
-- Use **“z_Start_O4XP_PythonVenv.sh”** to run Ortho4XP
+- Use **“z_Start_O4XP.sh”** to run Ortho4XP
 - Both scripts find working directory automatically
 
 Windows:
