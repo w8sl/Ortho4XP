@@ -15,13 +15,13 @@ ovl_exclude_net = []
 custom_overlay_src = ""
 
 if "dar" in sys.platform:
-    unzip_cmd = "7z "
+    unzip_cmd = os.path.join(FNAMES.Utils_dir, "mac", "7zz ")
     dsftool_cmd = os.path.join(FNAMES.Utils_dir, "mac", "DSFTool ")
 elif "win" in sys.platform:
     unzip_cmd = os.path.join(FNAMES.Utils_dir, "win", "7z.exe ")
     dsftool_cmd = os.path.join(FNAMES.Utils_dir, "win", "DSFTool.exe ")
 else:
-    unzip_cmd = os.path.join(FNAMES.Utils_dir, "lin", "7zz ")
+    unzip_cmd = "7z "
     dsftool_cmd = os.path.join(FNAMES.Utils_dir, "lin", "DSFTool ")
 
 ################################################################################
