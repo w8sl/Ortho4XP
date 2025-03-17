@@ -97,8 +97,8 @@ if [[ "$(uname -m)" == "arm64" ]]; then
    install_rosetta
 fi
 
-echo "Approving the use of executables from $SCRIPT_DIR/Utils/mac directory"
-xattr -dr com.apple.quarantine ./Utils/mac/*
+echo "Approving the use of executables from $SCRIPT_DIR/Utils/ directory"
+xattr -dr com.apple.quarantine ./Utils/*
 
 # Remove existing venv
 if [ -d $venv_path ]; then
