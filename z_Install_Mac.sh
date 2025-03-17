@@ -97,6 +97,7 @@ install_macOS_older(){
  pip install pyproj==3.6.1
  pip install rasterio==1.4.1
  pip install requests==2.32.3
+ pip install scikit-fmm
  }
 
 # Get the macOS version
