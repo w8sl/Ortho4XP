@@ -12,7 +12,7 @@ if [ ! -f ./Ortho4XP.py ]; then
   echo " "
   echo "Error !"
   echo " "
-  echo "z_Install_O4XP_Python_Venv.sh should be in the main O4XP directory !"
+  echo "z_Install_O4XP.sh should be in the main O4XP directory !"
   echo " "
   exit 1 
 fi
