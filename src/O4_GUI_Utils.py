@@ -1715,7 +1715,11 @@ class Ortho4XP_Earth_Preview(tk.Toplevel):
                                has_ovl="o"
                             else:
                                has_ovl="" 
-                            content = prov + "\n" + str(zl) + "\n" + has_ovl
+                            if contains_white_tag(lat,lon):
+                               white_textures=" w!"
+                            else:
+                               white_textures=""
+                            content = prov + "\n" + str(zl) + "\n" + has_ovl + white_textures
                         else:
                             content = "?"
                         self.dico_tiles_done[(lat, lon)] = (
@@ -2179,5 +2183,10 @@ class Ortho4XP_Earth_Preview(tk.Toplevel):
     def exit(self):
         self.destroy()
 
-
 ##############################################################################
+def contains_white_tag(lat,lon):
+    jpg_path = os.path.join(FNAMES.Imagery_dir, FNAMES.long_latlon(lat, lon))
+    for root, dirs, files in os.walk(jpg_path):
+        if any(file.endswith('.white') for file in files):
+            return True
+    return False
