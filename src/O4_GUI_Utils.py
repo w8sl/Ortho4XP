@@ -51,6 +51,8 @@ import O4_Airport_Data_Source as APT_SRC
 # Set OsX=True if you prefer the OsX way of drawing existing tiles but are on Linux or Windows.
 OsX = "dar" in sys.platform
 
+# Mark tiles with white texture tags on the map ("w!")
+mark_white_textures = True
 
 ############################################################################################
 class Ortho4XP_GUI(tk.Tk):
@@ -1715,10 +1717,10 @@ class Ortho4XP_Earth_Preview(tk.Toplevel):
                                has_ovl="o"
                             else:
                                has_ovl="" 
-                            if contains_white_tag(lat,lon):
-                               white_textures=" w!"
-                            else:
-                               white_textures=""
+                            white_textures=""
+                            if mark_white_textures:
+                               if contains_white_tag(lat,lon):
+                                  white_textures=" w!"                            
                             content = prov + "\n" + str(zl) + "\n" + has_ovl + white_textures
                         else:
                             content = "?"
