@@ -5,7 +5,7 @@ Installation on macOS without Homebrew
 Download and install Python 3.12 from [www.python.org](https://www.python.org/downloads/macos/)
 - Use **“z_Install_Mac.sh”** script (run chmod +x z_Install_Mac.sh first)
   
-- Click on **“z_Start_O4XP.sh”** to run Ortho4XP
+- Use **“z_Start_O4XP.sh”** to run Ortho4XP
 
 Installation on Linux, macOS with [Homebrew](https://brew.sh/)
 ------------------------------------------
