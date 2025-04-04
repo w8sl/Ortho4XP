@@ -24,11 +24,14 @@ from O4_Common_Types import IcaoCode
 #
 ########################################################################################################################
 
-__ZL_OPTIM_LIMIT__ = 12  # At which ZL do we stop replacing lower zl tiles with higher ones ?
+__ZL_OPTIM_LIMIT__ = (
+    12  # At which ZL do we stop replacing lower zl tiles with higher ones ?
+)
 
 
 class O4AirportDataSourceException(Exception):
     """Base exception class for all exceptions raised by this module"""
+
     pass
 
 
@@ -37,6 +40,7 @@ class O4AirportDataSourceException(Exception):
 # Zoom Level utility functions
 #
 ########################################################################################################################
+
 
 def zl_optimal_ground_dist(zl, screen_res, fov, fpa):
     """
@@ -234,11 +238,12 @@ def zl_to_height(zl, screen_res, fov):
 #
 ########################################################################################################################
 
+
 class XPlaneTile:
     """Utility class to work with X-Plane tiles"""
 
     # We won't dynamically add any attribute : optimize RAM usage
-    __slots__ = ['lat', 'lon', '_hash']
+    __slots__ = ["lat", "lon", "_hash"]
 
     def __init__(self, lat, lon):
         self.lat = int(math.floor(lat))
@@ -246,35 +251,56 @@ class XPlaneTile:
         self._hash = hash((self.lat, self.lon))
 
     def __eq__(self, other):
-        return (self.lat, self.lon) == (other.lat, other.lon) if isinstance(other, XPlaneTile) else NotImplemented
+        return (
+            (self.lat, self.lon) == (other.lat, other.lon)
+            if isinstance(other, XPlaneTile)
+            else NotImplemented
+        )
 
     def __lt__(self, other):
-        return (self.lat, self.lon) < (other.lat, other.lon) if isinstance(other, XPlaneTile) else NotImplemented
+        return (
+            (self.lat, self.lon) < (other.lat, other.lon)
+            if isinstance(other, XPlaneTile)
+            else NotImplemented
+        )
 
     def __hash__(self):
         return self._hash
 
     def __repr__(self):
-        return '<XPlaneTile {:+03d}{:+04d}>'.format(self.lat, self.lon)
+        return "<XPlaneTile {:+03d}{:+04d}>".format(self.lat, self.lon)
 
     def surrounding_tiles(self, include_self=False):
         """Return the tiles surrounding this one (NOT including itself).
         >>> [(tile.lat, tile.lon) for tile in XPlaneTile(43, 1).surrounding_tiles()]
         [(42, 0), (42, 1), (42, 2), (43, 0), (43, 2), (44, 0), (44, 1), (44, 2)]
         """
-        return [tile
-                # TODO: TileLatLon: there has to be a smarter way
-                for lat_offset in [-1 if self.lat > -90 else 179, 0, 1 if self.lat < 90 else -179]
-                for lon_offset in [-1 if self.lon > -90 else 179, 0, 1 if self.lon < 90 else -179]
-                for tile in [XPlaneTile(self.lat + lat_offset,
-                                        self.lon + lon_offset)]
-                if tile != self or include_self]
+        return [
+            tile
+            # TODO: TileLatLon: there has to be a smarter way
+            for lat_offset in [
+                -1 if self.lat > -90 else 179,
+                0,
+                1 if self.lat < 90 else -179,
+            ]
+            for lon_offset in [
+                -1 if self.lon > -90 else 179,
+                0,
+                1 if self.lon < 90 else -179,
+            ]
+            for tile in [XPlaneTile(self.lat + lat_offset, self.lon + lon_offset)]
+            if tile != self or include_self
+        ]
 
     def polygon(self):
-        return shapely.geometry.Polygon([(self.lon, self.lat),
-                                         (self.lon + 1, self.lat),
-                                         (self.lon + 1, self.lat + 1),
-                                         (self.lon, self.lat + 1)])
+        return shapely.geometry.Polygon(
+            [
+                (self.lon, self.lat),
+                (self.lon + 1, self.lat),
+                (self.lon + 1, self.lat + 1),
+                (self.lon, self.lat + 1),
+            ]
+        )
 
 
 class GTile:
@@ -284,7 +310,7 @@ class GTile:
     - https://developers.google.com/maps/documentation/javascript/coordinates"""
 
     # We won't dynamically add any attribute : optimize RAM usage
-    __slots__ = ['x', 'y', 'zl', '_hash']
+    __slots__ = ["x", "y", "zl", "_hash"]
 
     __INSTANCES_CACHE__ = {}
     __INSTANCES_CACHE_HITS__ = 0
@@ -293,11 +319,15 @@ class GTile:
     @classmethod
     def cache_info(cls):
         # LRU cache size tailored for heavy use case = Tile +42-089 (max airports), ZL 15 to 19
-        return {'instances': 'hits={}, misses={}'.format(cls.__INSTANCES_CACHE_HITS__, cls.__INSTANCES_CACHE_MISSES__),
-                'lower_zl_tile': str(cls.lower_zl_tile.cache_info()),
-                'higher_zl_subtiles': str(cls.higher_zl_subtiles.cache_info()),
-                'zl_siblings': str(cls.zl_siblings.cache_info()),
-                '_cached_polygon': str(cls._cached_polygon.cache_info())}
+        return {
+            "instances": "hits={}, misses={}".format(
+                cls.__INSTANCES_CACHE_HITS__, cls.__INSTANCES_CACHE_MISSES__
+            ),
+            "lower_zl_tile": str(cls.lower_zl_tile.cache_info()),
+            "higher_zl_subtiles": str(cls.higher_zl_subtiles.cache_info()),
+            "zl_siblings": str(cls.zl_siblings.cache_info()),
+            "_cached_polygon": str(cls._cached_polygon.cache_info()),
+        }
 
     def __new__(cls, x, y, zl, *args, **kwargs):
         _id = (x, y, zl)
@@ -306,7 +336,9 @@ class GTile:
             cls.__INSTANCES_CACHE_HITS__ += 1
             return cls.__INSTANCES_CACHE__[_id]
 
-        cls.__INSTANCES_CACHE__[_id] = inst = super(GTile, cls).__new__(cls, *args, **kwargs)
+        cls.__INSTANCES_CACHE__[_id] = inst = super(GTile, cls).__new__(
+            cls, *args, **kwargs
+        )
         cls.__INSTANCES_CACHE_MISSES__ += 1
         return inst
 
@@ -317,64 +349,78 @@ class GTile:
         self._hash = hash((self.x, self.y, self.zl))
 
     def __lt__(self, other):
-        return (self.x, self.y, self.zl) < (other.x, other.y, other.zl) if isinstance(other, GTile) else NotImplemented
+        return (
+            (self.x, self.y, self.zl) < (other.x, other.y, other.zl)
+            if isinstance(other, GTile)
+            else NotImplemented
+        )
 
     def __eq__(self, other):
-        return (self.x, self.y, self.zl) == (other.x, other.y, other.zl) if isinstance(other, GTile) else NotImplemented
+        return (
+            (self.x, self.y, self.zl) == (other.x, other.y, other.zl)
+            if isinstance(other, GTile)
+            else NotImplemented
+        )
 
     def __hash__(self):
         return self._hash
 
     def __repr__(self):
-        return '<GTile ({}, {})@ZL{}>'.format(self.x, self.y, self.zl)
+        return "<GTile ({}, {})@ZL{}>".format(self.x, self.y, self.zl)
 
-    @functools.lru_cache(maxsize=2 ** 14)
+    @functools.lru_cache(maxsize=2**14)
     def lower_zl_tile(self, target_zl=None):
         if target_zl and target_zl >= self.zl:
             return self
 
-        lower = GTile((((self.x // 16) // 2) * 16),
-                      (((self.y // 16) // 2) * 16),
-                      self.zl - 1)
+        lower = GTile(
+            (((self.x // 16) // 2) * 16), (((self.y // 16) // 2) * 16), self.zl - 1
+        )
         if target_zl and target_zl < self.zl - 1:
             # TODO: optim: should come up with some math instead
             return lower.lower_zl_tile(target_zl=target_zl)
         else:
             return lower
 
-    @functools.lru_cache(maxsize=2 ** 13)
+    @functools.lru_cache(maxsize=2**13)
     def higher_zl_subtiles(self, target_zl=None):
         if target_zl and target_zl <= self.zl:
             return [self]
 
         zl = target_zl or (self.zl + 1)
         zl_diff = zl - self.zl
-        return [GTile(x, y, zl)
-                for x in range(self.x * 2 ** zl_diff, (self.x + 16) * 2 ** zl_diff, 16)
-                for y in range(self.y * 2 ** zl_diff, (self.y + 16) * 2 ** zl_diff, 16)]
+        return [
+            GTile(x, y, zl)
+            for x in range(self.x * 2**zl_diff, (self.x + 16) * 2**zl_diff, 16)
+            for y in range(self.y * 2**zl_diff, (self.y + 16) * 2**zl_diff, 16)
+        ]
 
-    @functools.lru_cache(maxsize=2 ** 13)
+    @functools.lru_cache(maxsize=2**13)
     def zl_siblings(self):
         return self.lower_zl_tile().higher_zl_subtiles()
 
     def surrounding_tiles(self, include_self=False):
-        return [tile
-                for x_offset in [-16, 0, 16]
-                for y_offset in [-16, 0, 16]
-                for tile in [GTile(self.x + x_offset,
-                                   self.y + y_offset,
-                                   self.zl)]
-                if not (x_offset == 0 and y_offset == 0) or include_self]
+        return [
+            tile
+            for x_offset in [-16, 0, 16]
+            for y_offset in [-16, 0, 16]
+            for tile in [GTile(self.x + x_offset, self.y + y_offset, self.zl)]
+            if not (x_offset == 0 and y_offset == 0) or include_self
+        ]
 
     @staticmethod
-    @functools.lru_cache(maxsize=2 ** 15)
+    @functools.lru_cache(maxsize=2**15)
     def _cached_polygon(x, y, zl):
         (lat_max, lon_min) = GEO.gtile_to_wgs84(x, y, zl)
         (lat_min, lon_max) = GEO.gtile_to_wgs84(x + 16, y + 16, zl)
-        return shapely.geometry.Polygon([(lon_min, lat_min),
-                                         (lon_max, lat_min),
-                                         (lon_max, lat_max),
-                                         (lon_min, lat_max)])
+        return shapely.geometry.Polygon(
+            [
+                (lon_min, lat_min),
+                (lon_max, lat_min),
+                (lon_max, lat_max),
+                (lon_min, lat_max),
+            ]
+        )
 
     def polygon(self):
         return self._cached_polygon(self.x, self.y, self.zl)
@@ -388,23 +434,29 @@ class Runway:
     """
 
     # We won't dynamically add any attribute : optimize RAM usage
-    __slots__ = ['width',
-                 'end_1_id', 'end_1_lat', 'end_1_lon',
-                 'end_2_id', 'end_2_lat', 'end_2_lon',
-                 '_hash']
+    __slots__ = [
+        "width",
+        "end_1_id",
+        "end_1_lat",
+        "end_1_lon",
+        "end_2_id",
+        "end_2_lat",
+        "end_2_lon",
+        "_hash",
+    ]
 
     def __init__(self, runway_data):
-        self.width = runway_data['width']
-        self.end_1_id = runway_data['end_1_id']
-        self.end_1_lat = runway_data['end_1_lat']
-        self.end_1_lon = runway_data['end_1_lon']
-        self.end_2_id = runway_data['end_2_id']
-        self.end_2_lat = runway_data['end_2_lat']
-        self.end_2_lon = runway_data['end_2_lon']
+        self.width = runway_data["width"]
+        self.end_1_id = runway_data["end_1_id"]
+        self.end_1_lat = runway_data["end_1_lat"]
+        self.end_1_lon = runway_data["end_1_lon"]
+        self.end_2_id = runway_data["end_2_id"]
+        self.end_2_lat = runway_data["end_2_lat"]
+        self.end_2_lon = runway_data["end_2_lon"]
         self._hash = (self.end_1_id, self.end_2_id)
 
     def __repr__(self):
-        return '<Runway: {} / {}>'.format(self.end_1_id, self.end_2_id)
+        return "<Runway: {} / {}>".format(self.end_1_id, self.end_2_id)
 
     def __eq__(self, other):
         if not isinstance(other, Runway):
@@ -416,36 +468,42 @@ class Runway:
 
     def to_json(self):
         return {
-            'width': self.width,
-            'end_1_id': self.end_1_id,
-            'end_1_lat': self.end_1_lat,
-            'end_1_lon': self.end_1_lon,
-            'end_2_id': self.end_2_id,
-            'end_2_lat': self.end_2_lat,
-            'end_2_lon': self.end_2_lon
+            "width": self.width,
+            "end_1_id": self.end_1_id,
+            "end_1_lat": self.end_1_lat,
+            "end_1_lon": self.end_1_lon,
+            "end_2_id": self.end_2_id,
+            "end_2_lat": self.end_2_lat,
+            "end_2_lon": self.end_2_lon,
         }
 
     def relevant_xp_tiles(self, include_surrounding_tiles=False):
         """Return the tiles where this runway is located (could be several ones)."""
-        return [tile
-                for end_tile in {XPlaneTile(self.end_1_lat, self.end_1_lon),
-                                 XPlaneTile(self.end_2_lat, self.end_2_lon)}
-                for tile in [end_tile] + (end_tile.surrounding_tiles() if include_surrounding_tiles else [])]
+        return [
+            tile
+            for end_tile in {
+                XPlaneTile(self.end_1_lat, self.end_1_lon),
+                XPlaneTile(self.end_2_lat, self.end_2_lon),
+            }
+            for tile in [end_tile]
+            + (end_tile.surrounding_tiles() if include_surrounding_tiles else [])
+        ]
 
     def _runway_center(self):
-        geod = pyproj.Geod(ellps='WGS84')
+        geod = pyproj.Geod(ellps="WGS84")
 
         # First compute the azimuts and length between the two runway ends
-        (azimut_1_2, azimut_2_1, length) = geod.inv(lons1=self.end_1_lon,
-                                                    lats1=self.end_1_lat,
-                                                    lons2=self.end_2_lon,
-                                                    lats2=self.end_2_lat)
+        (azimut_1_2, azimut_2_1, length) = geod.inv(
+            lons1=self.end_1_lon,
+            lats1=self.end_1_lat,
+            lons2=self.end_2_lon,
+            lats2=self.end_2_lat,
+        )
 
         # Then find the center of the runway and return it
-        (lon, lat, _) = geod.fwd(lons=self.end_1_lon,
-                                 lats=self.end_1_lat,
-                                 az=azimut_1_2,
-                                 dist=length / 2)
+        (lon, lat, _) = geod.fwd(
+            lons=self.end_1_lon, lats=self.end_1_lat, az=azimut_1_2, dist=length / 2
+        )
 
         return shapely.geometry.Point(lon, lat)
 
@@ -455,15 +513,19 @@ class Runway:
         The final polygon will be a rectangle of optimal_dist by optimal_dist/2
         """
 
-        geod = pyproj.Geod(ellps='WGS84')
-        optimal_ground_dist = zl_optimal_ground_dist(zl, screen_res, math.radians(fov), math.radians(fpa))
+        geod = pyproj.Geod(ellps="WGS84")
+        optimal_ground_dist = zl_optimal_ground_dist(
+            zl, screen_res, math.radians(fov), math.radians(fpa)
+        )
         coords = []
 
         # First compute the azimuts and length between the two runway ends
-        (azimut_1_2, azimut_2_1, length) = geod.inv(lons1=self.end_1_lon,
-                                                    lats1=self.end_1_lat,
-                                                    lons2=self.end_2_lon,
-                                                    lats2=self.end_2_lat)
+        (azimut_1_2, azimut_2_1, length) = geod.inv(
+            lons1=self.end_1_lon,
+            lats1=self.end_1_lat,
+            lons2=self.end_2_lon,
+            lats2=self.end_2_lat,
+        )
 
         # Deduce the polygon dimensions
         polygon_length = 2 * optimal_ground_dist + length
@@ -471,25 +533,25 @@ class Runway:
         center = self._runway_center()
 
         # Compute the two points near end_1
-        (lon, lat, _) = geod.fwd(lons=center.x,
-                                 lats=center.y,
-                                 az=azimut_2_1,
-                                 dist=polygon_length / 2)
-        ((lon_1, lon_2), (lat_1, lat_2), _) = geod.fwd(lons=(lon, lon),
-                                                       lats=(lat, lat),
-                                                       az=(azimut_2_1 - 90.0,
-                                                           azimut_2_1 + 90.0),
-                                                       dist=(polygon_width / 2,
-                                                             polygon_width / 2))
+        (lon, lat, _) = geod.fwd(
+            lons=center.x, lats=center.y, az=azimut_2_1, dist=polygon_length / 2
+        )
+        ((lon_1, lon_2), (lat_1, lat_2), _) = geod.fwd(
+            lons=(lon, lon),
+            lats=(lat, lat),
+            az=(azimut_2_1 - 90.0, azimut_2_1 + 90.0),
+            dist=(polygon_width / 2, polygon_width / 2),
+        )
         coords.append((lon_1, lat_1))
         coords.append((lon_2, lat_2))
 
         # Then the two points near end_2
-        ((lon_1, lon_2), (lat_1, lat_2), _) = geod.fwd(lons=(lon_1, lon_2),
-                                                       lats=(lat_1, lat_2),
-                                                       az=(azimut_1_2,
-                                                           azimut_1_2),
-                                                       dist=(polygon_length, polygon_length))
+        ((lon_1, lon_2), (lat_1, lat_2), _) = geod.fwd(
+            lons=(lon_1, lon_2),
+            lats=(lat_1, lat_2),
+            az=(azimut_1_2, azimut_1_2),
+            dist=(polygon_length, polygon_length),
+        )
         coords.append((lon_2, lat_2))
         coords.append((lon_1, lat_1))
 
@@ -497,17 +559,23 @@ class Runway:
 
     def gtiles(self, zl, screen_res, fov, fpa):
         # First compute the initial polygon, and prepare it for possibly massive querying
-        prepared_polygon = shapely.prepared.prep(self.raw_polygon(zl, screen_res, fov, fpa))
+        prepared_polygon = shapely.prepared.prep(
+            self.raw_polygon(zl, screen_res, fov, fpa)
+        )
 
         # Find all the gtiles covering it
         (lon_min, lat_min, lon_max, lat_max) = prepared_polygon.context.envelope.bounds
         x_min, y_min = GEO.wgs84_to_orthogrid(lat_max, lon_min, zl)
         x_max, y_max = GEO.wgs84_to_orthogrid(lat_min, lon_max, zl)
 
-        return filter(lambda tile: prepared_polygon.intersects(tile.polygon()),
-                      (GTile(x, y, zl)
-                       for x in range(x_min, x_max + 16, 16)
-                       for y in range(y_min, y_max + 16, 16)))
+        return filter(
+            lambda tile: prepared_polygon.intersects(tile.polygon()),
+            (
+                GTile(x, y, zl)
+                for x in range(x_min, x_max + 16, 16)
+                for y in range(y_min, y_max + 16, 16)
+            ),
+        )
 
 
 class Airport:
@@ -520,15 +588,17 @@ class Airport:
     """
 
     # We won't dynamically add any attribute : optimize RAM usage
-    __slots__ = ['type', 'icao', 'name', 'elevation', 'runways']
+    __slots__ = ["type", "icao", "name", "elevation", "runways"]
 
     def __init__(self, airport_data):
-        self.type = airport_data['type']
-        self.icao = IcaoCode(airport_data['icao'])
-        self.name = airport_data['name']
-        self.elevation = airport_data['elevation']
-        self.runways = {(rw.end_1_id, rw.end_2_id): rw
-                        for rw in [Runway(rw_data) for rw_data in airport_data['runways']]}
+        self.type = airport_data["type"]
+        self.icao = IcaoCode(airport_data["icao"])
+        self.name = airport_data["name"]
+        self.elevation = airport_data["elevation"]
+        self.runways = {
+            (rw.end_1_id, rw.end_2_id): rw
+            for rw in [Runway(rw_data) for rw_data in airport_data["runways"]]
+        }
 
     def __repr__(self):
         return '<Airport: {} "{}">'.format(self.icao, self.name)
@@ -561,17 +631,21 @@ class Airport:
 
     def to_json(self):
         return {
-            'type': self.type,
-            'icao': str(self.icao),
-            'name': self.name,
-            'elevation': self.elevation,
-            'runways': [rw.to_json() for rw in self.runways.values()]
+            "type": self.type,
+            "icao": str(self.icao),
+            "name": self.name,
+            "elevation": self.elevation,
+            "runways": [rw.to_json() for rw in self.runways.values()],
         }
 
     def gtiles(self, zl, screen_res, fov, fpa):
-        return set([tile
-                    for rw in self.runways.values()
-                    for tile in rw.gtiles(zl, screen_res, fov, fpa)])
+        return set(
+            [
+                tile
+                for rw in self.runways.values()
+                for tile in rw.gtiles(zl, screen_res, fov, fpa)
+            ]
+        )
 
 
 class AirportCollection:
@@ -591,13 +665,16 @@ class AirportCollection:
 
     @classmethod
     def cache_info(cls):
-        return {'gtiles': str(cls.gtiles.cache_info())}
+        return {"gtiles": str(cls.gtiles.cache_info())}
 
     def __init__(self, xp_tile, include_surrounding_tiles=False):
         self.xp_tile = xp_tile
-        self.airports = {arpt.icao: arpt
-                         for arpt in AirportDataSource.airports_in(xp_tile,
-                                                                   include_surrounding_tiles=include_surrounding_tiles)}
+        self.airports = {
+            arpt.icao: arpt
+            for arpt in AirportDataSource.airports_in(
+                xp_tile, include_surrounding_tiles=include_surrounding_tiles
+            )
+        }
 
     #
     # Partial Dict interface
@@ -629,14 +706,18 @@ class AirportCollection:
     def _margin_width(zl, fraction):
         lat_1, lon_1 = GEO.gtile_to_wgs84(0, 0, zl)
         lat_2, lon_2 = GEO.gtile_to_wgs84(int(16 / fraction), 0, zl)
-        return shapely.geometry.Point(lon_1, lat_1).distance(shapely.geometry.Point(lon_2, lat_2))
+        return shapely.geometry.Point(lon_1, lat_1).distance(
+            shapely.geometry.Point(lon_2, lat_2)
+        )
 
     def _tile_margin_poly(self, zl, greediness):
         margin_width = self._margin_width(max(__ZL_OPTIM_LIMIT__, (zl - greediness)), 1)
         tile_poly = self.xp_tile.polygon()
-        margin_poly = tile_poly.exterior.buffer(distance=margin_width,
-                                                cap_style=shapely.geometry.CAP_STYLE.square,
-                                                join_style=shapely.geometry.JOIN_STYLE.mitre)
+        margin_poly = tile_poly.exterior.buffer(
+            distance=margin_width,
+            cap_style=shapely.geometry.CAP_STYLE.square,
+            join_style=shapely.geometry.JOIN_STYLE.mitre,
+        )
         return shapely.prepared.prep(margin_poly.union(tile_poly))
 
     def _sub_zl_margin_set(self, zl, sub_zl_gtiles):
@@ -646,23 +727,36 @@ class AirportCollection:
             # Build the margin polygon :
             # - exterior: parallel to ZLn+1 exterior, at margin_width distance
             # - interior: ZLn+1 exterior
-            zl_n_margin = zl_n1_polygon.exterior.buffer(distance=self._margin_width(zl, 16),
-                                                        cap_style=shapely.geometry.CAP_STYLE.square,
-                                                        join_style=shapely.geometry.JOIN_STYLE.mitre)
+            zl_n_margin = zl_n1_polygon.exterior.buffer(
+                distance=self._margin_width(zl, 16),
+                cap_style=shapely.geometry.CAP_STYLE.square,
+                join_style=shapely.geometry.JOIN_STYLE.mitre,
+            )
 
             # Prepare the margin polygon for multiple querying
-            margin_polygon = shapely.prepared.prep(zl_n_margin.difference(zl_n1_polygon))
+            margin_polygon = shapely.prepared.prep(
+                zl_n_margin.difference(zl_n1_polygon)
+            )
 
             # Find all the ZLn gtiles covering the ZLn+1 polygon + margin
-            (lon_min, lat_min, lon_max, lat_max) = margin_polygon.context.envelope.bounds
+            (lon_min, lat_min, lon_max, lat_max) = (
+                margin_polygon.context.envelope.bounds
+            )
             x_min, y_min = GEO.wgs84_to_orthogrid(lat_max, lon_min, zl)
             x_max, y_max = GEO.wgs84_to_orthogrid(lat_min, lon_max, zl)
 
             # Only keep the ZLn tiles intersecting the margin polygon
-            margin_tiles.update([t for t in [GTile(x, y, zl)
-                                             for x in range(x_min, x_max + 16, 16)
-                                             for y in range(y_min, y_max + 16, 16)]
-                                 if margin_polygon.intersects(t.polygon())])
+            margin_tiles.update(
+                [
+                    t
+                    for t in [
+                        GTile(x, y, zl)
+                        for x in range(x_min, x_max + 16, 16)
+                        for y in range(y_min, y_max + 16, 16)
+                    ]
+                    if margin_polygon.intersects(t.polygon())
+                ]
+            )
         return margin_tiles
 
     @staticmethod
@@ -675,22 +769,24 @@ class AirportCollection:
         # For each ZL from ZLn-1 up to ZLmin, check if it's already 70% covered by ZLn tiles
         # Note that if ZLn <= ZLmin, then this loop will be skipped
         zl_optim_limit = max(__ZL_OPTIM_LIMIT__, (zl - greediness))
-        for threshold_len in [greediness_threshold * 2 ** (2 * (zl - i))
-                              for i in range(zl - 1, zl_optim_limit - 1, -1)]:
+        for threshold_len in [
+            greediness_threshold * 2 ** (2 * (zl - i))
+            for i in range(zl - 1, zl_optim_limit - 1, -1)
+        ]:
             for zl_optim_tile in zl_n_tiles.keys():
                 if len(zl_n_tiles[zl_optim_tile]) >= threshold_len:
                     # If so, add the remaining ZLn tiles
-                    zl_n_tiles[zl_optim_tile] = zl_optim_tile.higher_zl_subtiles(target_zl=zl)
+                    zl_n_tiles[zl_optim_tile] = zl_optim_tile.higher_zl_subtiles(
+                        target_zl=zl
+                    )
 
             # Prepare a new dict for the next iteration, reuse the existing tiles
             zl_n_tiles_new = collections.defaultdict(list)
-            for (zl_optim_tile, zl_n_group) in zl_n_tiles.items():
+            for zl_optim_tile, zl_n_group in zl_n_tiles.items():
                 zl_n_tiles_new[zl_optim_tile.lower_zl_tile()].extend(zl_n_group)
             zl_n_tiles = zl_n_tiles_new
 
-        return set([tile
-                    for tile_group in zl_n_tiles.values()
-                    for tile in tile_group])
+        return set([tile for tile_group in zl_n_tiles.values() for tile in tile_group])
 
     @staticmethod
     def _compacted_tile_set(tiles: set):
@@ -726,32 +822,57 @@ class AirportCollection:
     # Airport Interface
     #
 
-    @functools.lru_cache(maxsize=2 ** 3)
-    def gtiles(self, zl, cover_zl, screen_res, fov, fpa, greediness, greediness_threshold, xp_tile_filter):
+    @functools.lru_cache(maxsize=2**3)
+    def gtiles(
+        self,
+        zl,
+        cover_zl,
+        screen_res,
+        fov,
+        fpa,
+        greediness,
+        greediness_threshold,
+        xp_tile_filter,
+    ):
         """Return the ZL gtiles needed to cover this airport collection.
-        This list ALSO includes all the (interior) higher ZL sub-tiles, down to cover_zl"""
+        This list ALSO includes all the (interior) higher ZL sub-tiles, down to cover_zl
+        """
 
         # First compute the tiles for the current zl
         tile_margin_poly = self._tile_margin_poly(zl, greediness)
-        selected_airports = filter(lambda a: zl <= cover_zl.max_cover_zl_for(a.icao),
-                                   self.airports.values())
-        gtiles = functools.reduce(lambda s1, s2: s1.union(s2),
-                                  map(lambda a: set(filter(lambda t: not tile_margin_poly.disjoint(t.polygon()),
-                                                           a.gtiles(zl, screen_res, fov, fpa))),
-                                      selected_airports),set())
+        selected_airports = filter(
+            lambda a: zl <= cover_zl.max_cover_zl_for(a.icao), self.airports.values()
+        )
+        gtiles = functools.reduce(
+            lambda s1, s2: s1.union(s2),
+            map(
+                lambda a: set(
+                    filter(
+                        lambda t: not tile_margin_poly.disjoint(t.polygon()),
+                        a.gtiles(zl, screen_res, fov, fpa),
+                    )
+                ),
+                selected_airports,
+            ),
+            set(),
+        )
 
         if zl < cover_zl.max:
             # If we're not at ZLmax, compute the ZLn+1 gtiles, and "compact" them
             # When compacted, this list will then also include any ZLn gtiles that were fully covered by ZLn+1 gtiles
             # We'll then exclude any such ZLn tile from the final list, thus creating "holes" for the ZLn+1 gtiles
-            all_sub_gtiles = set(self.gtiles(zl=zl + 1,
-                                             cover_zl=cover_zl,
-                                             screen_res=screen_res,
-                                             fov=fov,
-                                             fpa=fpa,
-                                             greediness=greediness,
-                                             greediness_threshold=greediness_threshold,
-                                             xp_tile_filter=False))
+            all_sub_gtiles = set(
+                self.gtiles(
+                    zl=zl + 1,
+                    cover_zl=cover_zl,
+                    screen_res=screen_res,
+                    fov=fov,
+                    fpa=fpa,
+                    greediness=greediness,
+                    greediness_threshold=greediness_threshold,
+                    xp_tile_filter=False,
+                )
+            )
             compacted_sub_gtiles = self._compacted_tile_set(all_sub_gtiles)
         else:
             all_sub_gtiles = set()
@@ -764,28 +885,35 @@ class AirportCollection:
 
         # Optimize texture usage, but "eating" up any lower zl being "greediness_threshold"-percent covered by this zl
         # Will look up to 'greediness' lower levels
-        optimized_gtiles = self._optimized_tile_set(gtiles, zl, greediness, greediness_threshold)
+        optimized_gtiles = self._optimized_tile_set(
+            gtiles, zl, greediness, greediness_threshold
+        )
 
         # Only keep useful ZLn gtiles : remove the gtiles that are fully covered by ZLn+1
         #                             : also remove those outside the xp_tile border (with a margin)
-        own_zl_gtiles = set(filter(lambda t: not tile_margin_poly.disjoint(t.polygon()),
-                                   optimized_gtiles - compacted_sub_gtiles))
+        own_zl_gtiles = set(
+            filter(
+                lambda t: not tile_margin_poly.disjoint(t.polygon()),
+                optimized_gtiles - compacted_sub_gtiles,
+            )
+        )
 
         # Finally, return the remaining ZLn tiles + all the previously computed ZLn+1..ZLmax subtiles
         final_gtiles = own_zl_gtiles.union(all_sub_gtiles)
         if xp_tile_filter:
             tile_poly = shapely.prepared.prep(self.xp_tile.polygon())
-            return set(filter(lambda t: not tile_poly.disjoint(t.polygon()),
-                              final_gtiles))
+            return set(
+                filter(lambda t: not tile_poly.disjoint(t.polygon()), final_gtiles)
+            )
         return final_gtiles
 
     @staticmethod
     def as_polygons(gtiles):
         """Return as few Shapely polygons as possible for the given gtiles."""
         polys = shapely.ops.unary_union([gtile.polygon() for gtile in gtiles])
-        
+
         if isinstance(polys, shapely.geometry.MultiPolygon):
-            return list(polys.geoms)   
+            return list(polys.geoms)
         elif isinstance(polys, shapely.geometry.Polygon):
             return [polys]
         elif isinstance(polys, list):
@@ -793,35 +921,55 @@ class AirportCollection:
         else:
             return []
 
-    def zone_list(self, screen_res, fov, fpa, provider, base_zl, cover_zl, greediness, greediness_threshold):
+    def zone_list(
+        self,
+        screen_res,
+        fov,
+        fpa,
+        provider,
+        base_zl,
+        cover_zl,
+        greediness,
+        greediness_threshold,
+    ):
         tile_zones = []
         for zl in range(cover_zl.max, base_zl - 1, -1):
-            for polygon in self.as_polygons(self.gtiles(zl=zl,
-                                                        cover_zl=cover_zl,
-                                                        screen_res=screen_res,
-                                                        fov=fov,
-                                                        fpa=fpa,
-                                                        greediness=greediness,
-                                                        greediness_threshold=greediness_threshold,
-                                                        xp_tile_filter=True)):
+            for polygon in self.as_polygons(
+                self.gtiles(
+                    zl=zl,
+                    cover_zl=cover_zl,
+                    screen_res=screen_res,
+                    fov=fov,
+                    fpa=fpa,
+                    greediness=greediness,
+                    greediness_threshold=greediness_threshold,
+                    xp_tile_filter=True,
+                )
+            ):
                 coords = []
-                for (x, y) in polygon.exterior.coords:
+                for x, y in polygon.exterior.coords:
                     coords.extend([y, x])
                 tile_zones.append([coords, zl, provider])
         return tile_zones
 
-    def disk_size(self, zl, cover_zl, screen_res, fov, fpa, greediness, greediness_threshold):
+    def disk_size(
+        self, zl, cover_zl, screen_res, fov, fpa, greediness, greediness_threshold
+    ):
         # This could be computed more precisely, but each DDS texture has a fixed size of 11,184,952 bytes, whatever
         # the zoom level.
         # Since we only need a (fast) estimate, just multiply that constant with the number of tiles
-        return 11184952 * len(self.gtiles(zl=zl,
-                                          cover_zl=cover_zl,
-                                          screen_res=screen_res,
-                                          fov=fov,
-                                          fpa=fpa,
-                                          greediness=greediness,
-                                          greediness_threshold=greediness_threshold,
-                                          xp_tile_filter=True))
+        return 11184952 * len(
+            self.gtiles(
+                zl=zl,
+                cover_zl=cover_zl,
+                screen_res=screen_res,
+                fov=fov,
+                fpa=fpa,
+                greediness=greediness,
+                greediness_threshold=greediness_threshold,
+                xp_tile_filter=True,
+            )
+        )
 
 
 ########################################################################################################################
@@ -847,97 +995,129 @@ class XPlaneAptDatParser:
     - http://developer.x-plane.com/wp-content/uploads/2018/02/XP-APT1100-Spec_revised_02142018.pdf
     - http://developer.x-plane.com/wp-content/uploads/2017/02/XP-APT1050-Spec.pdf
     """
+
     # A few regexes to extract relevant information from an X-Plane apt.dat files
-    __RE_ARPT__ = re.compile(r'\s+'.join([r'^(?P<airport_type>1|16|17)',
-                                          r'(?P<airport_elevation>\S+)',
-                                          r'(?P<airport_deprecated_1>\S+)',
-                                          r'(?P<airport_deprecated_2>\S+)',
-                                          r'(?P<airport_ICAO>\S+)',
-                                          r'(?P<airport_name>.*)']))
+    __RE_ARPT__ = re.compile(
+        r"\s+".join(
+            [
+                r"^(?P<airport_type>1|16|17)",
+                r"(?P<airport_elevation>\S+)",
+                r"(?P<airport_deprecated_1>\S+)",
+                r"(?P<airport_deprecated_2>\S+)",
+                r"(?P<airport_ICAO>\S+)",
+                r"(?P<airport_name>.*)",
+            ]
+        )
+    )
 
-    __RE_IS_RWY__ = re.compile(r'^10[012]\s+')
+    __RE_IS_RWY__ = re.compile(r"^10[012]\s+")
 
-    __RE_LAND_RWY__ = re.compile(r'\s+'.join([r'^100',
-                                              r'(?P<runway_width>\S+)',
-                                              r'(?P<runway_surface>\S+)',
-                                              r'(?P<runway_shoulder_surface>\S+)',
-                                              r'(?P<runway_smoothness>\S+)',
-                                              r'(?P<runway_centerline_lights>\S+)',
-                                              r'(?P<runway_edge_lights>\S+)',
-                                              r'(?P<runway_distance_signs>\S+)',
-                                              r'(?P<runway_end_1_number>\S+)',
-                                              r'(?P<runway_end_1_latitude>\S+)',
-                                              r'(?P<runway_end_1_longitude>\S+)',
-                                              r'(?P<runway_end_1_displaced_threshold_length>\S+)',
-                                              r'(?P<runway_end_1_blastpad_length>\S+)',
-                                              r'(?P<runway_end_1_markings>\S+)',
-                                              r'(?P<runway_end_1_approach_lights>\S+)',
-                                              r'(?P<runway_end_1_touchdown_lights>\S+)',
-                                              r'(?P<runway_end_1_id_lights>\S+)',
-                                              r'(?P<runway_end_2_number>\S+)',
-                                              r'(?P<runway_end_2_latitude>\S+)',
-                                              r'(?P<runway_end_2_longitude>\S+)',
-                                              r'(?P<runway_end_2_displaced_threshold_length>\S+)',
-                                              r'(?P<runway_end_2_blastpad_length>\S+)',
-                                              r'(?P<runway_end_2_markings>\S+)',
-                                              r'(?P<runway_end_2_approach_lights>\S+)',
-                                              r'(?P<runway_end_2_touchdown_lights>\S+)',
-                                              r'(?P<runway_end_2_id_lights>\S+)']))
+    __RE_LAND_RWY__ = re.compile(
+        r"\s+".join(
+            [
+                r"^100",
+                r"(?P<runway_width>\S+)",
+                r"(?P<runway_surface>\S+)",
+                r"(?P<runway_shoulder_surface>\S+)",
+                r"(?P<runway_smoothness>\S+)",
+                r"(?P<runway_centerline_lights>\S+)",
+                r"(?P<runway_edge_lights>\S+)",
+                r"(?P<runway_distance_signs>\S+)",
+                r"(?P<runway_end_1_number>\S+)",
+                r"(?P<runway_end_1_latitude>\S+)",
+                r"(?P<runway_end_1_longitude>\S+)",
+                r"(?P<runway_end_1_displaced_threshold_length>\S+)",
+                r"(?P<runway_end_1_blastpad_length>\S+)",
+                r"(?P<runway_end_1_markings>\S+)",
+                r"(?P<runway_end_1_approach_lights>\S+)",
+                r"(?P<runway_end_1_touchdown_lights>\S+)",
+                r"(?P<runway_end_1_id_lights>\S+)",
+                r"(?P<runway_end_2_number>\S+)",
+                r"(?P<runway_end_2_latitude>\S+)",
+                r"(?P<runway_end_2_longitude>\S+)",
+                r"(?P<runway_end_2_displaced_threshold_length>\S+)",
+                r"(?P<runway_end_2_blastpad_length>\S+)",
+                r"(?P<runway_end_2_markings>\S+)",
+                r"(?P<runway_end_2_approach_lights>\S+)",
+                r"(?P<runway_end_2_touchdown_lights>\S+)",
+                r"(?P<runway_end_2_id_lights>\S+)",
+            ]
+        )
+    )
 
-    __RE_WATER_RWY__ = re.compile(r'\s+'.join(['^101',
-                                               r'(?P<waterway_width>\S+)',
-                                               r'(?P<waterway_buoys>\S+)',
-                                               r'(?P<waterway_end_1_number>\S+)',
-                                               r'(?P<waterway_end_1_latitude>\S+)',
-                                               r'(?P<waterway_end_1_longitude>\S+)',
-                                               r'(?P<waterway_end_2_number>\S+)',
-                                               r'(?P<waterway_end_2_latitude>\S+)',
-                                               r'(?P<waterway_end_2_longitude>\S+)']))
+    __RE_WATER_RWY__ = re.compile(
+        r"\s+".join(
+            [
+                "^101",
+                r"(?P<waterway_width>\S+)",
+                r"(?P<waterway_buoys>\S+)",
+                r"(?P<waterway_end_1_number>\S+)",
+                r"(?P<waterway_end_1_latitude>\S+)",
+                r"(?P<waterway_end_1_longitude>\S+)",
+                r"(?P<waterway_end_2_number>\S+)",
+                r"(?P<waterway_end_2_latitude>\S+)",
+                r"(?P<waterway_end_2_longitude>\S+)",
+            ]
+        )
+    )
 
-    __RE_HELIPAD__ = re.compile(r'\s+'.join([r'^102',
-                                             r'(?P<helipad_designator>\S+)',
-                                             r'(?P<helipad_center_latitude>\S+)',
-                                             r'(?P<helipad_center_longitude>\S+)',
-                                             r'(?P<helipad_orientation>\S+)',
-                                             r'(?P<helipad_length>\S+)',
-                                             r'(?P<helipad_width>\S+)',
-                                             r'(?P<helipad_surface>\S+)',
-                                             r'(?P<helipad_markings>\S+)',
-                                             r'(?P<helipad_shoulder_surface>\S+)',
-                                             r'(?P<helipad_smoothness>\S+)',
-                                             r'(?P<helipad_edge_lights>\S+)']))
+    __RE_HELIPAD__ = re.compile(
+        r"\s+".join(
+            [
+                r"^102",
+                r"(?P<helipad_designator>\S+)",
+                r"(?P<helipad_center_latitude>\S+)",
+                r"(?P<helipad_center_longitude>\S+)",
+                r"(?P<helipad_orientation>\S+)",
+                r"(?P<helipad_length>\S+)",
+                r"(?P<helipad_width>\S+)",
+                r"(?P<helipad_surface>\S+)",
+                r"(?P<helipad_markings>\S+)",
+                r"(?P<helipad_shoulder_surface>\S+)",
+                r"(?P<helipad_smoothness>\S+)",
+                r"(?P<helipad_edge_lights>\S+)",
+            ]
+        )
+    )
 
     @staticmethod
     def apt_dat_files():
         """Return the list of all the apt.dat files within the given X-Plane installation.
-        The order is important : airports in the first files will be overwritten by those in the last ones (as in XP)"""
+        The order is important : airports in the first files will be overwritten by those in the last ones (as in XP)
+        """
         xp_dir = CFG.xplane_install_dir
-        apt_dat = os.path.join('Earth nav data', 'apt.dat')
+        apt_dat = os.path.join("Earth nav data", "apt.dat")
         if "12" in xp_dir:
-          global_airports = os.path.join(xp_dir, 'Global Scenery', 'Global Airports', apt_dat)
+            global_airports = os.path.join(
+                xp_dir, "Global Scenery", "Global Airports", apt_dat
+            )
         else:
-          global_airports = os.path.join(xp_dir, 'Custom Scenery', 'Global Airports', apt_dat)
+            global_airports = os.path.join(
+                xp_dir, "Custom Scenery", "Global Airports", apt_dat
+            )
 
-        custom_airports = set(glob.glob(os.path.join(xp_dir, 'Custom Scenery', '*', apt_dat))) - {global_airports}
+        custom_airports = set(
+            glob.glob(os.path.join(xp_dir, "Custom Scenery", "*", apt_dat))
+        ) - {global_airports}
         return [global_airports] + sorted(custom_airports)
 
     @staticmethod
     def parse(apt_dat_file):
         # Translation dicts
-        airport_types = {'1': 'airport', '16': 'seaplane_base', '17': 'heliport'}
+        airport_types = {"1": "airport", "16": "seaplane_base", "17": "heliport"}
 
-        with open(apt_dat_file, encoding='latin9') as apt_dat:
+        with open(apt_dat_file, encoding="latin9") as apt_dat:
             # Group the source lines by airport
             current_airport_data = None
             for src_line in apt_dat:
                 m = XPlaneAptDatParser.__RE_ARPT__.match(src_line)
                 if m:
                     new_airport_data = {
-                        'type': airport_types[m.group('airport_type')],
-                        'icao': IcaoCode(m.group('airport_ICAO')),
-                        'name': m.group('airport_name'),
-                        'elevation': m.group('airport_elevation'),
-                        'runways': list()
+                        "type": airport_types[m.group("airport_type")],
+                        "icao": IcaoCode(m.group("airport_ICAO")),
+                        "name": m.group("airport_name"),
+                        "elevation": m.group("airport_elevation"),
+                        "runways": list(),
                     }
                     if current_airport_data is None:
                         # First airport : start collecting its runways
@@ -952,14 +1132,17 @@ class XPlaneAptDatParser:
                     # TODO: XPlaneAptDatParser: also parse seaplane bases et heliports
                     m = XPlaneAptDatParser.__RE_LAND_RWY__.match(src_line)
                     if m and current_airport_data is not None:
-                        current_airport_data['runways'].append({
-                            'end_1_id': m.group('runway_end_1_number'),
-                            'end_1_lat': float(m.group('runway_end_1_latitude')),
-                            'end_1_lon': float(m.group('runway_end_1_longitude')),
-                            'end_2_id': m.group('runway_end_2_number'),
-                            'end_2_lat': float(m.group('runway_end_2_latitude')),
-                            'end_2_lon': float(m.group('runway_end_2_longitude')),
-                            'width': float(m.group('runway_width'))})
+                        current_airport_data["runways"].append(
+                            {
+                                "end_1_id": m.group("runway_end_1_number"),
+                                "end_1_lat": float(m.group("runway_end_1_latitude")),
+                                "end_1_lon": float(m.group("runway_end_1_longitude")),
+                                "end_2_id": m.group("runway_end_2_number"),
+                                "end_2_lat": float(m.group("runway_end_2_latitude")),
+                                "end_2_lon": float(m.group("runway_end_2_longitude")),
+                                "width": float(m.group("runway_width")),
+                            }
+                        )
                 else:
                     pass  # skip any other line
 
@@ -969,6 +1152,7 @@ class XPlaneAptDatParser:
 # Main class of this module : AirportDataSource
 #
 ########################################################################################################################
+
 
 class AirportDataSource:
     """Represents a source of airport data (be it X-Plane apt.dat files, OSM data, or whatever other service).
@@ -1003,9 +1187,7 @@ class AirportDataSource:
             cls.__TILE_AIRPORTS__[t] = cls._read_cached_tile(t)
 
         # Now we should have all the tiles loaded, return the corresponding airports
-        return {a
-                for t in search_range
-                for a in cls.__TILE_AIRPORTS__[t]}
+        return {a for t in search_range for a in cls.__TILE_AIRPORTS__[t]}
 
     @classmethod
     def _read_cached_tile(cls, tile):
@@ -1013,13 +1195,19 @@ class AirportDataSource:
 
         # Ensure the tile cache file has been built : first waits for the main job to parse the apt.dat.
         # We need that because the tile updater jobs won't be started until that part is done.
-        if cls._cache_updater_main_job is not None and cls._cache_updater_main_job.running():
+        if (
+            cls._cache_updater_main_job is not None
+            and cls._cache_updater_main_job.running()
+        ):
             cache_was_rebuilt = True
             concurrent.futures.wait([cls._cache_updater_main_job])
 
         # If we don't have an updater job for this tile, then it means there wasn't any airport data for it,
         # just return an empty collection
-        if cls._cache_updater_tile_jobs is not None and tile not in cls._cache_updater_tile_jobs:
+        if (
+            cls._cache_updater_tile_jobs is not None
+            and tile not in cls._cache_updater_tile_jobs
+        ):
             return []
 
         if cls.cache_update_in_progress():
@@ -1030,8 +1218,10 @@ class AirportDataSource:
 
         if not os.path.exists(tile_cache_file):
             if cache_was_rebuilt:
-                raise O4AirportDataSourceException("Couldn't find {}, please rebuild the cache manually, "
-                                                   "or restart Ortho4XP".format(tile_cache_file))
+                raise O4AirportDataSourceException(
+                    "Couldn't find {}, please rebuild the cache manually, "
+                    "or restart Ortho4XP".format(tile_cache_file)
+                )
             else:
                 # If we don't have that tile, and no cache update was triggered this turn, then it means we don't have
                 # any airport data for it, just return an empty collection
@@ -1055,45 +1245,64 @@ class AirportDataSource:
     def _write_tile_cache(tile, airports_dict):
         tile_cache_file = FNAMES.cached_arpt_data(lat=tile.lat, lon=tile.lon)
         os.makedirs(os.path.dirname(tile_cache_file), exist_ok=True)
-        with open(tile_cache_file, 'w') as f:
+        with open(tile_cache_file, "w") as f:
             # See https://bugs.python.org/issue12134, it's a lot faster to first dump to a json string, and only then
             # writing it as a whole, instead of just calling json.dump()
-            f.write(json.dumps({str(icao): arpt.to_json()
-                                for (icao, arpt) in airports_dict.items()},
-                               sort_keys=True,
-                               indent=True))
+            f.write(
+                json.dumps(
+                    {
+                        str(icao): arpt.to_json()
+                        for (icao, arpt) in airports_dict.items()
+                    },
+                    sort_keys=True,
+                    indent=True,
+                )
+            )
 
     @classmethod
     def _main_updater_job(cls, apt_dat_files):
         # First parse all the apt.dat files available
         # This part will block until we're done (but this function is also running in a thread)
         parsed_airport_data = collections.defaultdict(dict)
-        for apt_data in [cls._cache_update_pool.submit(cls._parse_apt_dat, apt_file) for apt_file in apt_dat_files]:
-            for (tile, airport_collection) in apt_data.result().items():
-                for (icao, airport) in airport_collection.items():
+        for apt_data in [
+            cls._cache_update_pool.submit(cls._parse_apt_dat, apt_file)
+            for apt_file in apt_dat_files
+        ]:
+            for tile, airport_collection in apt_data.result().items():
+                for icao, airport in airport_collection.items():
                     # Intentionally overwrite global airport data with custom scenery ones
                     parsed_airport_data[tile][icao] = airport
 
         # Then start writing the tile cache files in the background
-        cls._cache_updater_tile_jobs = {tile: cls._cache_update_pool.submit(cls._write_tile_cache,
-                                                                            tile,
-                                                                            airports_dict)
-                                        for (tile, airports_dict) in parsed_airport_data.items()}
+        cls._cache_updater_tile_jobs = {
+            tile: cls._cache_update_pool.submit(
+                cls._write_tile_cache, tile, airports_dict
+            )
+            for (tile, airports_dict) in parsed_airport_data.items()
+        }
 
         # Finally, rewrite the cache info file
-        with open(os.path.join(FNAMES.Airport_dir, 'cache_info.json'), 'w') as f:
-            f.write(json.dumps({'cache_format_ver': cls.__CACHE_FORMAT_VERSION__,
-                                'apt_dat_files': {apt_dat: {'mtime': os.path.getmtime(apt_dat)}
-                                                  for apt_dat in apt_dat_files}},
-                               sort_keys=True,
-                               indent=True))
+        with open(os.path.join(FNAMES.Airport_dir, "cache_info.json"), "w") as f:
+            f.write(
+                json.dumps(
+                    {
+                        "cache_format_ver": cls.__CACHE_FORMAT_VERSION__,
+                        "apt_dat_files": {
+                            apt_dat: {"mtime": os.path.getmtime(apt_dat)}
+                            for apt_dat in apt_dat_files
+                        },
+                    },
+                    sort_keys=True,
+                    indent=True,
+                )
+            )
 
     @classmethod
     def apt_dat_files(cls):
         """Compare the current list of apt.dat files against what we used last time.
         If any of the apt.dat file were changed/added/removed, then return the new list.
         Otherwise, just return an empty list so that cache rebuilding is skipped."""
-        cache_info_file = os.path.join(FNAMES.Airport_dir, 'cache_info.json')
+        cache_info_file = os.path.join(FNAMES.Airport_dir, "cache_info.json")
 
         if not os.path.exists(cache_info_file):
             return XPlaneAptDatParser.apt_dat_files()
@@ -1103,14 +1312,17 @@ class AirportDataSource:
 
         apt_dat_files = XPlaneAptDatParser.apt_dat_files()
 
-        if cache_info['cache_format_ver'] != cls.__CACHE_FORMAT_VERSION__:
+        if cache_info["cache_format_ver"] != cls.__CACHE_FORMAT_VERSION__:
             return apt_dat_files
 
-        if set(apt_dat_files) != set(cache_info['apt_dat_files']):
+        if set(apt_dat_files) != set(cache_info["apt_dat_files"]):
             return apt_dat_files
 
         for apt_dat in apt_dat_files:
-            if os.path.getmtime(apt_dat) != cache_info['apt_dat_files'][apt_dat]['mtime']:
+            if (
+                os.path.getmtime(apt_dat)
+                != cache_info["apt_dat_files"][apt_dat]["mtime"]
+            ):
                 return apt_dat_files
 
         return list()
@@ -1124,17 +1336,24 @@ class AirportDataSource:
 
     @classmethod
     def cache_update_in_progress(cls):
-        return ((cls._cache_updater_main_job is not None and
-                 cls._cache_updater_main_job.running()) or
-                (cls._cache_updater_tile_jobs is not None and
-                 any([j.running() for j in cls._cache_updater_tile_jobs.values()])))
+        return (
+            cls._cache_updater_main_job is not None
+            and cls._cache_updater_main_job.running()
+        ) or (
+            cls._cache_updater_tile_jobs is not None
+            and any([j.running() for j in cls._cache_updater_tile_jobs.values()])
+        )
 
     @classmethod
     def update_cache(cls, force_rebuild=False):
         if force_rebuild:
-            os.remove(os.path.join(FNAMES.Airport_dir, 'cache_info.json'))
+            os.remove(os.path.join(FNAMES.Airport_dir, "cache_info.json"))
 
         apt_dat_files = cls.apt_dat_files()
         if apt_dat_files:
-            cls._cache_update_pool = cls._cache_update_pool or concurrent.futures.ThreadPoolExecutor()
-            cls._cache_updater_main_job = cls._cache_update_pool.submit(cls._main_updater_job, apt_dat_files)
+            cls._cache_update_pool = (
+                cls._cache_update_pool or concurrent.futures.ThreadPoolExecutor()
+            )
+            cls._cache_updater_main_job = cls._cache_update_pool.submit(
+                cls._main_updater_job, apt_dat_files
+            )
