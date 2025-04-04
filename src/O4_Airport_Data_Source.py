@@ -1087,9 +1087,6 @@ class XPlaneAptDatParser:
         """
         xp_dir = CFG.xplane_install_dir
         apt_dat = os.path.join("Earth nav data", "apt.dat")
-        default_scenery = os.path.join(
-            xp_dir, "Resources", "default scenery", "default apt dat", apt_dat
-        )
         if "12" in xp_dir:
             global_airports = os.path.join(
                 xp_dir, "Global Scenery", "Global Airports", apt_dat
