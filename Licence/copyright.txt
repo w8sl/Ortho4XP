@@ -203,7 +203,8 @@ The license for original unRAR code has the following restriction:
 ------------------------------------------------------------------------------
 NVIDIA Texture Tools is licensed under the MIT license.
 
-Copyright (c) 2009-2017 Ignacio Castaño
+Copyright (c) 2022-2023 Overte e.V.
+Copyright (c) 2009-2020 Ignacio Castaño
 Copyright (c) 2007-2009 NVIDIA Corporation
 
 Permission is hereby granted, free of charge, to any person
