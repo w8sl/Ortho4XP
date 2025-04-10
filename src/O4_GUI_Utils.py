@@ -51,6 +51,8 @@ import O4_Airport_Data_Source as APT_SRC
 # Set OsX=True if you prefer the OsX way of drawing existing tiles but are on Linux or Windows.
 OsX = "dar" in sys.platform
 
+# Mark tiles with white texture tags on the map ("w!")
+mark_white_textures = True
 
 ############################################################################################
 class Ortho4XP_GUI(tk.Tk):
@@ -1711,17 +1713,15 @@ class Ortho4XP_Earth_Preview(tk.Toplevel):
                                 color = O4_Common_Types.ZoomLevels.tkinter_color_of(zl)
                             else:
                                 zl = "?"
-                            if os.path.exists(
-                                os.path.join(
-                                    FNAMES.Overlay_dir,
-                                    "Earth nav data",
-                                    FNAMES.long_latlon(lat, lon) + ".dsf",
-                                )
-                            ):
-                                has_ovl = "o"
+                            if os.path.exists(os.path.join(FNAMES.Overlay_dir, "Earth nav data", FNAMES.long_latlon(lat, lon) + ".dsf")):
+                               has_ovl="o"
                             else:
-                                has_ovl = ""
-                            content = prov + "\n" + str(zl) + "\n" + has_ovl
+                               has_ovl="" 
+                            white_textures=""
+                            if mark_white_textures:
+                               if contains_white_tag(lat,lon):
+                                  white_textures=" w!"                            
+                            content = prov + "\n" + str(zl) + "\n" + has_ovl + white_textures
                         else:
                             content = "?"
                         self.dico_tiles_done[(lat, lon)] = (
@@ -1869,20 +1869,13 @@ class Ortho4XP_Earth_Preview(tk.Toplevel):
         return
 
     def trash(self):
-        def delete_overlays(lat, lon):
-            ovl_path = os.path.join(
-                FNAMES.Overlay_dir,
-                "Earth nav data",
-                FNAMES.long_latlon(lat, lon) + ".dsf",
-            )
+        def delete_overlays(lat, lon):        
+            ovl_path=(os.path.join(FNAMES.Overlay_dir, "Earth nav data", FNAMES.long_latlon(lat, lon) + ".dsf"))
             if os.path.exists(ovl_path):
-                os.remove(ovl_path)
-                UI.vprint(
-                    1, "Deleted overalays for tile: " + FNAMES.short_latlon(lat, lon)
-                )
-                UI.vprint(1, "Use Refresh button to see changes on the map")
+                    os.remove(ovl_path)
+                    UI.vprint(1, "Deleted overalays for tile: "+ FNAMES.short_latlon(lat, lon))
+                    UI.vprint(1, "Use Refresh button to see changes on the map")
             return
-
         if self.v_["OSM data"].get():
             try:
                 shutil.rmtree(FNAMES.osm_dir(self.active_lat, self.active_lon))
@@ -1937,8 +1930,8 @@ class Ortho4XP_Earth_Preview(tk.Toplevel):
             except Exception as e:
                 UI.vprint(3, e)
         if self.v_["Tile (overlays)"].get() and not self.grouped:
-            try:
-                delete_overlays(self.active_lat, self.active_lon)
+            try:   
+              delete_overlays(self.active_lat, self.active_lon)           
             except Exception as e:
                 UI.vprint(3, e)
         return
@@ -2192,5 +2185,10 @@ class Ortho4XP_Earth_Preview(tk.Toplevel):
     def exit(self):
         self.destroy()
 
-
 ##############################################################################
+def contains_white_tag(lat,lon):
+    jpg_path = os.path.join(FNAMES.Imagery_dir, FNAMES.long_latlon(lat, lon))
+    for root, dirs, files in os.walk(jpg_path):
+        if any(file.endswith('.white') for file in files):
+            return True
+    return False
