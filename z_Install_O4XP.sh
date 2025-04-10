@@ -22,26 +22,29 @@ fi
 if [[ "$OSTYPE" == "darwin"* ]]; then
    echo "macOS"
 
-# Function to install Rosetta
-install_rosetta() {
-  if /usr/bin/pgrep oahd >/dev/null 2>&1; then
-    echo " "
-  else
-    echo "Installing Rosetta (required for DDS conversion) ..."
-      softwareupdate --install-rosetta --agree-to-license
+# Choose the Python version for macOS installation
 
-    if [[ $? -eq 0 ]]; then
-      echo "Rosetta has been successfully installed."
-    else
-      echo "Failed to install Rosetta."
-    fi
-  fi
-}
-
-if [[ "$(uname -m)" == "arm64" ]]; then
-   install_rosetta
-fi
-
+read -p "Which version of Python would you like to use with Ortho4XP? (0) 3.10, (1) 3.11, (2) 3.12 (3) 3.13  " nr
+         case $nr in
+	          0 ) echo " ";
+	              echo "Proceeding with Python 3.10";
+                  py_ver="3.10" 
+	              echo " " ;;
+	          1 ) echo " ";
+	              echo "Proceeding with Python 3.11";
+                  py_ver="3.11" 
+	              echo " " ;;
+	          2 ) echo " ";
+	              echo "Proceeding with Python 3.12";
+                  py_ver="3.12" 
+	              echo " " ;; 
+	          3 ) echo " ";
+	              echo "Proceeding with Python 3.13";
+                  py_ver="3.13" 
+	              echo " " ;;                               
+	          * ) echo invalid response;
+		      exit 1;;
+          esac 
 
 # Path to Homebrew
 
@@ -96,44 +99,9 @@ update_path(){
    echo " "      
  fi
 
-# Choose the Python version for macOS installation
-
-read -p "Which version of Python would you like to use with Ortho4XP? (0) 3.10, (1) 3.11, (2) 3.12 (3) 3.13  " nr
-         case $nr in
-	          0 ) echo " ";
-	              echo "Proceeding with Python 3.10";
-                  py_ver="3.10" 
-	              echo " " ;;
-	          1 ) echo " ";
-	              echo "Proceeding with Python 3.11";
-                  py_ver="3.11" 
-	              echo " " ;;
-	          2 ) echo " ";
-	              echo "Proceeding with Python 3.12";
-                  py_ver="3.12" 
-	              echo " " ;; 
-	          3 ) echo " ";
-	              echo "Proceeding with Python 3.13";
-                  py_ver="3.13" 
-	              echo " " ;;                               
-	          * ) echo invalid response;
-		      exit 1;;
-          esac 
- 
-if ! [ -x "$(command -v gdalwarp)" ]; then
-   read -p "Do you want to install GDAL, required only for creating GeoTIFFs?  (y/n) " yn
-   case $yn in
-	n ) echo "Proceeding without GDAL. It can be installed later (brew install gdal) ";;
-	y ) echo "Installing GDAL. Be patient - it may take some time ...";
-	    brew install gdal ;;
-	* ) echo invalid response;
-            exit 1;;
-   esac
-fi
-
-if ! [ -x "$(command -v python$py_ver)" ]; then
+ if ! [ -x "$(command -v python$py_ver)" ]; then
    echo "Python $py_ver not found! "
-fi 
+ fi 
 
 echo " "
 read -p "Do you want to (re)install Homebrew packages required by O4XP? (y/n) " yn
@@ -148,7 +116,7 @@ esac
 
 echo " "
 
-echo "Approving the use of executables from $SCRIPT_DIR/Utils directory"
+echo "Approving the use of executables from $SCRIPT_DIR/Utils/ directory"
 xattr -dr com.apple.quarantine ./Utils/*
 
 # Semi-automated, guided installation for Linux
@@ -181,10 +149,10 @@ fi
  
 # Required system packages
  
- Debian="sudo apt-get install python3 python3-venv python3-pip python3-gdal libgdal-dev python3-pil.imagetk p7zip-full libnvtt-bin freeglut3-dev gdal-bin gcc imagemagick"
- Arch="sudo pacman -S python python-pip python-gdal p7zip freeglut tk podofo netcdf mariadb hdf5 cfitsio postgresql gcc imagemagick"
- Fedora="sudo dnf install python3 python3-devel python3-pip python3-gdal gdal-devel python3-tkinter p7zip freeglut gcc-c++ ImageMagick"
- openSUSE="sudo zypper install python312 python312-tk python312-devel gdal python3-GDAL p7zip freeglut-devel gcc-c++ ImageMagick"
+ Debian="sudo apt-get install python3 python3-venv python3-pip python3-gdal libgdal-dev python3-pil.imagetk p7zip-full libnvtt-bin freeglut3-dev gdal-bin gcc"
+ Arch="sudo pacman -S python python-pip python-gdal p7zip freeglut tk podofo netcdf mariadb hdf5 cfitsio postgresql gcc"
+ Fedora="sudo dnf install python3 python3-devel python3-pip python3-gdal gdal-devel python3-tkinter p7zip freeglut gcc"
+ openSUSE="sudo zypper install python312 python312-tk python312-devel gdal python3-GDAL p7zip freeglut-devel gcc"
  
  if [[ "$OS" == *"Ubuntu"* ]]; then
       py_ver="3"
@@ -281,24 +249,7 @@ if [ "$(uname -m)" = "aarch64" ]; then
     echo "Linux aarch64 - compiling triangle and Triangle4XP from source..."
     gcc -O2 ./Utils/triangle.c -lm -o ./Utils/triangle_linux
     gcc -O2 ./Utils/Triangle4XP.c -lm -o ./Utils/Triangle4XP_linux
-fi
-
-if [ -n "$system_packages" ] && [ "$system_packages" = "$Debian" ]; then
-    
-    #Use native nvcompress on Ubuntu/Debian based distributions
-    echo "Configuring Ortho4XP to use OS native nvcompress..."
-    echo ""
-    search="native_nvcompress=False"
-    replace="native_nvcompress=True"
-    inputfile="./src/O4_Imagery_Utils.py"
-    tempfile=$(mktemp)
-
-    # Replace string in the file
-    sed "s/$search/$replace/g" "$inputfile" > "$tempfile"
-
-    # Move temp file to original file
-    mv "$tempfile" "$inputfile"
-fi
+fi 
 
 # Finding python command on "Unknown" distribution
 
@@ -337,13 +288,11 @@ fi
 
 # Make "z_Start_O4XP.sh" an executable file
 chmod +x ./z_Start_O4XP.sh
-xattr -dr com.apple.quarantine ./z_Start_O4XP.sh
 
 echo " "
 echo "Installed packages:"
 pip list
 echo " "
 echo " "
-echo " "
-echo "Use $SCRIPT_DIR/z_Start_O4XP.sh to start O4XP"
+echo "Use z_Start_O4XP.sh to run Ortho4XP"
 echo " "
