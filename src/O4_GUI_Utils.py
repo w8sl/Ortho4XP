@@ -1711,10 +1711,16 @@ class Ortho4XP_Earth_Preview(tk.Toplevel):
                                 color = O4_Common_Types.ZoomLevels.tkinter_color_of(zl)
                             else:
                                 zl = "?"
-                            if os.path.exists(os.path.join(FNAMES.Overlay_dir, "Earth nav data", FNAMES.long_latlon(lat, lon) + ".dsf")):
-                               has_ovl="o"
+                            if os.path.exists(
+                                os.path.join(
+                                    FNAMES.Overlay_dir,
+                                    "Earth nav data",
+                                    FNAMES.long_latlon(lat, lon) + ".dsf",
+                                )
+                            ):
+                                has_ovl = "o"
                             else:
-                               has_ovl="" 
+                                has_ovl = ""
                             content = prov + "\n" + str(zl) + "\n" + has_ovl
                         else:
                             content = "?"
@@ -1863,13 +1869,20 @@ class Ortho4XP_Earth_Preview(tk.Toplevel):
         return
 
     def trash(self):
-        def delete_overlays(lat, lon):        
-            ovl_path=(os.path.join(FNAMES.Overlay_dir, "Earth nav data", FNAMES.long_latlon(lat, lon) + ".dsf"))
+        def delete_overlays(lat, lon):
+            ovl_path = os.path.join(
+                FNAMES.Overlay_dir,
+                "Earth nav data",
+                FNAMES.long_latlon(lat, lon) + ".dsf",
+            )
             if os.path.exists(ovl_path):
-                    os.remove(ovl_path)
-                    UI.vprint(1, "Deleted overalays for tile: "+ FNAMES.short_latlon(lat, lon))
-                    UI.vprint(1, "Use Refresh button to see changes on the map")
+                os.remove(ovl_path)
+                UI.vprint(
+                    1, "Deleted overalays for tile: " + FNAMES.short_latlon(lat, lon)
+                )
+                UI.vprint(1, "Use Refresh button to see changes on the map")
             return
+
         if self.v_["OSM data"].get():
             try:
                 shutil.rmtree(FNAMES.osm_dir(self.active_lat, self.active_lon))
@@ -1924,8 +1937,8 @@ class Ortho4XP_Earth_Preview(tk.Toplevel):
             except Exception as e:
                 UI.vprint(3, e)
         if self.v_["Tile (overlays)"].get() and not self.grouped:
-            try:   
-              delete_overlays(self.active_lat, self.active_lon)           
+            try:
+                delete_overlays(self.active_lat, self.active_lon)
             except Exception as e:
                 UI.vprint(3, e)
         return
