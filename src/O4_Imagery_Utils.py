@@ -37,16 +37,6 @@ import O4_Mesh_Utils as MESH
 import O4_OSM_Utils as OSM
 import O4_Mask_Utils as MASK
 from O4_Parallel_Utils import parallel_execute
-import warnings
-import rasterio
-from rasterio.errors import NotGeoreferencedWarning
-from rasterio.transform import from_bounds, from_origin
-from rasterio.warp import calculate_default_transform, reproject, Resampling
-import platform
-
-warnings.filterwarnings("ignore", category=NotGeoreferencedWarning)
-architecture = platform.machine()
-use_gdal=False
 
 http_timeout = 10
 check_tms_response = False
@@ -62,35 +52,26 @@ request_headers_generic = {
     "Connection": "keep-alive",
     "Accept-Encoding": "gzip, deflate",
 }
-
+imagemagick = False
+native_nvcompress = False
 if "dar" in sys.platform:
-    if "arm64" in architecture:
-       dds_convert_cmd = os.path.join(
-       UI.Ortho4XP_dir, "Utils", "nvcompress", "new", "mac", "arm64", "nvcompress"
-       )
-    else:
-       dds_convert_cmd = os.path.join(
-       UI.Ortho4XP_dir, "Utils", "nvcompress"
-       )
+    dds_convert_cmd = os.path.join(UI.Ortho4XP_dir, "Utils", "nvcompress", "nvcompress")
     gdal_transl_cmd = "gdal_translate"
     gdalwarp_cmd = "gdalwarp"
     devnull_rdir = " >/dev/null 2>&1"
 elif "win" in sys.platform:
     dds_convert_cmd = os.path.join(
-        UI.Ortho4XP_dir, "Utils", "nvcompress", "new", "win", "nvcompress.exe"
+        UI.Ortho4XP_dir, "Utils", "nvcompress", "nvcompress.exe"
     )
     gdal_transl_cmd = "gdal_translate.exe"
     gdalwarp_cmd = "gdalwarp.exe"
     devnull_rdir = " > nul  2>&1"
 else:
-    if "aarch64" in architecture:
-        dds_convert_cmd = os.path.join(
-        UI.Ortho4XP_dir, "Utils","nvcompress", "new", "lin", "aarch64", "nvcompress"
-        )
+    if native_nvcompress is True:
+        dds_convert_cmd = "nvcompress"
     else:
-        dds_convert_cmd = os.path.join(
-        UI.Ortho4XP_dir, "Utils","nvcompress", "new", "lin", "nvcompress"
-        )
+        imagemagick = True
+        dds_convert_cmd = "magick"
     gdal_transl_cmd = "gdal_translate"
     gdalwarp_cmd = "gdalwarp"
     devnull_rdir = " >/dev/null 2>&1 "
@@ -2243,8 +2224,8 @@ def convert_texture(tile, til_x_left, til_y_top, zoomlevel, provider_code, type=
         file_to_convert = os.path.join(file_dir, jpeg_file_name)
     # eventually the dds conversion
     if type == "dds":
-
-        if not dxt5:
+        if imagemagick is False:
+            if not dxt5:
                 conv_cmd = [
                     dds_convert_cmd,
                     "-bc1",
@@ -2253,7 +2234,7 @@ def convert_texture(tile, til_x_left, til_y_top, zoomlevel, provider_code, type=
                     os.path.join(tile.build_dir, "textures", out_file_name),
                     devnull_rdir,
                 ]
-        else:
+            else:
                 conv_cmd = [
                     dds_convert_cmd,
                     "-bc3",
@@ -2262,7 +2243,23 @@ def convert_texture(tile, til_x_left, til_y_top, zoomlevel, provider_code, type=
                     os.path.join(tile.build_dir, "textures", out_file_name),
                     devnull_rdir,
                 ]
-
+        else:
+            if not dxt5:
+                conv_cmd = [
+                    dds_convert_cmd,
+                    file_to_convert,
+                    "-define",
+                    "dds:compression=dxt1",
+                    os.path.join(tile.build_dir, "textures", out_file_name),
+                ]
+            else:
+                conv_cmd = [
+                    dds_convert_cmd,
+                    file_to_convert,
+                    "-define",
+                    "dds:compression=dxt5",
+                    os.path.join(tile.build_dir, "textures", out_file_name),
+                ]
     else:
         (latmax, lonmin) = GEO.gtile_to_wgs84(til_x_left, til_y_top, zoomlevel)
         (latmin, lonmax) = GEO.gtile_to_wgs84(
@@ -2271,8 +2268,7 @@ def convert_texture(tile, til_x_left, til_y_top, zoomlevel, provider_code, type=
         (xmin, ymin) = GEO.transform("4326", "3857", lonmin, latmin)
         (xmax, ymax) = GEO.transform("4326", "3857", lonmax, latmax)
         if latmax - latmin < 0.04:
-            if use_gdal==True:
-              conv_cmd = [
+            conv_cmd = [
                 gdal_transl_cmd,
                 "-of",
                 "Gtiff",
@@ -2287,12 +2283,9 @@ def convert_texture(tile, til_x_left, til_y_top, zoomlevel, provider_code, type=
                 "epsg:4326",
                 file_to_convert,
                 os.path.join(FNAMES.Geotiff_dir, out_file_name),
-                ]
-            else:
-              conv_cmd=r_translate(file_to_convert, os.path.join(FNAMES.Geotiff_dir, out_file_name), "epsg:4326", lonmin, latmax, lonmax, latmin)
+            ]
         else:
-            if use_gdal==True:
-              geotag_cmd = [
+            geotag_cmd = [
                 gdal_transl_cmd,
                 "-of",
                 "Gtiff",
@@ -2307,43 +2300,22 @@ def convert_texture(tile, til_x_left, til_y_top, zoomlevel, provider_code, type=
                 "epsg:3857",
                 file_to_convert,
                 tmp_tif_file_name,
-                ]
-            else:
-              geotag_cmd = r_translate(file_to_convert, tmp_tif_file_name, "epsg:3857", xmin, ymax, xmax, ymin )
+            ]
             erase_tmp_tif = True
-            if str(geotag_cmd).startswith("["):
-              if subprocess.call(
+            if subprocess.call(
                 geotag_cmd, stdout=subprocess.DEVNULL, stderr=subprocess.STDOUT
-              ):
+            ):
                 UI.vprint(
                     1,
                     "ERROR: Could not geotag texture (gdal not present ?) ",
                     os.path.join(tile.build_dir, "textures", out_file_name),
                 )
                 try:
-                    os.remove(
-                        os.path.join(UI.Ortho4XP_dir, "tmp", png_file_name)
-                    )
+                    os.remove(os.path.join(UI.Ortho4XP_dir, "tmp", png_file_name))
                 except:
                     pass
                 return
-
-            else:
-              if geotag_cmd:
-                UI.vprint(
-                    1,
-                    "ERROR: Could not geotag texture ",
-                    os.path.join(tile.build_dir, "textures", out_file_name),
-                )
-                try:
-                    os.remove(
-                        os.path.join(UI.Ortho4XP_dir, "tmp", png_file_name)
-                    )
-                except:
-                    pass
-                return
-            if use_gdal==True:
-              conv_cmd = [
+            conv_cmd = [
                 gdalwarp_cmd,
                 "-of",
                 "Gtiff",
@@ -2359,20 +2331,13 @@ def convert_texture(tile, til_x_left, til_y_top, zoomlevel, provider_code, type=
                 "-rb",
                 tmp_tif_file_name,
                 os.path.join(FNAMES.Geotiff_dir, out_file_name),
-                ]
-            else:
-              conv_cmd=r_warp(tmp_tif_file_name, os.path.join(FNAMES.Geotiff_dir, out_file_name), "epsg:4326")
-
+            ]
     tentative = 0
     while True:
-        if str(conv_cmd).startswith("["):
-           if not subprocess.call(
-             conv_cmd, stdout=subprocess.DEVNULL, stderr=subprocess.STDOUT
-             ):
-              break
-        else:
-           if not conv_cmd:
-              break
+        if not subprocess.call(
+            conv_cmd, stdout=subprocess.DEVNULL, stderr=subprocess.STDOUT
+        ):
+            break
         tentative += 1
         if tentative == 10:
             UI.lvprint(
@@ -2395,7 +2360,7 @@ def convert_texture(tile, til_x_left, til_y_top, zoomlevel, provider_code, type=
             pass
     if erase_tmp_tif:
         try:
-            os.remove(tmp_tif_file_name)
+            os.remove(os.path.join(UI.Ortho4XP_dir, "tmp", png_file_name))
         except:
             pass
     return
@@ -2412,12 +2377,8 @@ def geotag(input_file_name):
     til_x_left = int(items[1])
     zoomlevel = int(items[-1][-6:-4])
     (latmax, lonmin) = GEO.gtile_to_wgs84(til_x_left, til_y_top, zoomlevel)
-    (latmin, lonmax) = GEO.gtile_to_wgs84(
-        til_x_left + 16, til_y_top + 16, zoomlevel
-    )
-
-    if use_gdal==True:
-      conv_cmd = [
+    (latmin, lonmax) = GEO.gtile_to_wgs84(til_x_left + 16, til_y_top + 16, zoomlevel)
+    conv_cmd = [
         gdal_transl_cmd,
         "-of",
         "Gtiff",
@@ -2432,71 +2393,14 @@ def geotag(input_file_name):
         "epsg:4326",
         input_file_name,
         out_file_name,
-        ]
-    else:
-      conv_cmd = r_translate(file_to_convert, os.path.join(FNAMES.Geotiff_dir, out_file_name), "epsg:4326", lonmin, latmax, lonmax, latmin )
+    ]
     tentative = 0
     while True:
-
-        if str(conv_cmd).startswith("["):
-          if not subprocess.call(conv_cmd):
-            break
-        else:
-          if not conv_cmd:
+        if not subprocess.call(conv_cmd):
             break
         tentative += 1
         if tentative == 10:
-            print(
-                "ERROR: Could not convert texture", out_file_name, "(10 tries)"
-            )
+            print("ERROR: Could not convert texture", out_file_name, "(10 tries)")
             break
         print("WARNING: Could not convert texture", out_file_name)
         time.sleep(1)
-
-
-################################################################################
-def r_translate(filein, fileout, r_crs, xmin, ymin, xmax, ymax):
-
-    with rasterio.open(filein) as src:
-        transform = from_bounds(xmin, ymin, xmax, ymax, src.width, src.height)
-        kwargs = src.meta.copy()
-        kwargs.update({
-            'driver': 'GTiff',
-            'compress': 'jpeg',
-            'transform': transform,
-            'crs': r_crs,
-            'interleave': 'pixel',
-            'jpeg_quality': 75
-            })
-
-        with rasterio.open(fileout, 'w', **kwargs) as dst:
-            dst.write(src.read())
-
-################################################################################
-def r_warp(filein,fileout,r_crs):
-
-   with rasterio.open(filein) as src:
-        transform, width, height = calculate_default_transform(
-            src.crs, r_crs, src.width, src.height, *src.bounds)
-
-        new_transform = transform * transform.scale(
-        (width / 4096),
-        (height / 4096))
-        kwargs = src.meta.copy()
-        kwargs.update({
-            'crs': r_crs,
-            'transform': new_transform,
-            'width': 4096,
-            'height': 4096,
-            'compress': 'jpeg',
-            'interleave': 'pixel',
-            'jpeg_quality': 75
-        })
-
-        data = src.read(
-            out_shape=(src.count, 4096, 4096),
-            resampling=Resampling.bilinear
-        )
-
-        with rasterio.open(fileout, 'w', **kwargs) as dst:
-            dst.write(data)
