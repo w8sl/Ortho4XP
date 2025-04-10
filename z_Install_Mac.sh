@@ -22,22 +22,6 @@ install_xcode_tools() {
   fi
 }
 
-# Function to install Rosetta
-install_rosetta() {
-  if /usr/bin/pgrep oahd >/dev/null 2>&1; then
-    echo "Rosetta is already installed."
-  else
-    echo "Installing Rosetta (required for DDS conversion) ..."
-      softwareupdate --install-rosetta --agree-to-license
-
-    if [[ $? -eq 0 ]]; then
-      echo "Rosetta has been successfully installed."
-    else
-      echo "Failed to install Rosetta."
-    fi
-  fi
-}
-
 check_python_tk() {
   echo ""
   echo "Checking for Tkinter..."
@@ -106,15 +90,10 @@ macos_version=$(sw_vers -productVersion)
 # Extract the major version
 major_version=$(echo $macos_version | cut -d '.' -f 1)
 
-
 # Main script execution
 echo ""
 
 install_xcode_tools
-
-if [[ "$(uname -m)" == "arm64" ]]; then
-   install_rosetta
-fi
 
 echo "Approving the use of executables from $SCRIPT_DIR/Utils/mac directory"
 xattr -dr com.apple.quarantine ./Utils/mac/*
@@ -142,10 +121,14 @@ if [ -d "$venv_path/bin" ]; then
   pip list
 fi
 
-# Make "z_Start_O4XP.sh" an executable file
-chmod +x ./z_Start_O4XP.sh
-xattr -dr com.apple.quarantine ./z_Start_O4XP.sh
+#Make z_Start_O4XP clickable on macOS
 
-echo " "
-echo "Use $SCRIPT_DIR/z_Start_O4XP.sh to start O4XP"
-echo " "
+if [ -f ./z_Start_O4XP.sh ]; then
+     echo "Making z_Start_O4XP executable and clickable"
+     echo " "
+     chmod +x ./z_Start_O4XP.sh
+     xattr -dr com.apple.quarantine ./z_Start_O4XP.sh
+     mv ./z_Start_O4XP.sh ./z_Start_O4XP.command
+     echo "Double-click on: \"z_Start_O4XP.command\" to run Ortho4XP"
+     echo " "
+fi
