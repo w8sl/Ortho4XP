@@ -24,7 +24,7 @@ Installation on Linux, macOS with [Homebrew](https://brew.sh/)
 
 Windows:
 -------------------------------
-- Download and install Python from the official website: www.python.org. Python versions 3.10 to 3.13 are supported
+- Download and install Python from the official website: [www.python.org](https://www.python.org/downloads/windows/) Python versions 3.10 to 3.13 are supported
 - Customize the installation to include “Add python.exe to PATH”, “pip”, “tcl/tk and IDLE”, “Add Python to environment variables”
 - **Download and install:** [Latest Microsoft Visual C++ Redistributable Version](https://aka.ms/vs/17/release/vc_redist.x64.exe)
 - Click on **"win_install.bat"** file for the installation and **"win_start.bat"** to run Ortho4XP
