@@ -119,6 +119,7 @@ if [ -d "$venv_path/bin" ]; then
   echo "$(python --version) venv has been created in the $venv_path directory"
   echo "Installed packages:"
   pip list
+  echo " "
 fi
 
 #Make z_Start_O4XP clickable on macOS
