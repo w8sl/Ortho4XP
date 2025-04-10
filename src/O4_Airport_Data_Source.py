@@ -1087,19 +1087,26 @@ class XPlaneAptDatParser:
         """
         xp_dir = CFG.xplane_install_dir
         apt_dat = os.path.join("Earth nav data", "apt.dat")
-        if "12" in xp_dir:
-            global_airports = os.path.join(
-                xp_dir, "Global Scenery", "Global Airports", apt_dat
-            )
-        else:
-            global_airports = os.path.join(
-                xp_dir, "Custom Scenery", "Global Airports", apt_dat
-            )
-
-        custom_airports = set(
-            glob.glob(os.path.join(xp_dir, "Custom Scenery", "*", apt_dat))
-        ) - {global_airports}
-        return [global_airports] + sorted(custom_airports)
+        default_scenery = os.path.join(
+                 xp_dir, "Resources", "default scenery", "default apt dat", apt_dat
+             )
+        if os.path.exists(default_scenery):
+                  
+             global_airports = os.path.join(
+                 xp_dir, "Custom Scenery", "Global Airports", apt_dat
+             )
+             custom_airports = set(
+                 glob.glob(os.path.join(xp_dir, "Custom Scenery", "*", apt_dat))
+             ) - {global_airports}
+             return [default_scenery, global_airports] + sorted(custom_airports)                         
+        else:            
+             global_airports = os.path.join(
+                 xp_dir, "Global Scenery", "Global Airports", apt_dat
+             )
+             custom_airports = set(
+                 glob.glob(os.path.join(xp_dir, "Custom Scenery", "*", apt_dat))
+             ) - {global_airports}
+             return [global_airports] + sorted(custom_airports)
 
     @staticmethod
     def parse(apt_dat_file):

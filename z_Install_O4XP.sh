@@ -22,26 +22,6 @@ fi
 if [[ "$OSTYPE" == "darwin"* ]]; then
    echo "macOS"
 
-# Function to install Rosetta
-install_rosetta() {
-  if /usr/bin/pgrep oahd >/dev/null 2>&1; then
-    echo " "
-  else
-    echo "Installing Rosetta (required for DDS conversion) ..."
-      softwareupdate --install-rosetta --agree-to-license
-
-    if [[ $? -eq 0 ]]; then
-      echo "Rosetta has been successfully installed."
-    else
-      echo "Failed to install Rosetta."
-    fi
-  fi
-}
-
-if [[ "$(uname -m)" == "arm64" ]]; then
-   install_rosetta
-fi
-
 # Choose the Python version for macOS installation
 
 read -p "Which version of Python would you like to use with Ortho4XP? (0) 3.10, (1) 3.11, (2) 3.12 (3) 3.13  " nr
@@ -136,22 +116,6 @@ esac
 
 echo " "
 
-if ! [ -x "$(command -v gdalwarp)" ]; then
-   
-   echo "GDAL not found!" 
-   echo" "
-   read -p "Do you want to install GDAL, required only for creating GeoTIFFs?  (y/n) " yn
-
-   case $yn in
-	 n ) echo "Proceeding without GDAL. It can be installed later (brew install gdal) ";;
-	 y ) echo "Installing GDAL. Be patient - it may take some time ...";
-	    brew install gdal ;;
-	 * ) echo invalid response;
-            exit 1;;
-   esac
-
-fi
-
 echo "Approving the use of executables from $SCRIPT_DIR/Utils/mac directory"
 xattr -dr com.apple.quarantine ./Utils/mac/*
 
@@ -185,10 +149,10 @@ fi
  
 # Required system packages
  
- Debian="sudo apt-get install python3 python3-venv python3-pip python3-gdal libgdal-dev python3-pil.imagetk p7zip-full libnvtt-bin freeglut3-dev gdal-bin gcc imagemagick"
- Arch="sudo pacman -S python python-pip python-gdal p7zip freeglut tk podofo netcdf mariadb hdf5 cfitsio postgresql gcc imagemagick"
- Fedora="sudo dnf install python3 python3-devel python3-pip python3-gdal gdal-devel python3-tkinter p7zip freeglut gcc-c++ ImageMagick"
- openSUSE="sudo zypper install python312 python312-tk python312-devel gdal python3-GDAL p7zip freeglut-devel gcc-c++ ImageMagick"
+ Debian="sudo apt-get install python3 python3-venv python3-pip python3-gdal libgdal-dev python3-pil.imagetk p7zip-full libnvtt-bin freeglut3-dev gdal-bin gcc"
+ Arch="sudo pacman -S python python-pip python-gdal p7zip freeglut tk podofo netcdf mariadb hdf5 cfitsio postgresql gcc"
+ Fedora="sudo dnf install python3 python3-devel python3-pip python3-gdal gdal-devel python3-tkinter p7zip freeglut gcc-c++"
+ openSUSE="sudo zypper install python312 python312-tk python312-devel gdal python3-GDAL p7zip freeglut-devel gcc-c++"
  
  if [[ "$OS" == *"Ubuntu"* ]]; then
       py_ver="3"
@@ -285,42 +249,6 @@ if [ "$(uname -m)" = "aarch64" ]; then
     echo "Linux aarch64 - compiling triangle and Triangle4XP from source..."
     gcc -O2 ./Utils/src/triangle.c -lm -o ./Utils/lin/triangle
     gcc -O2 ./Utils/src/Triangle4XP.c -lm -o ./Utils/lin/Triangle4XP
-       
-  if [ "$system_packages" = "$Debian" ]; then
-    
-    #Use native nvcompress on Ubuntu/Debian based distributions    
-    echo "Configuring Ortho4XP to use native nvcompress..."
-    echo ""
-    search="native_nvcompress=False"
-    replace="native_nvcompress=True"
-    inputfile="./src/O4_Imagery_Utils.py"
-    tempfile=$(mktemp)
-
-    # Replace string in the file
-    sed "s/$search/$replace/g" "$inputfile" > "$tempfile"
-
-    # Move temp file to original file
-    mv "$tempfile" "$inputfile"
-    
-  else
-
-    #Use Imagemagick on linux aarch64
-    # Variables
-    echo "Configuring Ortho4XP to use ImageMagick..."
-    echo ""
-    search="imagemagick=False"
-    replace="imagemagick=True"
-    inputfile="./src/O4_Imagery_Utils.py"
-    tempfile=$(mktemp)
-
-    # Replace string in the file
-    sed "s/$search/$replace/g" "$inputfile" > "$tempfile"
-
-    # Move temp file to original file
-    mv "$tempfile" "$inputfile"
-     
-  fi
-
 fi 
 
 # Finding python command on "Unknown" distribution
@@ -358,14 +286,13 @@ if [ -d "$venv_path/bin" ]; then
   echo "$(python --version) venv has been created in the $venv_path directory"
 fi
 
-# Make "z_Start_O4XP.sh" an executable file
-chmod +x ./z_Start_O4XP.sh
-xattr -dr com.apple.quarantine ./z_Start_O4XP.sh
-
 echo " "
 echo "Installed packages:"
 pip list
 echo " "
+echo "Making \"z_Start_O4XP.sh\" an executable file"
+chmod +x ./z_Start_O4XP.sh
+xattr -dr com.apple.quarantine ./z_Start_O4XP.sh
 echo " "
-echo "Use $SCRIPT_DIR/z_Start_O4XP.sh to start O4XP"
+echo "Use z_Start_O4XP.sh to run Ortho4XP"
 echo " "
