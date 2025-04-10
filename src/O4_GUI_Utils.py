@@ -52,7 +52,7 @@ import O4_Airport_Data_Source as APT_SRC
 OsX = "dar" in sys.platform
 
 # Mark tiles with white texture tags on the map ("w!")
-mark_white_textures = True
+mark_white_textures = False
 
 ############################################################################################
 class Ortho4XP_GUI(tk.Tk):
