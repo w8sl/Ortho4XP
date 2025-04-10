@@ -286,8 +286,9 @@ if [ -d "$venv_path/bin" ]; then
   echo "$(python --version) venv has been created in the $venv_path directory"
 fi
 
-# Make "z_Start_O4XP.sh" an executable file
+echo "Making \"z_Start_O4XP.sh\" an executable file"
 chmod +x ./z_Start_O4XP.sh
+xattr -dr com.apple.quarantine ./z_Start_O4XP.sh
 
 echo " "
 echo "Installed packages:"
