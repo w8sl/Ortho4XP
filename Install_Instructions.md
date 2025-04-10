@@ -12,7 +12,7 @@ Download and install Python 3.12 from [www.python.org](https://www.python.org/do
 
   - Type:   **_./z_Install_Mac.sh_**   press enter
     
- - To launch Ortho4XP, simply double-click on the file named **"z_Start_O4XP.command"**
+ - To launch Ortho4XP, double-click on the file named **"z_Start_O4XP.command"**
 
 Installation on Linux, macOS with [Homebrew](https://brew.sh/)
 ------------------------------------------
@@ -28,7 +28,7 @@ Windows:
 - Customize the installation to include “Add python.exe to PATH”, “pip”, “tcl/tk and IDLE”, “Add Python to environment variables”
 - **Download and install:** [Latest Microsoft Visual C++ Redistributable Version](https://aka.ms/vs/17/release/vc_redist.x64.exe)
 - Click on **"win_install.bat"** file for the installation and **"win_start.bat"** to run Ortho4XP
-- For manual installation, simply run: **pip install -r requirements.txt**
+- For manual installation, run: **pip install -r requirements.txt**
 - Use only Notepad++ or a similar editor to open/edit Ortho4XP files
 
 Important notices:
