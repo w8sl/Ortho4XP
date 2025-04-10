@@ -28,12 +28,12 @@ Windows:
 - Customize the installation to include “Add python.exe to PATH”, “pip”, “tcl/tk and IDLE”, “Add Python to environment variables”
 - **Download and install:** [Latest Microsoft Visual C++ Redistributable Version](https://aka.ms/vs/17/release/vc_redist.x64.exe)
 - Click on **"win_install.bat"** file for the installation and **"win_start.bat"** to run Ortho4XP
-- For manual installation simply run: **pip install -r requirements.txt**
+- For manual installation, simply run: **pip install -r requirements.txt**
 - Use only Notepad++ or a similar editor to open/edit Ortho4XP files
 
 Important notices:
 -------------------------------
 - The "**custom overlay src**" config variable must be set to the: "../X-Plane 12/Global Scenery/X-Plane 12 Global Scenery" directory
-- After modifying the setting, press the “Apply” button
+- After modifying the settings, press the “Apply” button
 - Always close Ortho4XP by pressing the blue “turn-off” button
 
