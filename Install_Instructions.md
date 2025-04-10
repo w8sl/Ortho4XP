@@ -10,7 +10,7 @@ Download and install Python 3.12 from [www.python.org](https://www.python.org/do
 
   - Type:   **_chmod +x z_Install_Mac.sh_**   press enter
 
-  - Type:   **_z_Install_Mac.sh_**   press enter
+  - Type:   **_./z_Install_Mac.sh_**   press enter
     
  - To launch Ortho4XP, simply double-click on the file named **"z_Start_O4XP.command"**
 
