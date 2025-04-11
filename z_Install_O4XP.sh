@@ -276,6 +276,20 @@ python$py_ver -m venv $venv_path
 
 source $venv_path/bin/activate
 
+if [[ "$OSTYPE" == "linux"* ]]; then
+# Get the version of GDAL
+gdal_version=$(gdal-config --version)
+
+# Compare version strings
+
+if [[ "$(printf '%s\n' "$gdal_version" "3.5.0" | sort -V | head -n1)" == "$gdal_version" && "$gdal_version" != "3.5.0" ]]; then
+  # Replace strings in the "requirements.txt" file
+  sed -i 's/^numpy.*$/numpy==1.26.4/' requirements.txt
+  sed -i 's/^rasterio.*$/rasterio==1.3.11/' requirements.txt
+  echo "Modyfying requirements.txt for GDAL<3.5"
+fi
+fi
+
 # Install required packages with pip
 
 pip install -r requirements.txt
