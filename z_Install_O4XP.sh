@@ -282,10 +282,17 @@ gdal_version=$(gdal-config --version)
 
 # Compare version strings
 if [[ "$(printf '%s\n' "$gdal_version" "3.5.0" | sort -V | head -n1)" == "$gdal_version" && "$gdal_version" != "3.5.0" ]]; then
+ if ! grep -q "==" requirements.txt; then
   # Replace strings in the "requirements.txt" file
   sed -i 's/^numpy.*$/numpy==1.26.4/' requirements.txt
   sed -i 's/^rasterio.*$/rasterio==1.3.11/' requirements.txt
   echo "Modyfying requirements.txt for GDAL<3.5"
+ else
+  echo " "
+  echo "Modified version of requirements.txt detected, skipping"
+  echo "rasterio==1.3.11, numpy==1.26.4 is required, if GDAL version is < 3.5.0"
+  echo " "
+ fi
 fi
 fi
 
