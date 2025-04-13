@@ -199,37 +199,49 @@ if ! [ -x "$(command -v gdalwarp)" ]; then
     echo " "
 fi
 
-
 if [[ "$OS" == "Unknown" ]]; then
 echo " "
-echo "Do you want to run update and install system packages required by O4XP ?"
+echo "Unknown system. You may try to install packages required by O4XP for Ubuntu/Debian or Arch based distribution"
 echo " "
-read -p "Install for distribution based on Arch? (a) Debian? (d) Skip installation? (s) " ads 
+echo "It is recommended to install the system updates first. Quit and run \"sudo apt update\", \"sudo pacman -Syu\" or equivalent !"
 echo " "
-case $ads in
-	s ) echo "ok, we will proceed without installation of system packages";;
-        a ) echo "Updating system and installing packages for Arch-based distribution";
-	    py_ver="3.12";
-	    sudo pacman -Syu;
-            $Arch;;
-	d ) echo "Updating system and installing packages for Debian-based distribution";
-            py_ver="3"; 
-	    sudo apt update;
-            $Debian;;		
-	* ) echo invalid response;
-	    exit 1;;
+read -p "Install all packages for distribution based on Arch? (a) Debian? (d) Proceed and install only Python requirements (p) Quit the installation? (q) " adqp 
+echo " "
+case $adqp in
+    p ) echo "Installing Python requirements";;
+    a ) echo "Installing all required packages for Arch-based distribution";
+	 py_ver="3.12";
+         $Arch;;
+    d ) echo "Installing all required packages for Debian-based distribution";
+         py_ver="3"; 
+         $Debian;;
+    q ) echo "Quiting the installation !";
+	exit 1;;		
+    * ) echo "Invalid response, aborting !";
+	exit 1;;
 esac
 
 
 else
-
-read -p "Do you want to run update and install system packages for $OS required by O4XP? (y/n) " yn
+echo " "
+echo "It is recommended to run system update before installing packages required by O4XP !"
+echo "It can be done by this script or manually by running: \"sudo apt update\" or equivalent"
+read -p "Would you like to execute a system update for $OS using this script?(y/n) " yn
 
 case $yn in
-	n ) echo "ok, we will proceed without installation of system packages";;
-	y ) echo "Updating system and installing packages required by O4XP";
-	    $update;
-            $system_packages;;
+	n ) echo "Proceeding, assuming that the system has already been updated. ... ";;
+	y ) echo "Installing the system updates";
+	    $update;;
+	* ) echo invalid response;
+            exit 1;;
+esac
+
+read -p "Would you like to (re)install system packages for $OS, required by O4XP(y/n) " yn
+
+case $yn in
+	n ) echo "Proceeding without (re)installing the system packages.... ";;
+	y ) echo "Installing system packages";
+	    $system_packages;;
 	* ) echo invalid response;
             exit 1;;
 esac
@@ -277,27 +289,27 @@ python$py_ver -m venv $venv_path
 source $venv_path/bin/activate
 
 if [[ "$OSTYPE" == "linux"* ]]; then
-# Get the version of GDAL
-gdal_version=$(gdal-config --version)
+  gdal_version=$(gdal-config --version)
+  
+  # Check if GDAL version is less than 3.5.0
+  if [[ "$(printf '%s\n' "$gdal_version" "3.5.0" | sort -V | head -n1)" == "$gdal_version" && "$gdal_version" != "3.5.0" ]]; then
+    # Only modify requirements.txt if no fixed versions are specified
+    if grep -q "==" requirements.txt; then
+      echo "Fixed versions detected in requirements.txt, skipping modification"
+      echo "Note: rasterio==1.3.11 and numpy==1.26.4 are required for GDAL < 3.5.0"
+    else
+      # Update package versions for compatibility with GDAL<3.5.0
+      sed -i 's/^numpy.*$/numpy==1.26.4/' requirements.txt
+      sed -i 's/^rasterio.*$/rasterio==1.3.11/' requirements.txt
+      echo "Updated requirements.txt for GDAL < 3.5.0 compatibility"
+    fi
+  fi
+fi
 
-# Compare version strings
-if [[ "$(printf '%s\n' "$gdal_version" "3.5.0" | sort -V | head -n1)" == "$gdal_version" && "$gdal_version" != "3.5.0" ]]; then
- if ! grep -q "==" requirements.txt; then
-  # Replace strings in the "requirements.txt" file
-  sed -i 's/^numpy.*$/numpy==1.26.4/' requirements.txt
-  sed -i 's/^rasterio.*$/rasterio==1.3.11/' requirements.txt
-  echo "Modyfying requirements.txt for GDAL<3.5"
- else
-  echo " "
-  echo "Modified version of requirements.txt detected, skipping"
-  echo "rasterio==1.3.11, numpy==1.26.4 is required, if GDAL version is < 3.5.0"
-  echo " "
- fi
-fi
-fi
 
 # Install required packages with pip
 
+echo "Installing requirements"
 pip install -r requirements.txt
 
 echo " "
@@ -312,7 +324,9 @@ pip list
 echo " "
 echo "Making \"z_Start_O4XP.sh\" an executable file"
 chmod +x ./z_Start_O4XP.sh
-xattr -dr com.apple.quarantine ./z_Start_O4XP.sh
+if [[ "$OSTYPE" == "darwin"* ]]; then
+ xattr -dr com.apple.quarantine ./z_Start_O4XP.sh
+fi
 echo " "
 echo "Use z_Start_O4XP.sh to run Ortho4XP"
 echo " "
