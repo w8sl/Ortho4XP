@@ -527,7 +527,7 @@ class CoverZLConfig:
             try:
                 self._value = int(cover_zl_value)
             except ValueError:
-                dict_value = json.loads(cover_zl_value)
+                dict_value = json.loads(correct_quotes(cover_zl_value))
                 if not isinstance(dict_value, dict):
                     raise ValueError(
                         "Invalid dictionary for the CoverZL value: {}".format(
@@ -717,3 +717,12 @@ class ScreenRes(enum.Enum):
     def __int__(self):
         """When casted to an int, return the horizontal component"""
         return self.__TO_RES_TUPLE__[self.value][0]
+
+def correct_quotes(input_string):
+    # Replace curly double quotes with straight double quotes
+    corrected_string = (
+        input_string
+        .replace('“', '"')
+        .replace('”', '"')
+    )    
+    return corrected_string
