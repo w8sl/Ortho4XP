@@ -36,6 +36,6 @@ Windows:
 Important notices:
 -------------------------------
 - On Windows, use Notepad++ or a similar editor to open Ortho4XP files
-- After modifying the settings, press the `Apply` button, for the current session. Press `Write App Config` to make cahanges permanent
+- After modifying the settings, press the `Apply` button, for the current session. Press `Write App Config` to make changes permanent
 - Always close Ortho4XP by pressing the blue “turn-off” button
 - To use the progressive_zl feature or create symlinks to Custom Scenery, set the `xplane_install_dir` in the Ortho4XP Config settings
