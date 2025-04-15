@@ -38,7 +38,7 @@ Windows:
 Important notices:
 -------------------------------
 - Set the `custom_overlay_src` config variable to the: `../X-Plane 12/Global Scenery/X-Plane 12 Global Scenery` directory !
-- After modifying the settings, press the `Apply` button, for the current session. Press `Write App Config` to make cahnges permanent
+- After modifying the settings, press the `Apply` button, for the current session. Press `Write App Config` to make cahanges permanent
 - Always close Ortho4XP by pressing the blue “turn-off” button
 - To use the progressive_zl feature or create symlinks to Custom Scenery, set the `xplane_install_dir` in the Ortho4XP Config settings
 
