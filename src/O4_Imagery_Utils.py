@@ -69,7 +69,7 @@ if "dar" in sys.platform:
             UI.Ortho4XP_dir, "Utils", "nvcompress", "new", "mac", "arm64", "nvcompress"
         )
     else:
-        dds_convert_cmd = os.path.join(UI.Ortho4XP_dir, "Utils", "nvcompress")
+        dds_convert_cmd = os.path.join(UI.Ortho4XP_dir, "Utils", "nvcompress", "nvcompress")
     gdal_transl_cmd = "gdal_translate"
     gdalwarp_cmd = "gdalwarp"
     devnull_rdir = " >/dev/null 2>&1"
