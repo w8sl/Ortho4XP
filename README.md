@@ -7,7 +7,7 @@ Unofficial fork of [progressive_zl branch](https://github.com/oscarpilote/Ortho4
 
 - Numerous updates and bugfixes heve been implemented, with few inspired by [Voyageur/Ortho4XP](https://github.com/voyageur/Ortho4XP)
 
-- nvcompress has been recompiled for arm64 and aarch64. Windows binary requires only the latest [Visual C++ Redistributable](https://learn.microsoft.com/en-us/cpp/windows/latest-supported-vc-redist?view=msvc-170)
+- [nvcompress](https://github.com/w8sl/nvidia-texture-tools) has been recompiled for arm64 and aarch64. Windows binary requires only the latest [Visual C++ Redistributable](https://learn.microsoft.com/en-us/cpp/windows/latest-supported-vc-redist?view=msvc-170)
 - Rasterio, which includes GDAL binaries, is used by default. Separate installation of GDAL is not necessary on macOS and Windows
 
 [Description of progressive_zl feature](https://forums.x-plane.org/index.php?/forums/topic/147570-feature-automated-zoom-levels-around-airports/&page=2#comment-1670217)
