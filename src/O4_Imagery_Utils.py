@@ -64,7 +64,7 @@ request_headers_generic = {
 }
 
 if "dar" in sys.platform:
-    dds_convert_cmd = os.path.join(UI.Ortho4XP_dir, "Utils", "mac","universal" , "nvcompress")
+    dds_convert_cmd = os.path.join(UI.Ortho4XP_dir, "Utils", "mac", "universal", "nvcompress")
     gdal_transl_cmd = "gdal_translate"
     gdalwarp_cmd = "gdalwarp"
     devnull_rdir = " >/dev/null 2>&1"
