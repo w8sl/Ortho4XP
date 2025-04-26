@@ -64,12 +64,7 @@ request_headers_generic = {
 }
 
 if "dar" in sys.platform:
-    if "arm64" in architecture:
-        dds_convert_cmd = os.path.join(
-            UI.Ortho4XP_dir, "Utils", "mac", "arm64", "nvcompress"
-        )
-    else:
-        dds_convert_cmd = os.path.join(UI.Ortho4XP_dir, "Utils", "mac", "nvcompress")
+    dds_convert_cmd = os.path.join(UI.Ortho4XP_dir, "Utils", "mac","universal" , "nvcompress")
     gdal_transl_cmd = "gdal_translate"
     gdalwarp_cmd = "gdalwarp"
     devnull_rdir = " >/dev/null 2>&1"
