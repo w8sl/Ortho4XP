@@ -76,8 +76,8 @@ major_version=$(echo $macos_version | cut -d '.' -f 1)
 # Main script execution
 echo ""
 
-echo "Approving the use of executables from $SCRIPT_DIR/Utils/ directory"
-xattr -dr com.apple.quarantine ./Utils/*
+echo "Adjusting file permissions to enable execution and editing capabilities"
+xattr -dr com.apple.quarantine ./*
 
 # Remove existing venv
 if [ -d $venv_path ]; then
@@ -109,7 +109,6 @@ if [ -f ./z_Start_O4XP.sh ]; then
      echo "Making z_Start_O4XP executable and clickable"
      echo " "
      chmod +x ./z_Start_O4XP.sh
-     xattr -dr com.apple.quarantine ./z_Start_O4XP.sh
      mv ./z_Start_O4XP.sh ./z_Start_O4XP.command
      echo "Double-click on: \"z_Start_O4XP.command\" to run Ortho4XP"
      echo " "
