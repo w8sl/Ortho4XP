@@ -116,8 +116,8 @@ esac
 
 echo " "
 
-echo "Approving the use of executables from $SCRIPT_DIR/Utils/ directory"
-xattr -dr com.apple.quarantine ./Utils/*
+echo "Adjusting file permissions to enable execution and editing capabilities"
+xattr -dr com.apple.quarantine ./*
 
 # Semi-automated, guided installation for Linux
 
@@ -203,7 +203,7 @@ if [[ "$OS" == "Unknown" ]]; then
 echo " "
 echo "Unknown system. You may try to install packages required by O4XP for Ubuntu/Debian or Arch based distribution"
 echo " "
-echo "It is recommended to install the system updates first. Quit and run \"sudo apt update\", \"sudo pacman -Syu\" or equivalent !"
+echo "It is recommended to install the system updates first. Quit and run \"sudo apt update\" or equivalent for your distro !"
 echo " "
 read -p "Install all packages for distribution based on Arch? (a) Debian? (d) Proceed and install only Python requirements (p) Quit the installation? (q) " adqp 
 echo " "
@@ -215,7 +215,7 @@ case $adqp in
     d ) echo "Installing all required packages for Debian-based distribution";
          py_ver="3"; 
          $Debian;;
-    q ) echo "Quiting the installation !";
+    q ) echo "Quitting the installation !";
 	exit 1;;		
     * ) echo "Invalid response, aborting !";
 	exit 1;;
@@ -225,7 +225,8 @@ esac
 else
 echo " "
 echo "It is recommended to run system update before installing packages required by O4XP !"
-echo "It can be done by this script or manually by running: \"sudo apt update\" or equivalent"
+echo "It can be done by this script or manually by running: \"sudo apt update\" or equivalent for your distro"
+echo " "
 read -p "Would you like to execute a system update for $OS using this script?(y/n) " yn
 
 case $yn in
@@ -324,9 +325,6 @@ pip list
 echo " "
 echo "Making \"z_Start_O4XP.sh\" an executable file"
 chmod +x ./z_Start_O4XP.sh
-if [[ "$OSTYPE" == "darwin"* ]]; then
- xattr -dr com.apple.quarantine ./z_Start_O4XP.sh
-fi
 echo " "
 echo "Use z_Start_O4XP.sh to run Ortho4XP"
 echo " "
