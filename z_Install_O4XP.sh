@@ -22,30 +22,6 @@ fi
 if [[ "$OSTYPE" == "darwin"* ]]; then
    echo "macOS"
 
-# Choose the Python version for macOS installation
-
-read -p "Which version of Python would you like to use with Ortho4XP? (0) 3.10, (1) 3.11, (2) 3.12 (3) 3.13  " nr
-         case $nr in
-	          0 ) echo " ";
-	              echo "Proceeding with Python 3.10";
-                  py_ver="3.10" 
-	              echo " " ;;
-	          1 ) echo " ";
-	              echo "Proceeding with Python 3.11";
-                  py_ver="3.11" 
-	              echo " " ;;
-	          2 ) echo " ";
-	              echo "Proceeding with Python 3.12";
-                  py_ver="3.12" 
-	              echo " " ;; 
-	          3 ) echo " ";
-	              echo "Proceeding with Python 3.13";
-                  py_ver="3.13" 
-	              echo " " ;;                               
-	          * ) echo invalid response;
-		      exit 1;;
-          esac 
-
 # Path to Homebrew
 
    if [[ "$(uname -m)" == "arm64" ]]; then
@@ -99,8 +75,32 @@ update_path(){
    echo " "      
  fi
 
+# Choose the Python version for macOS installation
+
+read -p "Which version of Python would you like to use with Ortho4XP? (0) 3.10, (1) 3.11, (2) 3.12 (3) 3.13  " nr
+         case $nr in
+	          0 ) echo " ";
+	              echo "Proceeding with Python 3.10";
+                  py_ver="3.10" 
+	              echo " " ;;
+	          1 ) echo " ";
+	              echo "Proceeding with Python 3.11";
+                  py_ver="3.11" 
+	              echo " " ;;
+	          2 ) echo " ";
+	              echo "Proceeding with Python 3.12";
+                  py_ver="3.12" 
+	              echo " " ;; 
+	          3 ) echo " ";
+	              echo "Proceeding with Python 3.13";
+                  py_ver="3.13" 
+	              echo " " ;;                               
+	          * ) echo invalid response;
+		      exit 1;;
+          esac 
+          
  if ! [ -x "$(command -v python$py_ver)" ]; then
-   echo "Python $py_ver not found! "
+   echo "Python $py_ver not found! Install Homebrew packages! "
  fi 
 
 echo " "
@@ -115,9 +115,6 @@ case $yn in
 esac
 
 echo " "
-
-echo "Adjusting file permissions to enable execution and editing capabilities"
-xattr -dr com.apple.quarantine ./*
 
 # Semi-automated, guided installation for Linux
 
@@ -170,12 +167,12 @@ fi
       system_packages=$Debian
 
  elif [[ "$OS" == *"Arch"* ]]; then
-      py_ver="3.12"
+      py_ver=""
       update="sudo pacman -Syu"
       system_packages=$Arch
 
  elif [[ "$OS" == *"Manjaro"* ]]; then
-      py_ver="3.12"
+      py_ver=""
       update="sudo pacman -Syu"
       system_packages=$Arch
  
@@ -201,42 +198,44 @@ fi
 
 if [[ "$OS" == "Unknown" ]]; then
 echo " "
-echo "Unknown system. You may try to install packages required by O4XP for Ubuntu/Debian or Arch based distribution"
+echo "Unknown system. You may try to install packages required by O4XP for Ubuntu/Debian, Arch or Fedora based distribution"
 echo " "
-echo "It is recommended to install the system updates first. Quit and run \"sudo apt update\" or equivalent for your distro !"
+echo 'If not done, quit and install system updates using the GUI (if possible) or run "sudo apt update" or equivalent command for your distro. '
+echo " " 
+read -p "Quit? (q) Proceed and install packages for distribution based on Arch? (a) Debian? (d) Fedora? (f) Install only Python requirements (p)  " adfqp
 echo " "
-read -p "Install all packages for distribution based on Arch? (a) Debian? (d) Proceed and install only Python requirements (p) Quit the installation? (q) " adqp 
-echo " "
-case $adqp in
+case $adfqp in
     p ) echo "Installing Python requirements";;
-    a ) echo "Installing all required packages for Arch-based distribution";
-	 py_ver="3.12";
+    a ) echo "Installing required packages for Arch-based distribution";
+	     py_ver="";
          $Arch;;
-    d ) echo "Installing all required packages for Debian-based distribution";
+    d ) echo "Installing required packages for Debian-based distribution";
          py_ver="3"; 
          $Debian;;
+    f ) echo "Installing required packages for Fedora-based distribution";
+         py_ver="3";
+         $Fedora;;
     q ) echo "Quitting the installation !";
 	exit 1;;		
     * ) echo "Invalid response, aborting !";
 	exit 1;;
 esac
 
-
 else
 echo " "
-echo "It is recommended to run system update before installing packages required by O4XP !"
-echo "It can be done by this script or manually by running: \"sudo apt update\" or equivalent for your distro"
+echo 'If not done, quit and install system updates using the GUI (if possible) or run "sudo apt update" or equivalent command for your distro. '
 echo " "
-read -p "Would you like to execute a system update for $OS using this script?(y/n) " yn
+read -p "Quit? (q) Proceed? (p) " qp
 
-case $yn in
-	n ) echo "Proceeding, assuming that the system has already been updated. ... ";;
-	y ) echo "Installing the system updates";
-	    $update;;
+case $qp in
+	p ) echo "Proceeding... ";;
+	q ) echo "Quitting the installation !";
+	    exit 1;;
 	* ) echo invalid response;
             exit 1;;
 esac
 
+echo " "
 read -p "Would you like to (re)install system packages for $OS, required by O4XP(y/n) " yn
 
 case $yn in
@@ -281,6 +280,13 @@ if [ -d $venv_path ]; then
   rm -rf $venv_path
 fi
 
+if [[ "$OSTYPE" == "darwin"* ]]; then
+echo " "
+echo "Adjusting file permissions to enable execution and editing capabilities"
+xattr -dr com.apple.quarantine ./*
+echo " "
+fi
+
 # Create a Python virtual environment
 
 python$py_ver -m venv $venv_path
@@ -307,7 +313,6 @@ if [[ "$OSTYPE" == "linux"* ]]; then
   fi
 fi
 
-
 # Install required packages with pip
 
 echo "Installing requirements"
@@ -323,8 +328,11 @@ echo " "
 echo "Installed packages:"
 pip list
 echo " "
-echo "Making \"z_Start_O4XP.sh\" an executable file"
+
+if [ -f ./z_Start_O4XP.sh ]; then
+echo 'Making "z_Start_O4XP" an executable file'
 chmod +x ./z_Start_O4XP.sh
+fi
 echo " "
-echo "Use z_Start_O4XP.sh to run Ortho4XP"
+echo "Use z_Start_O4XP to run Ortho4XP"
 echo " "
