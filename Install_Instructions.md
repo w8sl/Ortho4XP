@@ -23,7 +23,7 @@ Installation on Linux, macOS with [Homebrew](https://brew.sh/)
 - Follow the terminal output for instructions
 - Use **“z_Start_O4XP.sh”** to run Ortho4XP
 - Both scripts find working directory automatically
-- On Linux, the script forces system updates. It may be safer to run “sudo apt update” or equivalent manually
+- On Linux: first, install system updates using the GUI (if possible) or run “sudo apt update” or equivalent command for your distro
 
 Windows:
 -------------------------------
