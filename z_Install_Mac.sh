@@ -76,14 +76,14 @@ major_version=$(echo $macos_version | cut -d '.' -f 1)
 # Main script execution
 echo ""
 
-echo "Adjusting file permissions to enable execution and editing capabilities"
-xattr -dr com.apple.quarantine ./*
-
 # Remove existing venv
 if [ -d $venv_path ]; then
   echo "Removing existing venv: $venv_path"
   rm -rf $venv_path
 fi
+
+echo "Adjusting file permissions to enable execution and editing capabilities"
+xattr -dr com.apple.quarantine ./*
 
 # Create an if statement based on the major version
 if [ "$major_version" -lt 14 ]; then
