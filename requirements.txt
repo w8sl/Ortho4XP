@@ -1,7 +1,7 @@
-numpy
+numpy==2.2.6
 Pillow
 pyproj
 requests
 Rtree
 shapely
-rasterio
+rasterio==1.4.3
