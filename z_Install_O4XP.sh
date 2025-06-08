@@ -296,22 +296,16 @@ python$py_ver -m venv $venv_path
 source $venv_path/bin/activate
 
 if [[ "$OSTYPE" == "linux"* ]]; then
-  gdal_version=$(gdal-config --version)
-  
+  gdal_version=$(gdal-config --version)  
   # Check if GDAL version is less than 3.5.0
-  if [[ "$(printf '%s\n' "$gdal_version" "3.5.0" | sort -V | head -n1)" == "$gdal_version" && "$gdal_version" != "3.5.0" ]]; then
-    # Only modify requirements.txt if no fixed versions are specified
-    if grep -q "==" requirements.txt; then
-      echo "Fixed versions detected in requirements.txt, skipping modification"
-      echo "Note: rasterio==1.3.11 and numpy==1.26.4 are required for GDAL < 3.5.0"
-    else
+  if [[ "$(printf '%s\n' "$gdal_version" "3.5.0" | sort -V | head -n1)" == "$gdal_version" && "$gdal_version" != "3.5.0" ]]; then    
       # Update package versions for compatibility with GDAL<3.5.0
-      sed -i 's/^numpy.*$/numpy==1.26.4/' requirements.txt
-      sed -i 's/^rasterio.*$/rasterio==1.3.11/' requirements.txt
+      sed -i 's/^numpy==[0-9.]\+/numpy==1.26.4/' requirements.txt
+      sed -i 's/^rasterio==[0-9.]\+/rasterio==1.3.11/' requirements.txt
       echo "Updated requirements.txt for GDAL < 3.5.0 compatibility"
-    fi
   fi
 fi
+
 
 # Install required packages with pip
 
