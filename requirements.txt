@@ -4,5 +4,5 @@ pyproj
 requests
 Rtree
 shapely
-scikit-fmm
 rasterio==1.4.3
+git+https://github.com/scikit-fmm/scikit-fmm.git
