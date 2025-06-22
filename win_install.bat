@@ -20,7 +20,10 @@ python -m venv venv
 
 call .\venv\Scripts\activate
 
-echo Installing requirements
+:: Upgrade pip
+echo Upgrading pip
+
+python -m pip install --upgrade pip
 
 :: Install requirements
 echo Installing requirements
