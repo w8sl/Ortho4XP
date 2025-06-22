@@ -24,7 +24,11 @@ echo Installing requirements
 
 :: Install requirements
 echo Installing requirements
-pip install -r requirements.txt
+
+pip install numpy==2.2.6
+pip install Pillow pyproj requests Rtree shapely
+pip install rasterio==1.4.3
+pip install scikit-fmm
 
 setlocal
 
