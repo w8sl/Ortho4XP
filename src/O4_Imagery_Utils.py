@@ -2269,7 +2269,7 @@ def convert_texture(tile, til_x_left, til_y_top, zoomlevel, provider_code, type=
         )
         (xmin, ymin) = GEO.transform("4326", "3857", lonmin, latmin)
         (xmax, ymax) = GEO.transform("4326", "3857", lonmax, latmax)
-        if latmax - latmin < 0.04:
+        if (latmax - latmin < 0.04) and use_gdal:
             if use_gdal == True:
                 conv_cmd = [
                     gdal_transl_cmd,
