@@ -32,7 +32,7 @@ check_python_tk() {
     echo ""
     echo "Tkinter is not installed!"
     echo ""
-    echo "Install Tkinter: brew install python-tk@3.12"
+    echo "Install Tkinter: brew install python-tk@3.13"
     exit 1
   fi
 }
@@ -109,11 +109,11 @@ echo ""
 # Create an if statement based on the major version
 if [ "$major_version" -lt 14 ]; then
     echo "Your macOS version is less than 14.x.x"
-    py_ver="3.12"
+    py_ver="3.13"
     install_macOS_older
 else
     echo "Your macOS version is 14.x.x or higher"
-    py_ver="3.12"
+    py_ver="3.13"
     install_macOS_recent
 fi
 
