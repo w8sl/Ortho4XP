@@ -145,8 +145,8 @@ fi
  
 # Required system packages
  
- Debian="sudo apt-get install python3 python3-venv python3-pip python3-gdal libgdal-dev python3-pil.imagetk p7zip-full libnvtt-bin freeglut3-dev gdal-bin gcc"
- Arch="sudo pacman -S python python-pip python-gdal p7zip freeglut tk podofo netcdf mariadb hdf5 cfitsio postgresql gcc"
+ Debian="sudo apt-get install python3 python3-venv python3-pip python3-gdal libgdal-dev python3-pil.imagetk 7zip libnvtt-bin freeglut3-dev gdal-bin gcc"
+ Arch="sudo pacman -S python python-pip python-gdal 7zip freeglut tk podofo netcdf mariadb hdf5 cfitsio postgresql gcc"
  Fedora="sudo dnf install python3 python3-devel python3-pip python3-gdal gdal-devel python3-tkinter p7zip freeglut gcc-c++"
  openSUSE="sudo zypper install python312 python312-tk python312-devel gdal python3-GDAL p7zip freeglut-devel gcc-c++"
  
