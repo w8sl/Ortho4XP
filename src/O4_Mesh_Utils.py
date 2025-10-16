@@ -649,7 +649,7 @@ def build_mesh(tile):
 
     limit_tris = "S" + str(max_steiner)
     Tri_option = (
-        "-pq" + "{:.9g}".format(tile.min_angle) + do_refine + 
+        "-pq" + "{:.9g}".format(tile.min_angle) + do_refine +
         "uYB" + tri_verbosity + output_poly + limit_tris
     )
 
@@ -700,35 +700,43 @@ def build_mesh(tile):
                 pass
     time.sleep(0.3)
     fingers_crossed.poll()
+
     if fingers_crossed.returncode:
-        UI.vprint(
-            0,
-            "\nWARNING: Triangle4XP could not achieve the requested quality ",
-            "(min_angle), most probably due to an uncatched OSM error.\n",
-            "It will be tempted now with no angle constraint ",
-            "(i.e. min_angle=0).",
-            "You might also want to try with min_angle in the 2-5 range",
-        )
-        Tri_option = (
-        "-pq" + "{:.9g}".format(0) + do_refine + 
-        "uYB" + tri_verbosity + output_poly + limit_tris)
-       
-        mesh_cmd[1] =Tri_option
-        UI.vprint(2, "   Mesh command:", " ".join(mesh_cmd))
-        fingers_crossed = subprocess.Popen(
-            mesh_cmd, stdout=subprocess.PIPE, bufsize=0
-        )
-        while True:
-            line = fingers_crossed.stdout.readline()
-            if not line:
+        min_angles_to_try = [5, 2, 0]
+        for mina in min_angles_to_try:
+            print(
+                "\n\nWARNING: Triangle4XP could not achieve the requested quality",
+                "(min_angle), most probably due to an uncatched OSM error\n",
+                f"        It will be retried with lower value (min_angle = {mina})\n\n",
+            )
+
+            Tri_option = (
+               "-pq" + "{:.9g}".format(mina) + do_refine +
+               "uYB" + tri_verbosity + output_poly + limit_tris
+            )
+
+            mesh_cmd[1] = Tri_option
+
+            UI.vprint(2, "   Mesh command:", " ".join(mesh_cmd))
+            fingers_crossed = subprocess.Popen(mesh_cmd, stdout=subprocess.PIPE, bufsize=0)
+
+            while True:
+                line = fingers_crossed.stdout.readline()
+                if not line:
+                    break
+                else:
+                    try:
+                        print(line.decode("utf-8")[:-1])
+                    except:
+                        pass
+            time.sleep(0.3)
+            fingers_crossed.poll()
+
+            if fingers_crossed.returncode == 0:
+                # If return code is 0, process succeeded
+                print(f"\nSuccess with min_angle = {mina}\n")
                 break
-            else:
-                try:
-                    print(line.decode("utf-8")[:-1])
-                except:
-                    pass
-        time.sleep(0.3)
-        fingers_crossed.poll()
+
         if fingers_crossed.returncode:
             UI.exit_message_and_bottom_line(
                 "\nERROR: Triangle4XP really couldn't make it !\n\n",
@@ -851,17 +859,17 @@ def triangulate(name, path_to_Ortho4XP_dir):
 
 ##############################################################################
 def read_mesh_file(mesh_file):
-    
+
     f = open(mesh_file,"r")
     mesh_version = float(f.readline().strip().split()[-1])
-    
-    # skip 3 lines 
+
+    # skip 3 lines
     for i in range(3):
         f.readline()
-    
+
     nbr_nodes = int(f.readline())
     node_coords = numpy.zeros(5 * nbr_nodes)
-    
+
     # read positions
     for i in range(nbr_nodes):
         node_coords[5 * i : 5 * i + 3] = [
@@ -869,23 +877,23 @@ def read_mesh_file(mesh_file):
         ]
     # altitutes are encoded in .mesh files with a 100000 scaling factor
     node_coords[2::5] *= 100000
-    
+
     # skip 3 lines
     for i in range(3):
         f.readline()
-    
+
     # read normals
     for i in range(nbr_nodes):
         node_coords[5 * i + 3 : 5 * i + 5] = [
             float(x) for x in f.readline().split()[:2]
         ]
-    
+
     # skip 2 lines
-    for i in range(0, 2): 
+    for i in range(0, 2):
         f.readline()
 
     # read nbr of tris
-    nbr_tris = int(f.readline())      
+    nbr_tris = int(f.readline())
 
     tri_idx  = numpy.zeros(3 * nbr_tris, dtype = numpy.uint32)
     tri_types = numpy.zeros(nbr_tris, dtype = numpy.uint32)
