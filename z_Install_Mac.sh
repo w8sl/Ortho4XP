@@ -60,7 +60,6 @@ cd "$(dirname "${BASH_SOURCE[0]}")"
 
 install_macOS_recent(){
   
-  check_python
   python$py_ver -m venv $venv_path
   source $venv_path/bin/activate
   
@@ -70,7 +69,6 @@ install_macOS_recent(){
 
 install_macOS_older(){
 
- check_python
  python$py_ver -m venv $venv_path
  source $venv_path/bin/activate
 
@@ -109,11 +107,13 @@ echo ""
 # Create an if statement based on the major version
 if [ "$major_version" -lt 14 ]; then
     echo "Your macOS version is less than 14.x.x"
-    py_ver="3.13"
+    py_ver="3.12"
+    check_python
     install_macOS_older
 else
     echo "Your macOS version is 14.x.x or higher"
     py_ver="3.13"
+    check_python
     install_macOS_recent
 fi
 
