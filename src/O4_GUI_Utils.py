@@ -567,8 +567,6 @@ class Ortho4XP_Custom_ZL(tk.Toplevel):
     polyobj_list = []
 
     def __init__(self, parent, lat, lon):
-        # Start 2 worker processes for async layer building, +1 for gathering and displaying the result, +1 for the banner
-        self.pool = concurrent.futures.ThreadPoolExecutor(max_workers=4)
         self.parent = parent
         self.lat = lat
         self.lon = lon
@@ -673,16 +671,17 @@ class Ortho4XP_Custom_ZL(tk.Toplevel):
         row += 1
 
         ttk.Button(
-            self.frame_left,
-            text="Zone List Editor",
-            command=lambda: self.on_preview_button(lat, lon),
-        ).grid(row=row, padx=5, column=0, sticky=N + S + E + W)
+           self.frame_left,
+           text="Zone List Editor",
+           command=lambda: self.on_preview_button(lat, lon),
+           ).grid(row=row, padx=5, column=0, sticky=N + S + E + W)
         row += 1
         ttk.Button(
             self.frame_left,
             text="Show Existing DSF layout",
             command=lambda: self.on_dsf_layout_button(lat, lon),
-        ).grid(row=row, padx=5, pady=3, column=0, sticky=N + S + E + W)
+            ).grid(row=row, padx=5, pady=3, column=0, sticky=N + S + E + W)
+
         row += 1
 
         # Widgets - Layers Controls
@@ -845,28 +844,13 @@ class Ortho4XP_Custom_ZL(tk.Toplevel):
             row=row, column=0, padx=5, pady=3, sticky=N + S + E + W
         )
         row += 1
-
         right_row = 0
-        self.apt_data_cache_banner = tk.Label(
-            self.frame_right,
-            anchor=N,
-            text="Parsing X-Plane Airport data, please wait...",
-            fg="light green",
-            bg="dark green",
-            font="Helvetica 12 bold italic",
-        )
-        self.apt_data_cache_banner.grid(row=right_row, column=0, sticky=N + S + W + E)
-        self.pool.submit(self.async_hide_banner_when_done)
         right_row += 1
         self.canvas = tk.Canvas(self.frame_right, bd=0, height=750, width=750)
         self.canvas.grid(row=right_row, column=0, sticky=N + S + E + W)
         self._canvas_layers = None
 
-    def async_hide_banner_when_done(self):
-        if APT_SRC.AirportDataSource.cache_update_in_progress():
-            APT_SRC.AirportDataSource.wait_for_cache_update()
-        if self.apt_data_cache_banner is not None:
-            self.apt_data_cache_banner.grid_remove()
+    
 
     @staticmethod
     def async_build_map_layer(lat, lon, zl, provider):
@@ -1033,12 +1017,12 @@ class Ortho4XP_Custom_ZL(tk.Toplevel):
             layers = dict()
 
             # Render the map layer on the canvas (.result() will wait until it is available)
-            layers["map"] = background_map_layer.result()
+            layers["map"] = background_map_layer
             self.canvas.create_image(0, 0, anchor=NW, image=layers["map"], tags="map")
 
             # Render the texture layers on the canvas (.result() will wait until they are available)
             if texture_layers is not None:
-                texture_layers = texture_layers.result()
+                texture_layers = texture_layers
                 for zl in sorted(texture_layers.keys()):
                     tag = "ZL_{:d}".format(zl)
                     layer = texture_layers[zl]
@@ -1110,66 +1094,53 @@ class Ortho4XP_Custom_ZL(tk.Toplevel):
                 self.points += [int(x), int(y)]
             self.redraw_poly()
             self.save_zone_cmd()
+        return
 
+    def _update_canvas(self, background_map_layer, texture_layers):
+       # GUI-safe canvas operations
+       self.canvas.delete("all")
+       self.configure_canvas()
+       self._canvas_layers = self._async_render_layers(background_map_layer, texture_layers)
+       
     def on_preview_button(self, lat, lon):
-        # Reset the canvas and update the internal state with respect to the configuration (in case it has changed)
-        self.canvas.delete("all")
-        self.update_internal_state(lat, lon)
-        self.configure_canvas()
+       # Start background thread for heavy work
+       threading.Thread(target=self._preview_worker, args=(lat, lon)).start()
 
-        # Asynchronously build the map layer
-        background_map_layer = self.pool.submit(
-            self.async_build_map_layer,
-            lat,
-            lon,
-            int(self.zl_combo.get()),
-            self.map_combo.get(),
-        )
+    def _preview_worker(self, lat, lon):
+       # Compute internal state and layer data (non-GUI work)
+       self.update_internal_state(lat, lon)
+       zl = int(self.zl_combo.get())
+       map_type = self.map_combo.get()
 
-        # Asynchronously build the texture layers
-        if CFG.cover_airports_with_highres == "Progressive":
-            texture_layers = self.pool.submit(
-                self.async_build_progressive_zl_layers,
-                lat,
-                lon,
-                int(self.zl_combo.get()),
-            )
-        else:
-            texture_layers = None
+       background_map_layer = self.async_build_map_layer(lat, lon, zl, map_type)
 
-        # Finally, asynchronously render them on the canvas when they're available
-        self._canvas_layers = self.pool.submit(
-            self._async_render_layers, background_map_layer, texture_layers
-        )
+       if CFG.cover_airports_with_highres == "Progressive":
+          texture_layers = self.async_build_progressive_zl_layers(lat, lon, zl)
+       else:
+          texture_layers = None
+
+       # Schedule canvas update on the main thread
+       self.canvas.after(0, lambda: self._update_canvas(background_map_layer, texture_layers))
 
     def on_dsf_layout_button(self, lat, lon):
-        # Reset the canvas and update the internal state with respect to the configuration (in case it has changed)
-        self.canvas.delete("all")
+       # Start background thread for layout work
+       threading.Thread(target=self._dsf_layout_worker, args=(lat, lon)).start()
+
+    def _dsf_layout_worker(self, lat, lon):
+        # Compute internal state and layer data (non-GUI work)
         self.update_internal_state(lat, lon)
-        self.configure_canvas()
+        zl = int(self.zl_combo.get())
+        map_type = self.map_combo.get()
 
-        # Asynchronously build the map layer
-        background_map_layer = self.pool.submit(
-            self.async_build_map_layer,
-            lat,
-            lon,
-            int(self.zl_combo.get()),
-            self.map_combo.get(),
-        )
+        background_map_layer = self.async_build_map_layer(lat, lon, zl, map_type)
+        texture_layers = self.async_build_dsf_layout_layers(lat, lon, zl)
 
-        # Asynchronously build the texture layers
-        texture_layers = self.pool.submit(
-            self.async_build_dsf_layout_layers, lat, lon, int(self.zl_combo.get())
-        )
-
-        # Finally, asynchronously render them on the canvas when they're available
-        self._canvas_layers = self.pool.submit(
-            self._async_render_layers, background_map_layer, texture_layers
-        )
+        # Schedule canvas update on the main thread
+        self.canvas.after(0, lambda: self._update_canvas(background_map_layer, texture_layers))
 
     def on_toggle_zl_button(self, zl):
         tag = "ZL_{:d}".format(zl)
-        if tag in self._canvas_layers.result():
+        if tag in self._canvas_layers:
             if self._zl_toggle_button_vars[zl].get() == 0:
                 self.canvas.itemconfigure(tag, state=HIDDEN)
             elif self._zl_toggle_button_vars[zl].get() == 1:
