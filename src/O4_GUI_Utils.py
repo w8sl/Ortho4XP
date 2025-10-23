@@ -1,5 +1,5 @@
 import collections
-import concurrent.futures
+from concurrent.futures import ThreadPoolExecutor
 import functools
 import glob
 import os
@@ -845,12 +845,36 @@ class Ortho4XP_Custom_ZL(tk.Toplevel):
         )
         row += 1
         right_row = 0
+        
+        self.apt_data_cache_banner = tk.Label(
+           self.frame_right,
+           anchor=N,
+           text="Parsing X-Plane Airport data, please wait...",
+           fg="light green",
+           bg="dark green",
+           font="Helvetica 12 bold italic",
+           )
+        self.apt_data_cache_banner.grid(row=right_row, column=0, sticky=N + S + W + E)
+
+        # Start background thread to monitor cache update
+        threading.Thread(target=self._monitor_cache_update).start()
+        
         right_row += 1
         self.canvas = tk.Canvas(self.frame_right, bd=0, height=750, width=750)
         self.canvas.grid(row=right_row, column=0, sticky=N + S + E + W)
         self._canvas_layers = None
 
-    
+    def _monitor_cache_update(self):
+       # Wait for cache update to finish (non-GUI work)
+       if APT_SRC.AirportDataSource.cache_update_in_progress():
+          APT_SRC.AirportDataSource.wait_for_cache_update()
+
+       # Schedule banner removal on the main thread
+       self.frame_right.after(0, self._hide_cache_banner)
+
+    def _hide_cache_banner(self):
+      if self.apt_data_cache_banner is not None:
+        self.apt_data_cache_banner.grid_remove()
 
     @staticmethod
     def async_build_map_layer(lat, lon, zl, provider):
@@ -1016,11 +1040,11 @@ class Ortho4XP_Custom_ZL(tk.Toplevel):
         try:
             layers = dict()
 
-            # Render the map layer on the canvas (.result() will wait until it is available)
+            # Render the map layer on the canvas 
             layers["map"] = background_map_layer
             self.canvas.create_image(0, 0, anchor=NW, image=layers["map"], tags="map")
 
-            # Render the texture layers on the canvas (.result() will wait until they are available)
+            # Render the texture layers on the canvas 
             if texture_layers is not None:
                 texture_layers = texture_layers
                 for zl in sorted(texture_layers.keys()):
@@ -1097,47 +1121,56 @@ class Ortho4XP_Custom_ZL(tk.Toplevel):
         return
 
     def _update_canvas(self, background_map_layer, texture_layers):
-       # GUI-safe canvas operations
-       self.canvas.delete("all")
-       self.configure_canvas()
-       self._canvas_layers = self._async_render_layers(background_map_layer, texture_layers)
-       
+        # GUI-safe canvas operations
+        self.canvas.delete("all")
+        self.configure_canvas()
+        self._canvas_layers = self._async_render_layers(background_map_layer, texture_layers)
+
     def on_preview_button(self, lat, lon):
-       # Start background thread for heavy work
-       threading.Thread(target=self._preview_worker, args=(lat, lon)).start()
+        # Start background thread for heavy work
+        threading.Thread(target=self._preview_worker, args=(lat, lon)).start()
 
     def _preview_worker(self, lat, lon):
-       # Compute internal state and layer data (non-GUI work)
-       self.update_internal_state(lat, lon)
-       zl = int(self.zl_combo.get())
-       map_type = self.map_combo.get()
-
-       background_map_layer = self.async_build_map_layer(lat, lon, zl, map_type)
-
-       if CFG.cover_airports_with_highres == "Progressive":
-          texture_layers = self.async_build_progressive_zl_layers(lat, lon, zl)
-       else:
-          texture_layers = None
-
-       # Schedule canvas update on the main thread
-       self.canvas.after(0, lambda: self._update_canvas(background_map_layer, texture_layers))
-
-    def on_dsf_layout_button(self, lat, lon):
-       # Start background thread for layout work
-       threading.Thread(target=self._dsf_layout_worker, args=(lat, lon)).start()
-
-    def _dsf_layout_worker(self, lat, lon):
-        # Compute internal state and layer data (non-GUI work)
+        # Compute internal state and prepare parameters
         self.update_internal_state(lat, lon)
         zl = int(self.zl_combo.get())
         map_type = self.map_combo.get()
 
-        background_map_layer = self.async_build_map_layer(lat, lon, zl, map_type)
-        texture_layers = self.async_build_dsf_layout_layers(lat, lon, zl)
+        with ThreadPoolExecutor(max_workers=2) as executor:
+            future_map = executor.submit(self.async_build_map_layer, lat, lon, zl, map_type)
+
+            if CFG.cover_airports_with_highres == "Progressive":
+                future_texture = executor.submit(self.async_build_progressive_zl_layers, lat, lon, zl)
+            else:
+                future_texture = None
+
+            background_map_layer = future_map.result()
+            texture_layers = future_texture.result() if future_texture else None
 
         # Schedule canvas update on the main thread
         self.canvas.after(0, lambda: self._update_canvas(background_map_layer, texture_layers))
 
+    def on_dsf_layout_button(self, lat, lon):
+        # Start background thread for layout work
+        threading.Thread(target=self._dsf_layout_worker, args=(lat, lon)).start()
+
+    def _dsf_layout_worker(self, lat, lon):
+        # Compute internal state and prepare parameters
+        self.update_internal_state(lat, lon)
+        zl = int(self.zl_combo.get())
+        map_type = self.map_combo.get()
+
+        # Build both layers in parallel
+        with ThreadPoolExecutor(max_workers=2) as executor:
+            future_map = executor.submit(self.async_build_map_layer, lat, lon, zl, map_type)
+            future_texture = executor.submit(self.async_build_dsf_layout_layers, lat, lon, zl)
+
+            background_map_layer = future_map.result()
+            texture_layers = future_texture.result()
+
+        # Schedule canvas update on the main thread
+        self.canvas.after(0, lambda: self._update_canvas(background_map_layer, texture_layers))
+        
     def on_toggle_zl_button(self, zl):
         tag = "ZL_{:d}".format(zl)
         if tag in self._canvas_layers:
