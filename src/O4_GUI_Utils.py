@@ -1,5 +1,5 @@
 import collections
-from concurrent.futures import ThreadPoolExecutor
+import concurrent.futures
 import functools
 import glob
 import os
@@ -46,6 +46,7 @@ import O4_Tile_Utils as TILE
 import O4_UI_Utils as UI
 import O4_Config_Utils as CFG
 import O4_Airport_Data_Source as APT_SRC
+from concurrent.futures import ThreadPoolExecutor
 
 
 # Set OsX=True if you prefer the OsX way of drawing existing tiles but are on Linux or Windows.
@@ -53,6 +54,7 @@ OsX = "dar" in sys.platform
 
 # Mark tiles with white texture tags on the map ("w!")
 mark_white_textures = True
+
 
 ############################################################################################
 class Ortho4XP_GUI(tk.Tk):
@@ -671,16 +673,16 @@ class Ortho4XP_Custom_ZL(tk.Toplevel):
         row += 1
 
         ttk.Button(
-           self.frame_left,
-           text="Zone List Editor",
-           command=lambda: self.on_preview_button(lat, lon),
-           ).grid(row=row, padx=5, column=0, sticky=N + S + E + W)
+            self.frame_left,
+            text="Zone List Editor",
+            command=lambda: self.on_preview_button(lat, lon),
+        ).grid(row=row, padx=5, column=0, sticky=N + S + E + W)
         row += 1
         ttk.Button(
             self.frame_left,
             text="Show Existing DSF layout",
             command=lambda: self.on_dsf_layout_button(lat, lon),
-            ).grid(row=row, padx=5, pady=3, column=0, sticky=N + S + E + W)
+        ).grid(row=row, padx=5, pady=3, column=0, sticky=N + S + E + W)
 
         row += 1
 
@@ -786,7 +788,10 @@ class Ortho4XP_Custom_ZL(tk.Toplevel):
             self.frame_left, text="Extract Mesh ", command=self.extract_mesh_ifc
         ).grid(row=row, column=0, padx=5, pady=3, sticky=N + S + E + W)
         row += 1
-
+        ttk.Button(
+            self.frame_left, text="Load Tile Config ", command=self.read_tile_cfg
+        ).grid(row=row, column=0, padx=5, pady=3, sticky=N + S + E + W)
+        row += 1
         tk.Label(
             self.frame_left,
             text="Ctrl+B1 : add texture\nShift+B1: add zone point\nCtrl+B2 : delete zone",
@@ -796,6 +801,10 @@ class Ortho4XP_Custom_ZL(tk.Toplevel):
         row += 1
         ttk.Button(
             self.frame_left, text="    Apply    ", command=self.save_zone_list
+        ).grid(row=row, column=0, padx=5, pady=3, sticky=N + S + E + W)
+        row += 1
+        ttk.Button(
+            self.frame_left, text="Save Tile Config ", command=self.write_tile_cfg
         ).grid(row=row, column=0, padx=5, pady=3, sticky=N + S + E + W)
         row += 1
         ttk.Button(self.frame_left, text="    Reset    ", command=self.delAll).grid(
@@ -845,36 +854,36 @@ class Ortho4XP_Custom_ZL(tk.Toplevel):
         )
         row += 1
         right_row = 0
-        
+
         self.apt_data_cache_banner = tk.Label(
-           self.frame_right,
-           anchor=N,
-           text="Parsing X-Plane Airport data, please wait...",
-           fg="light green",
-           bg="dark green",
-           font="Helvetica 12 bold italic",
-           )
+            self.frame_right,
+            anchor=N,
+            text="Parsing X-Plane Airport data, please wait...",
+            fg="light green",
+            bg="dark green",
+            font="Helvetica 12 bold italic",
+        )
         self.apt_data_cache_banner.grid(row=right_row, column=0, sticky=N + S + W + E)
 
         # Start background thread to monitor cache update
         threading.Thread(target=self._monitor_cache_update).start()
-        
+
         right_row += 1
         self.canvas = tk.Canvas(self.frame_right, bd=0, height=750, width=750)
         self.canvas.grid(row=right_row, column=0, sticky=N + S + E + W)
         self._canvas_layers = None
 
     def _monitor_cache_update(self):
-       # Wait for cache update to finish (non-GUI work)
-       if APT_SRC.AirportDataSource.cache_update_in_progress():
-          APT_SRC.AirportDataSource.wait_for_cache_update()
+        # Wait for cache update to finish (non-GUI work)
+        if APT_SRC.AirportDataSource.cache_update_in_progress():
+            APT_SRC.AirportDataSource.wait_for_cache_update()
 
-       # Schedule banner removal on the main thread
-       self.frame_right.after(0, self._hide_cache_banner)
+        # Schedule banner removal on the main thread
+        self.frame_right.after(0, self._hide_cache_banner)
 
     def _hide_cache_banner(self):
-      if self.apt_data_cache_banner is not None:
-        self.apt_data_cache_banner.grid_remove()
+        if self.apt_data_cache_banner is not None:
+            self.apt_data_cache_banner.grid_remove()
 
     @staticmethod
     def async_build_map_layer(lat, lon, zl, provider):
@@ -1040,11 +1049,11 @@ class Ortho4XP_Custom_ZL(tk.Toplevel):
         try:
             layers = dict()
 
-            # Render the map layer on the canvas 
+            # Render the map layer on the canvas (.result() will wait until it is available)
             layers["map"] = background_map_layer
             self.canvas.create_image(0, 0, anchor=NW, image=layers["map"], tags="map")
 
-            # Render the texture layers on the canvas 
+            # Render the texture layers on the canvas (.result() will wait until they are available)
             if texture_layers is not None:
                 texture_layers = texture_layers
                 for zl in sorted(texture_layers.keys()):
@@ -1124,7 +1133,9 @@ class Ortho4XP_Custom_ZL(tk.Toplevel):
         # GUI-safe canvas operations
         self.canvas.delete("all")
         self.configure_canvas()
-        self._canvas_layers = self._async_render_layers(background_map_layer, texture_layers)
+        self._canvas_layers = self._async_render_layers(
+            background_map_layer, texture_layers
+        )
 
     def on_preview_button(self, lat, lon):
         # Start background thread for heavy work
@@ -1137,10 +1148,14 @@ class Ortho4XP_Custom_ZL(tk.Toplevel):
         map_type = self.map_combo.get()
 
         with ThreadPoolExecutor(max_workers=2) as executor:
-            future_map = executor.submit(self.async_build_map_layer, lat, lon, zl, map_type)
+            future_map = executor.submit(
+                self.async_build_map_layer, lat, lon, zl, map_type
+            )
 
             if CFG.cover_airports_with_highres == "Progressive":
-                future_texture = executor.submit(self.async_build_progressive_zl_layers, lat, lon, zl)
+                future_texture = executor.submit(
+                    self.async_build_progressive_zl_layers, lat, lon, zl
+                )
             else:
                 future_texture = None
 
@@ -1148,7 +1163,9 @@ class Ortho4XP_Custom_ZL(tk.Toplevel):
             texture_layers = future_texture.result() if future_texture else None
 
         # Schedule canvas update on the main thread
-        self.canvas.after(0, lambda: self._update_canvas(background_map_layer, texture_layers))
+        self.canvas.after(
+            0, lambda: self._update_canvas(background_map_layer, texture_layers)
+        )
 
     def on_dsf_layout_button(self, lat, lon):
         # Start background thread for layout work
@@ -1162,15 +1179,21 @@ class Ortho4XP_Custom_ZL(tk.Toplevel):
 
         # Build both layers in parallel
         with ThreadPoolExecutor(max_workers=2) as executor:
-            future_map = executor.submit(self.async_build_map_layer, lat, lon, zl, map_type)
-            future_texture = executor.submit(self.async_build_dsf_layout_layers, lat, lon, zl)
+            future_map = executor.submit(
+                self.async_build_map_layer, lat, lon, zl, map_type
+            )
+            future_texture = executor.submit(
+                self.async_build_dsf_layout_layers, lat, lon, zl
+            )
 
             background_map_layer = future_map.result()
             texture_layers = future_texture.result()
 
         # Schedule canvas update on the main thread
-        self.canvas.after(0, lambda: self._update_canvas(background_map_layer, texture_layers))
-        
+        self.canvas.after(
+            0, lambda: self._update_canvas(background_map_layer, texture_layers)
+        )
+
     def on_toggle_zl_button(self, zl):
         tag = "ZL_{:d}".format(zl)
         if tag in self._canvas_layers:
@@ -1429,6 +1452,55 @@ class Ortho4XP_Custom_ZL(tk.Toplevel):
         )
         extract_mesh_thread.start()
         return
+
+    def tile_from_preview(self):
+
+        (lat, lon) = (self.lat, self.lon)
+        build_dir = os.path.normpath(
+            FNAMES.build_dir(lat, lon, self.parent.custom_build_dir_entry.get())
+        )
+        return CFG.Tile(lat, lon, str(build_dir))
+
+    def write_tile_cfg(self):
+
+        (lat, lon) = (self.lat, self.lon)
+        build_dir = os.path.normpath(
+            FNAMES.build_dir(lat, lon, self.parent.custom_build_dir_entry.get())
+        )
+        self.save_zone_list()
+        tile = self.tile_from_preview()
+        tile.make_dirs()
+        if tile.write_to_config():
+            UI.vprint(1, "Config saved for tile:", FNAMES.short_latlon(self.lat, self.lon))
+            return
+        else:
+            return
+
+    def read_tile_cfg(self):
+
+        (lat, lon) = (self.lat, self.lon)
+        build_dir = os.path.normpath(
+            FNAMES.build_dir(lat, lon, self.parent.custom_build_dir_entry.get())
+        )
+        tile = self.tile_from_preview()
+
+        if tile.read_from_config():
+
+            for var_name in CFG.list_tile_vars:
+                try:
+                    value = getattr(tile, var_name)
+                    setattr(CFG, var_name, value)
+                except:
+                    pass
+            try:
+                self.parent.default_website.set(tile.default_website)
+                self.parent.default_zl.set(tile.default_zl)
+            except:
+                pass
+            UI.vprint(1, "Config loaded for tile:", FNAMES.short_latlon(self.lat, self.lon))
+            return
+        else:
+            return
 
     def delete_zone_cmd(self):
         try:
@@ -1717,15 +1789,23 @@ class Ortho4XP_Earth_Preview(tk.Toplevel):
                                 color = O4_Common_Types.ZoomLevels.tkinter_color_of(zl)
                             else:
                                 zl = "?"
-                            if os.path.exists(os.path.join(FNAMES.Overlay_dir, "Earth nav data", FNAMES.long_latlon(lat, lon) + ".dsf")):
-                               has_ovl="o"
+                            if os.path.exists(
+                                os.path.join(
+                                    FNAMES.Overlay_dir,
+                                    "Earth nav data",
+                                    FNAMES.long_latlon(lat, lon) + ".dsf",
+                                )
+                            ):
+                                has_ovl = "o"
                             else:
-                               has_ovl="" 
-                            white_textures=""
+                                has_ovl = ""
+                            white_textures = ""
                             if mark_white_textures:
-                               if contains_white_tag(lat,lon):
-                                  white_textures=" w!"                            
-                            content = prov + "\n" + str(zl) + "\n" + has_ovl + white_textures
+                                if contains_white_tag(lat, lon):
+                                    white_textures = " w!"
+                            content = (
+                                prov + "\n" + str(zl) + "\n" + has_ovl + white_textures
+                            )
                         else:
                             content = "?"
                         self.dico_tiles_done[(lat, lon)] = (
@@ -1873,13 +1953,20 @@ class Ortho4XP_Earth_Preview(tk.Toplevel):
         return
 
     def trash(self):
-        def delete_overlays(lat, lon):        
-            ovl_path=(os.path.join(FNAMES.Overlay_dir, "Earth nav data", FNAMES.long_latlon(lat, lon) + ".dsf"))
+        def delete_overlays(lat, lon):
+            ovl_path = os.path.join(
+                FNAMES.Overlay_dir,
+                "Earth nav data",
+                FNAMES.long_latlon(lat, lon) + ".dsf",
+            )
             if os.path.exists(ovl_path):
-                    os.remove(ovl_path)
-                    UI.vprint(1, "Deleted overalays for tile: "+ FNAMES.short_latlon(lat, lon))
-                    UI.vprint(1, "Use Refresh button to see changes on the map")
+                os.remove(ovl_path)
+                UI.vprint(
+                    1, "Deleted overalays for tile: " + FNAMES.short_latlon(lat, lon)
+                )
+                UI.vprint(1, "Use Refresh button to see changes on the map")
             return
+
         if self.v_["OSM data"].get():
             try:
                 shutil.rmtree(FNAMES.osm_dir(self.active_lat, self.active_lon))
@@ -1934,8 +2021,8 @@ class Ortho4XP_Earth_Preview(tk.Toplevel):
             except Exception as e:
                 UI.vprint(3, e)
         if self.v_["Tile (overlays)"].get() and not self.grouped:
-            try:   
-              delete_overlays(self.active_lat, self.active_lon)           
+            try:
+                delete_overlays(self.active_lat, self.active_lon)
             except Exception as e:
                 UI.vprint(3, e)
         return
@@ -2189,10 +2276,11 @@ class Ortho4XP_Earth_Preview(tk.Toplevel):
     def exit(self):
         self.destroy()
 
+
 ##############################################################################
-def contains_white_tag(lat,lon):
+def contains_white_tag(lat, lon):
     jpg_path = os.path.join(FNAMES.Imagery_dir, FNAMES.long_latlon(lat, lon))
     for root, dirs, files in os.walk(jpg_path):
-        if any(file.endswith('.white') for file in files):
+        if any(file.endswith(".white") for file in files):
             return True
     return False
