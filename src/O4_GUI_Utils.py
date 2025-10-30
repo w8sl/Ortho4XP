@@ -867,7 +867,21 @@ class Ortho4XP_Custom_ZL(tk.Toplevel):
 
         # Start background thread to monitor cache update
         threading.Thread(target=self._monitor_cache_update).start()
+        
+        if CFG.cover_airports_with_highres=="Progressive":
+            apt_data=APT_SRC.XPlaneAptDatParser.apt_dat_files()
+            if not os.path.isfile(apt_data[0]):
 
+                self.apt_data_banner = tk.Label(
+                    self.frame_right,
+                    anchor=N,
+                    text="To enable progressive zones, set  'xplane_install_dir'  in the Ortho4XP Config",
+                    fg="light green",
+                    bg="dark green",
+                    font="Helvetica 12 bold italic",
+                    )
+                self.apt_data_banner.grid(row=right_row, column=0, sticky=N + S + W + E)
+        
         right_row += 1
         self.canvas = tk.Canvas(self.frame_right, bd=0, height=750, width=750)
         self.canvas.grid(row=right_row, column=0, sticky=N + S + E + W)
