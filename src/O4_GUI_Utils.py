@@ -1049,11 +1049,11 @@ class Ortho4XP_Custom_ZL(tk.Toplevel):
         try:
             layers = dict()
 
-            # Render the map layer on the canvas (.result() will wait until it is available)
+            # Render the map layer on the canvas
             layers["map"] = background_map_layer
             self.canvas.create_image(0, 0, anchor=NW, image=layers["map"], tags="map")
 
-            # Render the texture layers on the canvas (.result() will wait until they are available)
+            # Render the texture layers on the canvas
             if texture_layers is not None:
                 texture_layers = texture_layers
                 for zl in sorted(texture_layers.keys()):
@@ -1467,6 +1467,7 @@ class Ortho4XP_Custom_ZL(tk.Toplevel):
         build_dir = os.path.normpath(
             FNAMES.build_dir(lat, lon, self.parent.custom_build_dir_entry.get())
         )
+        self.save_zone_cmd()
         self.save_zone_list()
         tile = self.tile_from_preview()
         tile.make_dirs()
