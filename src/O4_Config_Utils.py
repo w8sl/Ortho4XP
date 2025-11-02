@@ -189,8 +189,8 @@ class Tile():
                     if value and value[-1] in ('"',"'"): value=value[:-1]
                     if cfg_vars[var]['type'] in (bool,list):
                         cmd="self."+var+"="+value
-                    elif cfg_vars[var]['type'] is ScreenRes:
-                        cmd="self."+var+"=ScreenRes.from_config_value(value)"
+                    # elif cfg_vars[var]['type'] is ScreenRes:
+                    #   cmd="self."+var+"=ScreenRes.from_config_value(value)"
                     else:
                         cmd="self."+var+"=cfg_vars['"+var+"']['type'](value)"
                     exec(cmd)
