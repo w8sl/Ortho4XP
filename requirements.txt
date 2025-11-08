@@ -6,4 +6,3 @@ Rtree
 shapely
 rasterio==1.4.3
 scikit-fmm
-numpy==1.26.4; sys_platform=="darwin"
