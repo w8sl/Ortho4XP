@@ -164,7 +164,7 @@ def build_poly_file(tile):
             vector_map.seeds["SEA"] = [numpy.array([1000, 1000])]
         else:
             vector_map.seeds["SEA"] = [numpy.array([0.5, 0.5])]
-    vector_map.snap_to_grid(9) 
+    vector_map.snap_to_grid(8) 
     vector_map.write_node_file(node_file)
     vector_map.write_poly_file(poly_file)
 
