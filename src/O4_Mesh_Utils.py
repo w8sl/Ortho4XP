@@ -13,6 +13,8 @@ import O4_Geo_Utils as GEO
 import O4_Vector_Utils as VECT
 import O4_OSM_Utils as OSM
 import O4_Version
+import platform
+architecture = platform.machine()
 
 if "dar" in sys.platform:
     Triangle4XP_cmd = os.path.join(FNAMES.Utils_dir, "mac", "Triangle4XP ")
@@ -24,12 +26,16 @@ elif "win" in sys.platform:
     triangle_cmd = os.path.join(FNAMES.Utils_dir, "win", "triangle.exe ")
     sort_mesh_cmd = os.path.join(FNAMES.Utils_dir, "win", "moulinette.exe ")
     unzip_cmd = os.path.join(FNAMES.Utils_dir, "win", "7z.exe ")
-else:
-    Triangle4XP_cmd = os.path.join(FNAMES.Utils_dir, "lin", "Triangle4XP ")
-    triangle_cmd = os.path.join(FNAMES.Utils_dir, "lin", "triangle ")
+else:  
     sort_mesh_cmd = os.path.join(FNAMES.Utils_dir, "lin", "moulinette ")
     unzip_cmd = "7z "
-
+    if "aarch64" in architecture:
+        Triangle4XP_cmd = os.path.join(FNAMES.Utils_dir, "lin", "aarch64", "Triangle4XP ")
+        triangle_cmd = os.path.join(FNAMES.Utils_dir, "lin", "aarch64", "triangle ")
+    else:
+        Triangle4XP_cmd = os.path.join(FNAMES.Utils_dir, "lin", "Triangle4XP ")
+        triangle_cmd = os.path.join(FNAMES.Utils_dir, "lin", "triangle ")
+   
 
 community_server = False
 if os.path.exists(os.path.join(FNAMES.Ortho4XP_dir, "community_server.txt")):
