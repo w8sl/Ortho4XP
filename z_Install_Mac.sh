@@ -112,7 +112,7 @@ if [ "$major_version" -lt 14 ]; then
     install_macOS_older
 else
     echo "Your macOS version is 14.x.x or higher"
-    py_ver="3.12"
+    py_ver="3.14"
     check_python
     install_macOS_recent
 fi

@@ -76,7 +76,7 @@ update_path(){
  fi
 
  # Choose the Python version for macOS installation
- read -p "Which version of Python would you like to use with Ortho4XP? (0) 3.10, (1) 3.11, (2) 3.12 (3) 3.13  " nr
+ read -p "Which version of Python would you like to use with Ortho4XP? (0) 3.10, (1) 3.11, (2) 3.12 (3) 3.13 (4) 3.14 " nr
          case $nr in
 	          0 ) echo " ";
 	              echo "Proceeding with Python 3.10";
@@ -94,24 +94,30 @@ update_path(){
 	              echo "Proceeding with Python 3.13";
                   py_ver="3.13"
 	              echo " " ;;
+	          4 ) echo " ";
+	              echo "Proceeding with Python 3.14";
+                  py_ver="3.14"
+	              echo " " ;;
 	          * ) echo invalid response;
 		      exit 1;;
           esac
 
 if ! [ -x "$(command -v python$py_ver)" ]; then
-   echo "Python $py_ver not found! Install Homebrew packages! "
+    echo "Python $py_ver not found! Installing ... "
+    brew install python@$py_ver python-tk@$py_ver
+  else
+    echo "Python $py_ver is installed."
 fi
 
-echo " "
-read -p "Do you want to (re)install Homebrew packages required by O4XP? (y/n) " yn
-
-case $yn in
-	n ) echo "ok, we will proceed without installation of Homebrew packages";;
-	y ) echo "Installing Homebrew packages required by O4XP...";
-	    brew install python@$py_ver proj geos spatialindex p7zip python-tk@$py_ver;;
-	* ) echo invalid response;
-            exit 1;;
-esac
+python$py_ver -c "import tkinter" &>/dev/null
+  if [ $? -eq 0 ]; then
+    echo "Tkinter is installed."
+  else
+    echo ""
+    echo "Tkinter not found. Installing...!"
+    echo ""
+    brew install python@$py_ver python-tk@$py_ver
+  fi
 
 echo " "
 
@@ -145,10 +151,9 @@ fi
  
 # Required system packages
  
- Debian="sudo apt-get install python3 python3-venv python3-pip python3-gdal libgdal-dev python3-pil.imagetk 7zip libnvtt-bin freeglut3-dev gdal-bin gcc"
- Arch="sudo pacman -S python python-pip python-gdal 7zip freeglut tk podofo netcdf mariadb hdf5 cfitsio postgresql gcc"
- Fedora="sudo dnf install python3 python3-devel python3-pip python3-gdal gdal-devel python3-tkinter p7zip freeglut gcc-c++"
- openSUSE="sudo zypper install python312 python312-tk python312-devel gdal python3-GDAL p7zip freeglut-devel gcc-c++"
+ Debian="sudo apt-get install python3 python3-venv python3-pip python3-pil.imagetk p7zip libnvtt-bin freeglut3-dev gcc"
+ Arch="sudo pacman -S python python-pip 7zip freeglut tk gcc"
+ Fedora="sudo dnf install python3 python3-devel python3-pip python3-tkinter p7zip freeglut gcc-c++"
  
  if [[ "$OS" == *"Ubuntu"* ]]; then
       py_ver="3"
@@ -179,21 +184,15 @@ fi
       py_ver="3"
       update="sudo dnf update"
       system_packages=$Fedora 
-
-elif [[ "$OS" == *"openSUSE"* ]]; then
-      py_ver="3.12"
-      update="sudo zypper dup"
-      system_packages=$openSUSE
+ 
+ elif [[ "$OS" == *"AlmaLinux"* ]]; then
+      py_ver="3"
+      update="sudo dnf update"
+      system_packages=$Fedora 
 
  else
      OS="Unknown"
  fi
-
-if ! [ -x "$(command -v gdalwarp)" ]; then
-    echo " "
-    echo "It looks like system packages required by Ortho4XP are not installed!"
-    echo " "
-fi
 
 if [[ "$OS" == "Unknown" ]]; then
 echo " "
@@ -254,13 +253,6 @@ else
   exit 1
 fi
 
-if [ "$(uname -m)" = "aarch64" ]; then
-
-    #compile triangle and Triangle4XP from source on Linux aarch64
-    echo "Linux aarch64 - compiling triangle and Triangle4XP from source..."
-    gcc -O2 ./Utils/src/triangle.c -lm -o ./Utils/lin/triangle
-    gcc -O2 ./Utils/src/Triangle4XP.c -lm -o ./Utils/lin/Triangle4XP
-fi 
 
 # Finding python command on "Unknown" distribution
 
@@ -293,17 +285,6 @@ python$py_ver -m venv $venv_path
 # Activate Python venv
 
 source $venv_path/bin/activate
-
-if [[ "$OSTYPE" == "linux"* ]]; then
-  gdal_version=$(gdal-config --version)  
-  # Check if GDAL version is less than 3.5.0
-  if [[ "$(printf '%s\n' "$gdal_version" "3.5.0" | sort -V | head -n1)" == "$gdal_version" && "$gdal_version" != "3.5.0" ]]; then    
-      # Update package versions for compatibility with GDAL<3.5.0
-      sed -i 's/^numpy==[0-9.]\+/numpy==1.26.4/' requirements.txt
-      sed -i 's/^rasterio==[0-9.]\+/rasterio==1.3.11/' requirements.txt
-      echo "Updated requirements.txt for GDAL < 3.5.0 compatibility"
-  fi
-fi
 
 # Install required packages with pip
 

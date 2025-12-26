@@ -3,8 +3,9 @@
 Installation on macOS - quick method
 ---------------------
 
-Download and install Python 3.12 from [www.python.org](https://www.python.org/downloads/macos/)
-- Use **“z_Install_Mac.sh”** script to install O4XP. Follow these steps:
+Download and install Python 3.14 from [www.python.org](https://www.python.org/downloads/macos/)  *(Python 3.12 on macOS < 14)*
+
+  - Use **“z_Install_Mac.sh”** script to install O4XP. Follow these steps:
 
   - Open the terminal in the main Ortho4XP directory -> right click on the folder, choose: **Services** -> **New Terminal at Folder**
 
@@ -17,7 +18,7 @@ Download and install Python 3.12 from [www.python.org](https://www.python.org/do
     
  - To launch Ortho4XP, double-click on the file named **"z_Start_O4XP.command"**
 
-Installation on Linux, macOS with [Homebrew](https://brew.sh/)
+Installation on macOS with [Homebrew](https://brew.sh/) or Linux
 ------------------------------------------
 
 - Use **“z_Install_O4XP.sh”** script (run `chmod +x z_Install_O4XP.sh` first)
