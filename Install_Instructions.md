@@ -16,7 +16,7 @@ Download and install Python 3.12 from [www.python.org](https://www.python.org/do
     
  - To launch Ortho4XP, simply double-click on the file named **"z_Start_O4XP.command"**
 
-Installation on Linux, macOS with [Homebrew](https://brew.sh/)
+Installation on macOS with [Homebrew](https://brew.sh/) or Linux
 ------------------------------------------
 
 - Use **“z_Install_O4XP.sh”** script (run `chmod +x z_Install_O4XP.sh` first)
