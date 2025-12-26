@@ -1,0 +1,31 @@
+name: Add triangle and Triangle4XP for linux aarch64
+
+on:
+  workflow_dispatch:
+
+permissions:
+  contents: write
+  actions: read
+
+jobs:
+  build:
+    runs-on: ubuntu-22.04-arm
+    steps:
+    - name: Checkout code
+      uses: actions/checkout@v6
+    
+    - name: Compile C code
+      run: |         
+         gcc Utils/src/Triangle4XP.c -o Utils/lin/aarch64/Triangle4XP -lm
+         gcc Utils/src/triangle.c -o Utils/lin/aarch64/triangle -lm   
+    
+    - name: Create branch and commit changes
+      run: |
+         git config --global user.name 'github-actions[bot]'
+         git config --global user.email 'github-actions[bot]@users.noreply.github.com'
+         git checkout ${{ github.ref_name }}
+         git add .
+         git commit -m 'Add triangle and Triangle4XP for linux aarch64'
+
+    - name: Push changes
+      run: git push origin ${{ github.ref_name }}
