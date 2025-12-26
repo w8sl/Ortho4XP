@@ -13,6 +13,8 @@ import O4_Geo_Utils as GEO
 import O4_Vector_Utils as VECT
 import O4_OSM_Utils as OSM
 import O4_Version
+import platform
+architecture = platform.machine()
 
 if 'dar' in sys.platform:
     Triangle4XP_cmd = os.path.join(FNAMES.Utils_dir,"Triangle4XP ")
@@ -25,10 +27,14 @@ elif 'win' in sys.platform:
     sort_mesh_cmd   = os.path.join(FNAMES.Utils_dir,"moulinette.exe ")
     unzip_cmd       = os.path.join(FNAMES.Utils_dir,"7z.exe ")
 else:
-    Triangle4XP_cmd = os.path.join(FNAMES.Utils_dir,"Triangle4XP_linux ")
-    triangle_cmd    = os.path.join(FNAMES.Utils_dir,"triangle_linux ")
-    sort_mesh_cmd   = os.path.join(FNAMES.Utils_dir,"moulinette_linux ")
+    sort_mesh_cmd   = os.path.join(FNAMES.Utils_dir, "linux ")
     unzip_cmd       = "7z "
+    if "aarch64" in architecture:
+        Triangle4XP_cmd = os.path.join(FNAMES.Utils_dir,"aarch64","Triangle4XP_linux ")
+        triangle_cmd    = os.path.join(FNAMES.Utils_dir,"aarch64","triangle_linux ")
+    else:    
+        Triangle4XP_cmd = os.path.join(FNAMES.Utils_dir,"Triangle4XP_linux ")
+        triangle_cmd    = os.path.join(FNAMES.Utils_dir,"triangle_linux ")
 
 
 community_server=False
