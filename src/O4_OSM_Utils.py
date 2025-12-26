@@ -14,7 +14,7 @@ overpass_servers={
          "KU":"https://overpass.private.coffee/api/interpreter",
          "RU":"https://maps.mail.ru/osm/tools/overpass/api/interpreter"       
         }
-overpass_server_choice="DE"
+overpass_server_choice="KU"
 max_osm_tentatives=8
 
 ##############################################################################
