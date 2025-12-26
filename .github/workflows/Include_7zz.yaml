@@ -1,0 +1,49 @@
+name: Update 7zz file for mac
+
+on:
+  workflow_dispatch:
+
+permissions:
+  contents: write
+  actions: read
+
+jobs:
+  build:
+    runs-on: ubuntu-latest
+
+    steps:
+    - name: Checkout repository
+      uses: actions/checkout@v2
+
+
+    - name: Download 7z file
+      run: |
+        mkdir -p temp
+        wget https://www.7-zip.org/a/7z2501-mac.tar.xz -O temp/7z2501-mac.tar.xz
+
+    - name: Extract 7z file
+      run: tar -xvf temp/7z2501-mac.tar.xz -C temp/
+   
+    - name: List content of directories
+      run: ls -R
+        
+    - name: Move 7zz file
+      run: mv temp/7zz Utils/mac/
+
+    - name: Remove /temp directory
+      run: rm -rf temp/*
+    
+    - name: List content of directories again
+      run: ls -R
+      
+    - name: Create branch and commit changes
+      run: |
+         git config --global user.name 'github-actions[bot]'
+         git config --global user.email 'github-actions[bot]@users.noreply.github.com'
+         git checkout ${{ github.ref_name }}
+         git add .
+         git commit -m 'Update 7zz for macOS'
+
+    - name: Push changes
+      run: git push origin ${{ github.ref_name }}
+      
