@@ -175,6 +175,11 @@ fi
       update="sudo pacman -Syu"
       system_packages=$Arch
 
+ elif [[ "$OS" == *"cachyos"* ]]; then
+      py_ver=""
+      update="sudo pacman -Syu"
+      system_packages=$Arch
+
  elif [[ "$OS" == *"Manjaro"* ]]; then
       py_ver=""
       update="sudo pacman -Syu"
