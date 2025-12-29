@@ -165,6 +165,16 @@ fi
       update="sudo apt update"
       system_packages=$Debian
  
+ elif [[ "$OS" == *"Zorin"* ]]; then
+      py_ver="3"
+      update="sudo apt update"
+      system_packages=$Debian
+
+ elif [[ "$OS" == *"Pop"* ]]; then
+      py_ver="3"
+      update="sudo apt update"
+      system_packages=$Debian
+ 
  elif [[ "$OS" == *"Debian"* ]]; then
       py_ver="3"
       update="sudo apt update"
@@ -175,7 +185,12 @@ fi
       update="sudo pacman -Syu"
       system_packages=$Arch
 
-elif [[ "$OS" == *"cachyos"* ]]; then
+ elif [[ "$OS" == *"cachyos"* ]]; then
+      py_ver=""
+      update="sudo pacman -Syu"
+      system_packages=$Arch
+      
+ elif [[ "$OS" == *"EndeavourOS"* ]]; then
       py_ver=""
       update="sudo pacman -Syu"
       system_packages=$Arch
