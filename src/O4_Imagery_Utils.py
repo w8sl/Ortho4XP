@@ -2487,6 +2487,7 @@ def r_translate(filein, fileout, r_crs, xmin, ymin, xmax, ymax):
                 "crs": r_crs,
                 "interleave": "pixel",
                 "jpeg_quality": 75,
+                "num_threads":4
             }
         )
 
@@ -2513,6 +2514,7 @@ def r_warp(filein, fileout, r_crs):
                 "compress": "jpeg",
                 "interleave": "pixel",
                 "jpeg_quality": 75,
+                "num_threads":4
             }
         )
 
