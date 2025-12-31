@@ -15,7 +15,7 @@ check_python_tk() {
     echo ""
     echo "Tkinter is not installed!"
     echo ""
-    echo "Install Tkinter: brew install python-tk@3.12"
+    echo "Install Tkinter: brew install python-tk@$py_ver"
     exit 1
   fi
 }
