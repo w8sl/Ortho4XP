@@ -867,9 +867,9 @@ class Ortho4XP_Custom_ZL(tk.Toplevel):
 
         # Start background thread to monitor cache update
         threading.Thread(target=self._monitor_cache_update).start()
-        
-        if CFG.cover_airports_with_highres=="Progressive":
-            apt_data=APT_SRC.XPlaneAptDatParser.apt_dat_files()
+
+        if CFG.cover_airports_with_highres == "Progressive":
+            apt_data = APT_SRC.XPlaneAptDatParser.apt_dat_files()
             if not os.path.isfile(apt_data[0]):
 
                 self.apt_data_banner = tk.Label(
@@ -879,9 +879,9 @@ class Ortho4XP_Custom_ZL(tk.Toplevel):
                     fg="light green",
                     bg="dark green",
                     font="Helvetica 12 bold italic",
-                    )
+                )
                 self.apt_data_banner.grid(row=right_row, column=0, sticky=N + S + W + E)
-        
+
         right_row += 1
         self.canvas = tk.Canvas(self.frame_right, bd=0, height=750, width=750)
         self.canvas.grid(row=right_row, column=0, sticky=N + S + E + W)
@@ -1059,51 +1059,131 @@ class Ortho4XP_Custom_ZL(tk.Toplevel):
             traceback.print_exc()
             raise e
 
+    def _capture_viewport_center(self):
+        self.canvas.update_idletasks()
+
+        cw = self.canvas.winfo_width()
+        ch = self.canvas.winfo_height()
+
+        x0_frac, x1_frac = self.canvas.xview()
+        y0_frac, y1_frac = self.canvas.yview()
+
+        bbox = self.canvas.bbox("map")
+
+        if not bbox:
+            return
+
+        x0, y0, x1, y1 = bbox
+
+        scroll_x_canvas = x0 + x0_frac * (x1 - x0)
+        scroll_y_canvas = y0 + y0_frac * (y1 - y0)
+
+        center_x_canvas = scroll_x_canvas + cw / 2
+        center_y_canvas = scroll_y_canvas + ch / 2
+
+        # Use the origin for the CURRENT zoom (already set)
+        center_x_global = center_x_canvas + self.image_xmin_global
+        center_y_global = center_y_canvas + self.image_ymin_global
+        center_lat, center_lon = GEO.pix_to_wgs84(
+            center_x_global, center_y_global, self.zoomlevel
+        )
+
+        self._saved_center = (center_lat, center_lon)
+
     def _async_render_layers(self, background_map_layer, texture_layers):
         try:
-            layers = dict()
-
-            # Render the map layer on the canvas
+            layers = {}
+            # Draw base map at (0,0)
             layers["map"] = background_map_layer
             self.canvas.create_image(0, 0, anchor=NW, image=layers["map"], tags="map")
 
-            # Render the texture layers on the canvas
-            if texture_layers is not None:
-                texture_layers = texture_layers
+            # Draw texture layers at (0,0)
+            if texture_layers:
                 for zl in sorted(texture_layers.keys()):
-                    tag = "ZL_{:d}".format(zl)
+                    tag = f"ZL_{zl}"
                     layer = texture_layers[zl]
                     layers[tag] = layer
                     self.canvas.create_image(0, 0, anchor=NW, tags=tag, image=layer)
 
-            # Render the custom zones
+            # Draw custom zones
             self.apply_custom_zone_list()
 
-            # Finally, ensure the ZL toggle buttons are reset to the correct state, and that the items are displayed
+            # Reset ZL toggle states
             for zl in O4_Common_Types.ZoomLevels.CUSTOM_LEVELS:
                 self._zl_toggle_button_vars[zl].set(1)
-                self.canvas.itemconfigure("ZL_{:d}".format(zl), state=NORMAL)
+                self.canvas.itemconfigure(f"ZL_{zl}", state=NORMAL)
 
-            # Return the layers for storage, so they're not garbage collected (or they would be removed from the canvas)
+            # Update scrollregion AFTER drawing
+            self.canvas.config(scrollregion=self.canvas.bbox("map"))
+            bbox = self.canvas.bbox("map")
+            # Force Tkinter to finish drawing the huge image
+            self.canvas.update_idletasks()
+            self.canvas.update()
+
+            # Restore viewport center ---
+            if hasattr(self, "_saved_center") and bbox:
+                center_lat, center_lon = self._saved_center
+
+                # Convert lat/lon → global pixel coords
+                cx_global, cy_global = GEO.wgs84_to_pix(
+                    center_lat, center_lon, self.zoomlevel
+                )
+
+                # Convert global pixel → canvas pixel
+                cx_canvas = cx_global - self.image_xmin_global
+                cy_canvas = cy_global - self.image_ymin_global
+
+                cw = self.canvas.winfo_width()
+                ch = self.canvas.winfo_height()
+
+                target_x = cx_canvas - cw / 2
+                target_y = cy_canvas - ch / 2
+
+                x0, y0, x1, y1 = bbox
+                width = x1 - x0
+                height = y1 - y0
+
+                if width > 0:
+                    self.canvas.after(
+                        0, lambda: self.canvas.xview_moveto(target_x / width)
+                    )
+                if height > 0:
+                    self.canvas.after(
+                        0, lambda: self.canvas.yview_moveto(target_y / height)
+                    )
+
             return layers
 
-        except tk.TclError:
-            pass  # can happen when closing/reopening the ZL window too quickly : the image may no longer exist
         except Exception as e:
             traceback.print_exc()
             raise e
 
     def update_internal_state(self, lat, lon):
         self.zoomlevel = int(self.zl_combo.get())
-        zoomlevel = self.zoomlevel
-        tilxleft, tilytop = GEO.wgs84_to_gtile(lat + 1, lon, zoomlevel)
-        self.latmax, self.lonmin = GEO.gtile_to_wgs84(tilxleft, tilytop, zoomlevel)
-        self.xmin, self.ymin = GEO.wgs84_to_pix(self.latmax, self.lonmin, zoomlevel)
-        tilxright, tilybot = GEO.wgs84_to_gtile(lat, lon + 1, zoomlevel)
-        self.latmin, self.lonmax = GEO.gtile_to_wgs84(
-            tilxright + 1, tilybot + 1, zoomlevel
-        )
-        self.xmax, self.ymax = GEO.wgs84_to_pix(self.latmin, self.lonmax, zoomlevel)
+        zoom = self.zoomlevel
+
+        # Compute tile indices for the 1x1 degree area
+        tilxleft, tilytop = GEO.wgs84_to_gtile(lat + 1, lon, zoom)
+        tilxright, tilybot = GEO.wgs84_to_gtile(lat, lon + 1, zoom)
+
+        # Compute the TRUE global pixel origin of the stitched image
+        self.image_xmin_global = tilxleft * 256
+        self.image_ymin_global = tilytop * 256
+
+        # Compute the TRUE global pixel max
+        self.image_xmax_global = (tilxright + 1) * 256
+        self.image_ymax_global = (tilybot + 1) * 256
+
+        # Image size
+        self.image_width = self.image_xmax_global - self.image_xmin_global
+        self.image_height = self.image_ymax_global - self.image_ymin_global
+
+        # Used by custom zones
+        self.latmax, self.lonmin = GEO.gtile_to_wgs84(tilxleft, tilytop, zoom)
+        self.xmin, self.ymin = GEO.wgs84_to_pix(self.latmax, self.lonmin, zoom)
+        self.latmin, self.lonmax = GEO.gtile_to_wgs84(tilxright + 1, tilybot + 1, zoom)
+        self.xmax, self.ymax = GEO.wgs84_to_pix(self.latmin, self.lonmax, zoom)
+
         self.polygon_list = []
         self.polyobj_list = []
         self.poly_curr = []
@@ -1144,7 +1224,7 @@ class Ortho4XP_Custom_ZL(tk.Toplevel):
         return
 
     def _update_canvas(self, background_map_layer, texture_layers):
-        # GUI-safe canvas operations
+
         self.canvas.delete("all")
         self.configure_canvas()
         self._canvas_layers = self._async_render_layers(
@@ -1152,6 +1232,7 @@ class Ortho4XP_Custom_ZL(tk.Toplevel):
         )
 
     def on_preview_button(self, lat, lon):
+        self._capture_viewport_center()
         # Start background thread for heavy work
         threading.Thread(target=self._preview_worker, args=(lat, lon)).start()
 
@@ -1182,6 +1263,7 @@ class Ortho4XP_Custom_ZL(tk.Toplevel):
         )
 
     def on_dsf_layout_button(self, lat, lon):
+        self._capture_viewport_center()
         # Start background thread for layout work
         threading.Thread(target=self._dsf_layout_worker, args=(lat, lon)).start()
 
@@ -1486,7 +1568,9 @@ class Ortho4XP_Custom_ZL(tk.Toplevel):
         tile = self.tile_from_preview()
         tile.make_dirs()
         if tile.write_to_config():
-            UI.vprint(1, "Config saved for tile:", FNAMES.short_latlon(self.lat, self.lon))
+            UI.vprint(
+                1, "Config saved for tile:", FNAMES.short_latlon(self.lat, self.lon)
+            )
             return
         else:
             return
@@ -1512,7 +1596,9 @@ class Ortho4XP_Custom_ZL(tk.Toplevel):
                 self.parent.default_zl.set(tile.default_zl)
             except:
                 pass
-            UI.vprint(1, "Config loaded for tile:", FNAMES.short_latlon(self.lat, self.lon))
+            UI.vprint(
+                1, "Config loaded for tile:", FNAMES.short_latlon(self.lat, self.lon)
+            )
             return
         else:
             return
