@@ -1116,10 +1116,7 @@ class Ortho4XP_Custom_ZL(tk.Toplevel):
             # Update scrollregion AFTER drawing
             self.canvas.config(scrollregion=self.canvas.bbox("map"))
             bbox = self.canvas.bbox("map")
-            # Force Tkinter to finish drawing the huge image
-            self.canvas.update_idletasks()
-            self.canvas.update()
-
+           
             # Restore viewport center ---
             if hasattr(self, "_saved_center") and bbox:
                 center_lat, center_lon = self._saved_center
