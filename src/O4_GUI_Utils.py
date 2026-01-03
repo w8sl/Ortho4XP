@@ -671,16 +671,25 @@ class Ortho4XP_Custom_ZL(tk.Toplevel):
         )
         self.zl_combo.grid(row=2, column=0, padx=5, pady=3, sticky=E)
         row += 1
-
+        
         ttk.Button(
             self.frame_left,
-            text="Zone List Editor",
+            text="Progressive + Custom Zones",
             command=lambda: self.on_preview_button(lat, lon),
         ).grid(row=row, padx=5, column=0, sticky=N + S + E + W)
         row += 1
+                
         ttk.Button(
             self.frame_left,
-            text="Show Existing DSF layout",
+            text="Custom Zones",
+            command=lambda: self.on_preview_button_clean(lat, lon),
+        ).grid(row=row, padx=5, pady=3, column=0, sticky=N + S + E + W)
+
+        row += 1
+                
+        ttk.Button(
+            self.frame_left,
+            text="Existing DSF layout",
             command=lambda: self.on_dsf_layout_button(lat, lon),
         ).grid(row=row, padx=5, pady=3, column=0, sticky=N + S + E + W)
 
@@ -1116,7 +1125,7 @@ class Ortho4XP_Custom_ZL(tk.Toplevel):
             # Update scrollregion AFTER drawing
             self.canvas.config(scrollregion=self.canvas.bbox("map"))
             bbox = self.canvas.bbox("map")
-
+        
             # Restore viewport center ---
             if hasattr(self, "_saved_center") and bbox:
                 center_lat, center_lon = self._saved_center
@@ -1253,6 +1262,30 @@ class Ortho4XP_Custom_ZL(tk.Toplevel):
 
             background_map_layer = future_map.result()
             texture_layers = future_texture.result() if future_texture else None
+
+        # Schedule canvas update on the main thread
+        self.canvas.after(
+            0, lambda: self._update_canvas(background_map_layer, texture_layers)
+        )
+
+    def on_preview_button_clean(self, lat, lon):
+        self._capture_viewport_center()
+        # Start background thread for heavy work
+        threading.Thread(target=self._preview_worker_clean, args=(lat, lon)).start()
+
+    def _preview_worker_clean(self, lat, lon):
+        # Compute internal state and prepare parameters
+        self.update_internal_state(lat, lon)
+        zl = int(self.zl_combo.get())
+        map_type = self.map_combo.get()
+
+        with ThreadPoolExecutor(max_workers=2) as executor:
+            future_map = executor.submit(
+                self.async_build_map_layer, lat, lon, zl, map_type
+            )
+
+            background_map_layer = future_map.result()
+            texture_layers = None
 
         # Schedule canvas update on the main thread
         self.canvas.after(
