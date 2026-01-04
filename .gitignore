@@ -10,3 +10,4 @@ venv-ortho/
 **/*.bak
 **/*.swp
 .last_gui_params.txt
+Ortho4XP.cfg
