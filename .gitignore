@@ -16,4 +16,5 @@ venv-ortho/
 **/Thumbs.db
 **/*.bak
 **/*.swp
+Ortho4XP.cfg
 .last_gui_params.txt
