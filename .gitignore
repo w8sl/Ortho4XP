@@ -1,31 +1,12 @@
-# Ortho4XP packaging
-Binary/
-
-# Ortho4XP workdir cache directories (in case workdir is kept within the source dir)
-Airport_Data/
-build/
+DATA/
+Patches/
 Previews/
-
-# Ortho4XP output and logs
-**/Ortho4XP.log
-.last_gui_params.txt
-yOrtho4XP_Overlays/
-
-# Python: Byte-compiled / optimized / DLL files
-__pycache__/
-*.py[cod]
-*$py.class
-
-# virtualenv
-venv/
-venv36/
-virtualenv/
-
-# PyCharm
-.idea/
-
-# Misc
-**/*.bak
-**/*.orig
-**/Thumbs.db
+Extents/
 tmp/
+venv-ortho/
+**/Ortho4XP.log
+**/__pycache__
+**/Thumbs.db
+**/*.bak
+**/*.swp
+.last_gui_params.txt
