@@ -442,7 +442,7 @@ list_tile_vars = (
 )
 
 list_global_cfg = (
-    list_app_vars + list_vector_vars + list_mesh_vars + list_mask_vars + list_dsf_vars
+    list_app_vars + list_vector_vars + list_mesh_vars + list_mask_vars + list_dsf_vars + list_other_vars
 )
 
 ############################################################################################

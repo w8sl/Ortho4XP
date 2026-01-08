@@ -65,6 +65,16 @@ class DEM:
             ", Mean:",
             self.alt_dem.mean(),
         )
+        if (
+            self.alt_dem.min() == 0.0
+            and self.alt_dem.max() == 0.0
+            and self.alt_dem.mean() == 0.0
+        ):
+            UI.vprint(
+                1,
+                "   INFO: No elevation data found. Please use another source for elevation.",
+            )
+            UI.red_flag = True
 
     def load_data(self, source, info_only=False):
         if not source:
@@ -651,7 +661,7 @@ def ensure_elevation(source, lat, lon, verbose=True):
             resol == 3
             or os.path.getsize(FNAMES.viewfinderpanorama(lat, lon)) >= 25934402
         ):
-            UI.vprint(2, "   Recycling ", FNAMES.viewfinderpanorama(lat, lon))
+            UI.vprint(1, "   Recycling ", FNAMES.viewfinderpanorama(lat, lon))
             return 1
         UI.vprint(
             1,
@@ -697,7 +707,7 @@ def ensure_elevation(source, lat, lon, verbose=True):
     elif source in ("SRTM", "ALOS"):
         if os.path.exists(FNAMES.elevation_data(source, lat, lon)):
             UI.vprint(
-                2, "   Recycling ", FNAMES.elevation_data(source, lat, lon)
+                1, "   Recycling ", FNAMES.elevation_data(source, lat, lon)
             )
             return 1
         UI.vprint(
@@ -746,7 +756,7 @@ def ensure_elevation(source, lat, lon, verbose=True):
     elif source in ("NED1", "NED1/3"):
         if os.path.exists(FNAMES.elevation_data(source, lat, lon)):
             UI.vprint(
-                2, "   Recycling ", FNAMES.elevation_data(source, lat, lon)
+                1, "   Recycling ", FNAMES.elevation_data(source, lat, lon)
             )
             return 1
         UI.vprint(
