@@ -1,4 +1,6 @@
 import collections
+import pickle
+import numpy
 import concurrent.futures
 import functools
 import glob
@@ -47,6 +49,7 @@ import O4_UI_Utils as UI
 import O4_Config_Utils as CFG
 import O4_Airport_Data_Source as APT_SRC
 from concurrent.futures import ThreadPoolExecutor
+import logging
 
 
 # Set OsX=True if you prefer the OsX way of drawing existing tiles but are on Linux or Windows.
@@ -671,14 +674,14 @@ class Ortho4XP_Custom_ZL(tk.Toplevel):
         )
         self.zl_combo.grid(row=2, column=0, padx=5, pady=3, sticky=E)
         row += 1
-        
+
         ttk.Button(
             self.frame_left,
-            text="Progressive + Custom Zones",
+            text="Automatic + Custom Zones",
             command=lambda: self.on_preview_button(lat, lon),
         ).grid(row=row, padx=5, column=0, sticky=N + S + E + W)
         row += 1
-                
+
         ttk.Button(
             self.frame_left,
             text="Custom Zones",
@@ -686,7 +689,7 @@ class Ortho4XP_Custom_ZL(tk.Toplevel):
         ).grid(row=row, padx=5, pady=3, column=0, sticky=N + S + E + W)
 
         row += 1
-                
+
         ttk.Button(
             self.frame_left,
             text="Existing DSF layout",
@@ -908,6 +911,165 @@ class Ortho4XP_Custom_ZL(tk.Toplevel):
         if self.apt_data_cache_banner is not None:
             self.apt_data_cache_banner.grid_remove()
 
+    def OSM_airports_zone_list(self, tile):
+        # Reuse DSF.zone_list_to_ortho_dico
+        # Only run when airport high‑res coverage is enabled
+        if tile.cover_airports_with_highres not in ["True", "ICAO"]:
+            return {}
+
+        # Load airport dictionary
+        try:
+            with open(FNAMES.apt_file(tile), "rb") as f:
+                dico_airports = pickle.load(f)
+        except:
+            UI.vprint(
+                1,
+                "WARNING:",
+                FNAMES.apt_file(tile),
+                "missing; cannot generate preview of high‑res zones around OSM airports. Run step 1!",
+            )
+            return {}
+
+        UI.vprint(2, "-> Generating high‑resolution zones around OSM airports")
+
+        if tile.cover_airports_with_highres == "ICAO":
+            # Filter ICAO airports
+            airports_list = [
+                apt for apt in dico_airports if dico_airports[apt]["key_type"] == "icao"
+            ]
+        else:
+            airports_list = list(dico_airports.keys())
+
+        # Prepare airport mask
+        airport_array = numpy.zeros((4096, 4096), dtype=bool)
+
+        # Mark airport zones
+        for airport in airports_list:
+            (xmin, ymin, xmax, ymax) = dico_airports[airport]["boundary"].bounds
+
+            # Extend boundary
+            xmin -= 1000 * tile.cover_extent * GEO.m_to_lon(tile.lat)
+            xmax += 1000 * tile.cover_extent * GEO.m_to_lon(tile.lat)
+            ymax += 1000 * tile.cover_extent * GEO.m_to_lat
+            ymin -= 1000 * tile.cover_extent * GEO.m_to_lat
+
+            # Snap to texture boundaries
+            (tx1, ty1) = GEO.wgs84_to_orthogrid(
+                ymax + tile.lat, xmin + tile.lon, tile.cover_zl.max
+            )
+            (ymax, xmin) = GEO.gtile_to_wgs84(tx1, ty1, tile.cover_zl.max)
+            ymax -= tile.lat
+            xmin -= tile.lon
+
+            (tx2, ty2) = GEO.wgs84_to_orthogrid(
+                ymin + tile.lat, xmax + tile.lon, tile.cover_zl.max
+            )
+            (ymin, xmax) = GEO.gtile_to_wgs84(tx2 + 16, ty2 + 16, tile.cover_zl.max)
+            ymin -= tile.lat
+            xmax -= tile.lon
+
+            # Clamp to tile boundaries
+            xmin = max(0, xmin)
+            xmax = min(1, xmax)
+            ymin = max(0, ymin)
+            ymax = min(1, ymax)
+
+            # Convert to pixel mask
+            colmin = round(xmin * 4095)
+            colmax = round(xmax * 4095)
+            rowmax = round((1 - ymin) * 4095)
+            rowmin = round((1 - ymax) * 4095)
+
+            airport_array[rowmin : rowmax + 1, colmin : colmax + 1] = True
+
+        # Build final dictionary
+        dico_customzl = {}
+
+        til_x_min, til_y_min = GEO.wgs84_to_orthogrid(
+            tile.lat + 1, tile.lon, CFG.mesh_zl
+        )
+        til_x_max, til_y_max = GEO.wgs84_to_orthogrid(
+            tile.lat, tile.lon + 1, CFG.mesh_zl
+        )
+
+        for til_x in range(til_x_min, til_x_max + 1, 16):
+            for til_y in range(til_y_min, til_y_max + 1, 16):
+
+                (latp, lonp) = GEO.gtile_to_wgs84(til_x + 8, til_y + 8, tile.mesh_zl)
+                lonp = max(min(lonp, tile.lon + 1), tile.lon)
+                latp = max(min(latp, tile.lat + 1), tile.lat)
+
+                x = round((lonp - tile.lon) * 4095)
+                y = round((tile.lat + 1 - latp) * 4095)
+
+                # Only apply high‑res if inside airport mask
+                if airport_array[y, x]:
+                    zoomlevel = tile.cover_zl.max
+                    provider_code = tile.default_website
+                else:
+                    continue  # skip non‑airport tiles entirely
+
+                # Compute texture tile coordinates
+                til_x_text = 16 * (int(til_x / 2 ** (CFG.mesh_zl - zoomlevel)) // 16)
+                til_y_text = 16 * (int(til_y / 2 ** (CFG.mesh_zl - zoomlevel)) // 16)
+
+                dico_customzl[(til_x, til_y)] = (
+                    til_x_text,
+                    til_y_text,
+                    zoomlevel,
+                    provider_code,
+                )
+
+        return dico_customzl
+
+    def airport_zl_dict_to_gtiles(self, dico_customzl, mesh_zl):
+        gtiles_dict = collections.defaultdict(set)
+
+        for (til_x, til_y), (_, _, zoomlevel, _) in dico_customzl.items():
+
+            # Compute the real-world center of the mesh tile ---
+            latp, lonp = GEO.gtile_to_wgs84(til_x + 8, til_y + 8, mesh_zl)
+
+            # Convert lat/lon to the correct zoomlevel tile ---
+            gtile_x, gtile_y = GEO.wgs84_to_orthogrid(latp, lonp, zoomlevel)
+
+            # Store the tile
+            gtiles_dict[zoomlevel].add(self.sGTile(gtile_x, gtile_y, zoomlevel))
+
+        return gtiles_dict
+
+    class sGTile:
+        def __init__(self, x, y, zl):
+            self.x = x
+            self.y = y
+            self.zl = zl
+
+    def async_build_airport_zl_layer(
+        self, bg_map_lat, bg_map_lon, bg_map_zl, dico_customzl
+    ):
+        try:
+            # Convert airport-only ZL dict → gtiles_dict
+            gtiles_dict = self.airport_zl_dict_to_gtiles(dico_customzl, CFG.mesh_zl)
+
+            # Reuse existing layer builder
+            layers = self._build_texture_layers(
+                bg_map_lat, bg_map_lon, bg_map_zl, gtiles_dict
+            )
+
+            textures = set()
+            for zl, tiles in gtiles_dict.items():
+                for t in tiles:
+                    key = (t.x, t.y)
+                    textures.add(key)
+
+            self.number_of_textures = len(textures)
+            self.compute_size()
+            return layers
+
+        except Exception as e:
+            traceback.print_exc()
+            raise e
+
     @staticmethod
     def async_build_map_layer(lat, lon, zl, provider):
         try:
@@ -1125,7 +1287,7 @@ class Ortho4XP_Custom_ZL(tk.Toplevel):
             # Update scrollregion AFTER drawing
             self.canvas.config(scrollregion=self.canvas.bbox("map"))
             bbox = self.canvas.bbox("map")
-        
+
             # Restore viewport center ---
             if hasattr(self, "_saved_center") and bbox:
                 center_lat, center_lon = self._saved_center
@@ -1256,6 +1418,12 @@ class Ortho4XP_Custom_ZL(tk.Toplevel):
             if CFG.cover_airports_with_highres == "Progressive":
                 future_texture = executor.submit(
                     self.async_build_progressive_zl_layers, lat, lon, zl
+                )
+            elif CFG.cover_airports_with_highres in ["True", "ICAO"]:
+                tile = CFG.Tile(self.lat, self.lon, "")
+                zones = self.OSM_airports_zone_list(tile)
+                future_texture = executor.submit(
+                    self.async_build_airport_zl_layer, lat, lon, zl, zones
                 )
             else:
                 future_texture = None
@@ -1507,6 +1675,8 @@ class Ortho4XP_Custom_ZL(tk.Toplevel):
                 )
                 / 2**30
             )
+        elif CFG.cover_airports_with_highres in ["True", "ICAO"]:
+            total_size += self.number_of_textures * 10.2 / 1024
 
         self.gb.set("{:0.1f}".format(total_size) + " GiB")
 
