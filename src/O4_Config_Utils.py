@@ -109,7 +109,7 @@ list_dsf_vars=['cover_airports_with_highres','cover_extent','cover_zl','cover_sc
 list_other_vars=['custom_dem','fill_nodata']
 list_tile_vars=list_vector_vars+list_mesh_vars+list_mask_vars+list_dsf_vars+list_other_vars+['default_website','default_zl','zone_list']
 
-list_global_cfg=list_app_vars+list_vector_vars+list_mesh_vars+list_mask_vars+list_dsf_vars
+list_global_cfg=list_app_vars+list_vector_vars+list_mesh_vars+list_mask_vars+list_dsf_vars+list_other_vars
 
 ############################################################################################
 # Initialization to default values

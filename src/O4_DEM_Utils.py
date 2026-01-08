@@ -70,7 +70,7 @@ class DEM:
         ):
             UI.vprint(
                 1,
-                "   INFO: No evelation found. Please use another source for elevation.",
+                "   INFO: No elevation data found. Please use another source for elevation.",
             )
             UI.red_flag = True
 
