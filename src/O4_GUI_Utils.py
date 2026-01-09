@@ -1676,8 +1676,10 @@ class Ortho4XP_Custom_ZL(tk.Toplevel):
                 / 2**30
             )
         elif CFG.cover_airports_with_highres in ["True", "ICAO"]:
-            total_size += self.number_of_textures * 10.2 / 1024
-
+            try:
+                total_size += self.number_of_textures * 10.2 / 1024
+            except:
+                pass
         self.gb.set("{:0.1f}".format(total_size) + " GiB")
 
     def save_zone_cmd(self):
