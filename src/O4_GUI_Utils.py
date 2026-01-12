@@ -606,7 +606,7 @@ class Ortho4XP_Custom_ZL(tk.Toplevel):
         self.map_choice = tk.StringVar()
         self.map_choice.set("OSM")
         self.zl_choice = tk.StringVar()
-        self.zl_choice.set(str(O4_Common_Types.ZoomLevels.OSM_LEVELS[0]))
+        self.zl_choice.set(str(O4_Common_Types.ZoomLevels.OSM_LEVELS[1]))
         self.progress_preview = tk.IntVar()
         self.progress_preview.set(0)
         self.zmap_choice = tk.StringVar()
