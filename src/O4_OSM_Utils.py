@@ -11,10 +11,9 @@ import O4_File_Names as FNAMES
 
 overpass_servers={
          "DE":"https://overpass-api.de/api/interpreter",
-         "KU":"https://overpass.private.coffee/api/interpreter",
-         "RU":"https://maps.mail.ru/osm/tools/overpass/api/interpreter"       
+         "KU":"https://overpass.private.coffee/api/interpreter", 
         }
-overpass_server_choice = "KU"
+overpass_server_choice = "random"
 max_osm_tentatives = 8
 
 ################################################################################
