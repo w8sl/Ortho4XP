@@ -16,24 +16,30 @@ import O4_Vector_Utils as VECT
 import O4_OSM_Utils as OSM
 import O4_Version
 
+    
 if 'dar' in sys.platform:
-    Triangle4XP_cmd = os.path.join(FNAMES.Utils_dir,"Triangle4XP.app ")
-    triangle_cmd    = os.path.join(FNAMES.Utils_dir,"triangle.app ")
-    sort_mesh_cmd   = os.path.join(FNAMES.Utils_dir,"moulinette.app ")
-    reintroduce_obj_cmd = os.path.join(FNAMES.Utils_dir,"push_obj_into_mesh.app ")
-    unzip_cmd       = "7z "
-elif 'win' in sys.platform: 
-    Triangle4XP_cmd = os.path.join(FNAMES.Utils_dir,"Triangle4XP.exe ")
-    triangle_cmd    = os.path.join(FNAMES.Utils_dir,"triangle.exe ")
-    sort_mesh_cmd   = os.path.join(FNAMES.Utils_dir,"moulinette.exe ")
-    reintroduce_obj_cmd = os.path.join(FNAMES.Utils_dir,"push_obj_into_mesh.exe ")
-    unzip_cmd       = os.path.join(FNAMES.Utils_dir,"7z.exe ")
-else:
     Triangle4XP_cmd = os.path.join(FNAMES.Utils_dir,"Triangle4XP ")
     triangle_cmd    = os.path.join(FNAMES.Utils_dir,"triangle ")
     sort_mesh_cmd   = os.path.join(FNAMES.Utils_dir,"moulinette ")
+    unzip_cmd       = os.path.join(FNAMES.Utils_dir,"7zz ")
     reintroduce_obj_cmd = os.path.join(FNAMES.Utils_dir,"push_obj_into_mesh ")
+elif 'win' in sys.platform:
+    Triangle4XP_cmd = os.path.join(FNAMES.Utils_dir,"Triangle4XP.exe ")
+    triangle_cmd    = os.path.join(FNAMES.Utils_dir,"triangle.exe ")
+    sort_mesh_cmd   = os.path.join(FNAMES.Utils_dir,"moulinette.exe ")
+    unzip_cmd       = os.path.join(FNAMES.Utils_dir,"7z.exe ")
+    reintroduce_obj_cmd = os.path.join(FNAMES.Utils_dir,"push_obj_into_mesh.exe ")
+else:
+    sort_mesh_cmd   = os.path.join(FNAMES.Utils_dir, "moulinette_linux ")
     unzip_cmd       = "7z "
+    if "aarch64" in architecture:
+        Triangle4XP_cmd = os.path.join(FNAMES.Utils_dir,"aarch64","Triangle4XP_linux ")
+        triangle_cmd    = os.path.join(FNAMES.Utils_dir,"aarch64","triangle_linux ")
+        reintroduce_obj_cmd = os.path.join(FNAMES.Utils_dir,"push_obj_into_mesh_lin_aarch64 ")
+    else:    
+        Triangle4XP_cmd = os.path.join(FNAMES.Utils_dir,"Triangle4XP_linux ")
+        triangle_cmd    = os.path.join(FNAMES.Utils_dir,"triangle_linux ")
+        reintroduce_obj_cmd = os.path.join(FNAMES.Utils_dir,"push_obj_into_mesh_linux ")
 
 ##############################################################################
 @jit(nopython=True)
@@ -587,8 +593,8 @@ def build_mesh(tile):
     weight_array.tofile(weight_file)
     del(weight_array)
     
-    #curv_tol_scaling=sqrt(tile.dem.nxdem/(1000*(tile.dem.x1-tile.dem.x0)))
-    curv_tol_scaling=100
+    curv_tol_scaling=sqrt(tile.dem.nxdem/(1000*(tile.dem.x1-tile.dem.x0)))
+    #curv_tol_scaling=100
     curvature_tol=tile.curvature_tol[tile.iterate] if len(tile.curvature_tol)>tile.iterate else tile.curvature_tol[0]
     hmin=tile.hmin[tile.iterate] if len(tile.hmin)>tile.iterate else tile.hmin[0]
     hmin_effective=max(hmin,(tile.dem.y1-tile.dem.y0)*GEO.lat_to_m/tile.dem.nydem/2)

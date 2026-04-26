@@ -6,6 +6,8 @@ g2xpl_16_prefix=''
 g2xpl_16_suffix=''
 
 Ortho4XP_dir  =  '..' if getattr(sys,'frozen',False) else '.'
+
+Airport_dir   =  os.path.join(Ortho4XP_dir, "Airport_data")
 Preview_dir   =  os.path.join(Ortho4XP_dir, 'Previews')
 Provider_dir  =  os.path.join(Ortho4XP_dir, 'Providers')
 Extent_dir    =  os.path.join(Ortho4XP_dir, 'Extents')
@@ -126,16 +128,16 @@ def base_file_name(lat, lon):
 
 ##############################################################################
 def elevation_data(source,lat, lon):
-    if source=='View':
+    if source in ('View','View3'):
         return base_file_name(lat,lon)+'.hgt'
     elif source=='SRTM':
         return base_file_name(lat,lon)+'_SRTMv3.hgt'
     elif source=='ALOS':
         return base_file_name(lat,lon)+'_ALOS3W30.tif'
     elif source=='NED1/3':
-        return base_file_name(lat,lon)+'_NED13.img'
+        return base_file_name(lat,lon)+'_NED13.tif'
     elif source=='NED1':
-        return os.path.join(Elevation_dir,long_latlon(lat,lon)+'_NED1','w001001.adf') 
+        return base_file_name(lat,lon)+"_NED1.tif"
 ##############################################################################
 
 ##############################################################################
@@ -201,3 +203,5 @@ def dds_file_name_from_attributes(til_x_left,til_y_top,zoomlevel,provider_code,f
 def geotiff_file_name_from_attributes(til_x_left,til_y_top,zoomlevel,provider_code):
     return str(til_y_top)+"_"+str(til_x_left)+"_"+provider_code+str(zoomlevel)+'-WGS84.tif'
 ##############################################################################
+def cached_arpt_data(lat, lon):
+    return os.path.join(Airport_dir, round_latlon(lat, lon), short_latlon(lat, lon) + '.json')

@@ -93,12 +93,12 @@ def OSM_to_MultiPolygon_dico(osm_layer, lat, lon, dem, classifier, dico):
                                         for nodeid in nodelist],dtype=numpy.float64)-numpy.array([lon,lat],dtype=numpy.float64),7))\
                                         for nodelist in osm_layer.dicosmr[relid]['outer']]
             # do not check for validity here, let it fail and write a log
-            multiout=ops.cascaded_union([geom for geom in multiout])
+            multiout=ops.unary_union([geom for geom in multiout])
             multiin=[geometry.Polygon(numpy.round(numpy.array([osm_layer.dicosmn[nodeid]\
                                         for nodeid in nodelist],dtype=numpy.float64)-numpy.array([lon,lat],dtype=numpy.float64),7))\
                                         for nodelist in osm_layer.dicosmr[relid]['inner']]
             # insteand OSM errors in some small inner islands within rel might be ignored and shouldn't make the whole rel to be skipped 
-            multiin=ops.cascaded_union([geom for geom in multiin if geom.is_valid])
+            multiin=ops.unary_union([geom for geom in multiin if geom.is_valid])
             multipol = multiout.difference(multiin)
         except Exception as e:
             UI.lvprint(2,"Invalid OSM relation starting at",osm_layer.dicosmn[osm_layer.dicosmr[relid]['outer'][0]],", skipped.")
@@ -137,7 +137,7 @@ def write_text_dsf(lat,lon, dsf_txt_filename, dico_polygons, dico_polygon_def, s
         f.write('POLYGON_DEF '+dico_polygon_def[key][0]+'\n')
     i=0
     for key in sorted(dico_polygons.keys()):
-        for pol in dico_polygons[key]:
+        for pol in dico_polygons[key].geoms:
             if len(pol.interiors) > 255:
                 print("Alert ! Too much holes in one forest, skipped.")
                 continue
@@ -185,7 +185,7 @@ def build_road_exclusion(lat, lon, road_level):
     if not OSM.OSM_queries_to_OSM_layer(queries,road_layer,lat,lon,tags_of_interest,cached_suffix='big_roads'):
         return 0
     road_network=OSM.OSM_to_MultiLineString(road_layer, lat, lon, tags_for_exclusion) 
-    road_surface=[VECT.improved_buffer(linestring, buffer_large, 0, 0, show_progress=False) for linestring in road_network]
+    road_surface=[VECT.improved_buffer(linestring, buffer_large, 0, 0, show_progress=False) for linestring in road_network.geoms]
     if road_level>=2:
         road_layer=OSM.OSM_layer()
         queries=[\
@@ -201,7 +201,7 @@ def build_road_exclusion(lat, lon, road_level):
         if not OSM.OSM_queries_to_OSM_layer(queries,road_layer, lat, lon, tags_of_interest, cached_suffix='small_roads'):
             return 0
         road_network=OSM.OSM_to_MultiLineString(road_layer,0,0,tags_for_exclusion)
-        road_surface=geometry.MultiPolygon(road_surface+[VECT.improved_buffer(linestring, buffer_small, 0, 0,show_progress=False) for linestring in road_network])
+        road_surface=geometry.MultiPolygon(road_surface+[VECT.improved_buffer(linestring, buffer_small, 0, 0,show_progress=False) for linestring in road_network.geoms])
     del(road_network)
     (idx_road,dico_road)=VECT.MultiPolygon_to_Indexed_Polygons(road_surface,merge_overlappings=False)
     return (idx_road,dico_road)
@@ -242,7 +242,7 @@ def build_forest(lat, lon, target_scenery_dir, exclude_road_level = 0):
             (idx_pol,dico_pol) = VECT.indexed_difference(idx_pol, dico_pol, idx_road, dico_road)
         print("      Cut to tile boundaries")
         forest_dico[key] = geometry.MultiPolygon([VECT.cut_to_tile(pol, 0, 1, 0, 1) for pol in dico_pol.values() if pol.is_valid])
-        print("      Got ", len(forest_dico[key]), "of them.")
+        print("      Got ", len(forest_dico[key].geoms), "of them.")
     print("    Writing DSF to file")
     dest_dir=os.path.join(target_scenery_dir, "Earth nav data", FNAMES.round_latlon(lat, lon))
     if not os.path.exists(dest_dir):

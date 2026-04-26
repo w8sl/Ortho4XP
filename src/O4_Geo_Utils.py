@@ -2,6 +2,7 @@ from numba import jit
 from math import log, tan, pi, atan, exp, cos, sin, sqrt, atan2
 import pyproj
 from shapely import ops
+from pyproj import Transformer
 
 earth_radius = 6378137
 lat_to_m      = pi*earth_radius/180
@@ -22,22 +23,24 @@ def dist(A,B):
     a=sin((A[1]-B[1])*pi/360)**2+cos(A[1]*pi/180)*cos(B[1]*pi/180)*sin((A[0]-B[0])*pi/360)**2
     return 2*earth_radius*atan2(sqrt(a),sqrt(1-a))
 
-epsg={}
-epsg['4326']=pyproj.Proj(init='epsg:4326')
-epsg['3857']=pyproj.Proj(init='epsg:3857')
-epsg['3035']=pyproj.Proj(init='epsg:3035')
-epsg['2154']=pyproj.Proj(init='epsg:2154')
-epsg['31370']=pyproj.Proj(init='epsg:31370')
+#epsg={}
+#epsg['4326']=pyproj.Proj(init='epsg:4326')
+#epsg['3857']=pyproj.Proj(init='epsg:3857')
+#epsg['3035']=pyproj.Proj(init='epsg:3035')
+#epsg['2154']=pyproj.Proj(init='epsg:2154')
+#epsg['31370']=pyproj.Proj(init='epsg:31370')
 
 ##############################################################################
 @jit(nopython=True,fastmath=True)
 def webmercator_pixel_size(lat,zoomlevel):
     return 2*pi*earth_radius*cos(pi*lat/180)/(2**(zoomlevel+8))
+def webmercator_zoomlevel(lat, pixel_size):
+    return floor(log2((2 * pi * earth_radius * cos(lat * pi / 180)) / pixel_size) - 8)
 ##############################################################################
 
 ##############################################################################
 def transform(s_epsg, t_epsg, s_x, s_y):
-    return pyproj.transform(epsg[s_epsg], epsg[t_epsg], s_x, s_y)
+    return Transformer.from_crs(crs_from=f"EPSG:{s_epsg}", crs_to=f"EPSG:{t_epsg}", always_xy=True).transform(s_x, s_y)
 ##############################################################################
 
 def variation_to_east(s_epsg, lat, lon):
@@ -164,3 +167,16 @@ def st_coord_int(lat,lon,tex_x,tex_y,zoomlevel):
     t = t if t<=1 else 1
     return (int(round(s*65535)),int(round(t*65535)))
 ##############################################################################
+
+
+# FIXME: tile_pix_origin() + latlon_to_tile_relative_pix() could be similar to either
+#      : wgs84_to_orthogrid() or st_coord(), I'm not sure
+def tile_pix_origin(lat, lon, zl):
+    tilxleft, tilytop = wgs84_to_gtile(lat + 1, lon, zl)
+    latmax, lonmin = gtile_to_wgs84(tilxleft, tilytop, zl)
+    return wgs84_to_pix(latmax, lonmin, zl)
+
+
+def latlon_to_tile_relative_pix(tile_origin, lat, lon, zl):
+    pix_x, pix_y = wgs84_to_pix(lat, lon, zl)
+    return pix_x - tile_origin[0], pix_y - tile_origin[1]

@@ -3,6 +3,7 @@ import os
 import sys
 import subprocess
 import io
+import pyproj
 import requests
 import queue
 import random
@@ -31,6 +32,17 @@ import O4_OSM_Utils as OSM
 import O4_Mask_Utils as MASK
 from O4_Parallel_Utils import parallel_execute
 
+import warnings
+import rasterio
+from rasterio.errors import NotGeoreferencedWarning
+from rasterio.transform import from_bounds, from_origin
+from rasterio.warp import calculate_default_transform, reproject, Resampling
+import platform
+
+warnings.filterwarnings("ignore", category=NotGeoreferencedWarning)
+architecture = platform.machine()
+use_gdal = False
+
 http_timeout=10
 check_tms_response=False
 max_connect_retries=10
@@ -44,21 +56,36 @@ request_headers_generic={
             'Accept-Encoding':'gzip, deflate'
             }
 
-if 'dar' in sys.platform:
-    dds_convert_cmd = os.path.join(UI.Ortho4XP_dir,"Utils","nvcompress","nvcompress.app") 
+if "dar" in sys.platform:
+    dds_convert_cmd = os.path.join(UI.Ortho4XP_dir, "Utils", "nvcompress", "new", "mac",  "nvcompress")
     gdal_transl_cmd = "gdal_translate"
-    gdalwarp_cmd    = "gdalwarp"
-    devnull_rdir    = " >/dev/null 2>&1"
-elif 'win' in sys.platform: 
-    dds_convert_cmd = os.path.join(UI.Ortho4XP_dir, "Utils", "nvcompress", "nvcompress.exe") 
+    gdalwarp_cmd = "gdalwarp"
+    devnull_rdir = " >/dev/null 2>&1"
+elif "win" in sys.platform:
+    dds_convert_cmd = os.path.join(
+        UI.Ortho4XP_dir, "Utils", "nvcompress", "new", "win", "nvcompress.exe"
+    )
     gdal_transl_cmd = "gdal_translate.exe"
-    gdalwarp_cmd    = "gdalwarp.exe"
-    devnull_rdir    = " > nul  2>&1"
+    gdalwarp_cmd = "gdalwarp.exe"
+    devnull_rdir = " > nul  2>&1"
 else:
-    dds_convert_cmd = "nvcompress" 
+    if "aarch64" in architecture:
+        dds_convert_cmd = os.path.join(
+            UI.Ortho4XP_dir,
+            "Utils",
+            "nvcompress",
+            "new",
+            "lin",
+            "aarch64",
+            "nvcompress",
+        )
+    else:
+        dds_convert_cmd = os.path.join(
+            UI.Ortho4XP_dir, "Utils", "nvcompress", "new", "lin", "nvcompress"
+        )
     gdal_transl_cmd = "gdal_translate"
-    gdalwarp_cmd    = "gdalwarp"
-    devnull_rdir    = " >/dev/null 2>&1 "
+    gdalwarp_cmd = "gdalwarp"
+    devnull_rdir = " >/dev/null 2>&1 "
     
 ###############################################################################################################################
 #
@@ -80,7 +107,7 @@ def initialize_extents_dict():
             if '.' not in file_name or file_name.split('.')[-1]!='ext': continue
             extent_code=file_name.split('.')[0]
             extent={}
-            f=open(os.path.join(FNAMES.Extent_dir,dir_name,file_name),'r')
+            f=open(os.path.join(FNAMES.Extent_dir,dir_name,file_name),'r',encoding='utf-8')
             valid_extent=True
             for line in f.readlines():
                 line=line[:-1]
@@ -94,17 +121,8 @@ def initialize_extents_dict():
                     print("Error for extent",extent_code,"in line",line)
                     continue
                 # structuring data
-                if key=='epsg_code':
-                    try:
-                        GEO.epsg[value]=GEO.pyproj.Proj(init='epsg:'+value)
-                    except:
-                        # HACK for Slovenia 
-                        if int(value)==102060:
-                            GEO.epsg[value]=GEO.pyproj.Proj(init='epsg:3912')
-                        else:
-                            print("Error in epsg code for extent",extent_code)
-                            valid_extent=False
-                elif key=='mask_bounds':
+                
+                if key=='mask_bounds':
                     try:
                         extent[key]=[float(x) for x in value.split(",")]
                     except:
@@ -193,16 +211,7 @@ def initialize_providers_dict():
                     except:
                         print("Definition of fake headers for provider",provider_code,"not valid.")
                         valid_provider=False
-                elif key=='epsg_code':
-                    try:
-                        GEO.epsg[value]=GEO.pyproj.Proj(init='epsg:'+value)
-                    except:
-                        # HACK for Slovenia 
-                        if int(value)==102060:
-                            GEO.epsg[value]=GEO.pyproj.Proj(init='epsg:3912')
-                        else:
-                            UI.vprint(0,"Error in epsg code for provider",provider_code)
-                            valid_provider=False
+
                 elif key=='in_GUI':
                     try:
                         provider['in_GUI']=eval(value)
@@ -331,10 +340,10 @@ def initialize_combined_providers_dict():
             comb_list=[]
             f=open(os.path.join(FNAMES.Provider_dir,file_name),'r')
             for line in f.readlines():
-                line = line.strip()
+                
                 if '#' in line: line = line.split('#')[0]
-                if not line: continue
-                layer_code, extent_code, color_code, priority = line.split()
+                if not line[:-1]: continue
+                layer_code,extent_code,color_code,priority=line[:-1].split()
                 if layer_code not in providers_dict:
                     print("Unknown provider in combined provider",provider_code,":",layer_code)
                     continue
@@ -730,6 +739,9 @@ def get_wmts_image(tilematrix,til_x,til_y,provider,http_session):
         url=url.replace('{xcenter}',str((til_x+0.5)*provider['resolutions'][tilematrix]*provider['tile_size']+provider['top_left_corner'][tilematrix][0]))
         url=url.replace('{ycenter}',str(-1*(til_y+0.5)*provider['resolutions'][tilematrix]*provider['tile_size']+provider['top_left_corner'][tilematrix][1]))
         url=url.replace('{size}',str(int(provider['resolutions'][tilematrix]*provider['tile_size'])))
+        url=url.replace('{zoom_gov}','L{:02d}'.format(tilematrix))
+        url=url.replace('{x_gov}','C{:08x}'.format(til_x))
+        url=url.replace('{y_gov}','R{:08x}'.format(til_y))
         if '{switch:' in url:
             (url_0,tmp)=url.split('{switch:')
             (tmp,url_2)=tmp.split('}')
@@ -828,7 +840,7 @@ def build_texture_from_bbox_and_size(t_bbox,t_epsg,t_size,provider):
     warp_needed=crop_needed=False
     (ulx,uly,lrx,lry)=t_bbox
     (t_sizex,t_sizey)=t_size
-    if provider['epsg_code'] == '3857' and t_epsg == '3857': 
+    if provider['epsg_code'] == '3857': 
         s_ulx,s_uly,s_lrx,s_lry=ulx,uly,lrx,lry
     else:
         (s_ulx,s_uly)=GEO.transform(t_epsg, provider['epsg_code'], ulx, uly)
@@ -853,7 +865,7 @@ def build_texture_from_bbox_and_size(t_bbox,t_epsg,t_size,provider):
         height=wms_size
     elif provider['request_type'] in ('wmts','tms','local_tms'):
         asked_resol=max(x_range/t_sizex,y_range/t_sizey)
-        wmts_tilematrix=numpy.argmax(provider['resolutions']<=asked_resol*1.1)
+        wmts_tilematrix = (numpy.abs(provider['resolutions'] - asked_resol*1.1)).argmin()
         wmts_resol=provider['resolutions'][wmts_tilematrix]   # in s_epsg unit per pix !
         UI.vprint(3,"Asked resol:",asked_resol,"WMTS resol:",wmts_resol)
         width=height=provider['tile_size']
@@ -935,7 +947,7 @@ def download_jpeg_ortho(file_dir,file_name,til_x_left,til_y_top,zoomlevel,provid
             super_resol_factor=2**(max_zl-zoomlevel)
     width=height=int(4096*super_resol_factor)
     # we treat first the case of webmercator grid type servers
-    if 'grid_type' in provider and provider['grid_type']=='webmercator':
+    if 'grid_type' in provider and provider['grid_type']=='webmercator' or provider["epsg_code"] == "3857":
         tilbox=[til_x_left,til_y_top,til_x_left+16,til_y_top+16] 
         tilbox_mod=[int(round(p*super_resol_factor)) for p in tilbox]
         zoom_shift=round(log(super_resol_factor)/log(2))
@@ -951,6 +963,11 @@ def download_jpeg_ortho(file_dir,file_name,til_x_left,til_y_top,zoomlevel,provid
     if UI.red_flag: return 0
     if not success:
         UI.lvprint(1,"Part of image",file_name,"could not be obtained (even at lower ZL), it was filled with white there.")  
+        if not os.path.exists(file_dir):
+            os.makedirs(file_dir)
+        # This will create an empty file with the .white extension     
+        with open(os.path.join(file_dir, file_name.replace(".jpg", ".white")), 'w') as file:
+             pass      
     if not os.path.exists(file_dir):
         os.makedirs(file_dir)
     try:
@@ -1213,7 +1230,7 @@ def gdalwarp_alternative(s_bbox,s_epsg,s_im,t_bbox,t_epsg,t_size):
                     yield (int(x), int(y), int(x+x_step), int(y+y_step))
                     x += x_step
                 y += y_step
-        for quad in cut_quad_into_grid(t_quad,64):
+        for quad in cut_quad_into_grid(t_quad,8):
             s_quad=[]
             for (t_pixx,t_pixy) in [(quad[0],quad[1]),(quad[0],quad[3]),(quad[2],quad[3]),(quad[2],quad[1])]:
                 t_x=t_ulx+t_pixx/t_w*(t_lrx-t_ulx)
@@ -1419,48 +1436,238 @@ def convert_texture(tile,til_x_left,til_y_top,zoomlevel,provider_code,type='dds'
     else:
         file_to_convert=os.path.join(file_dir,jpeg_file_name)
     # eventually the dds conversion
-    if type=='dds':
+
+####################################
+    if type == "dds":
+
         if not dxt5:
-            conv_cmd=[dds_convert_cmd,'-bc1','-fast',file_to_convert,os.path.join(tile.build_dir,'textures',out_file_name),devnull_rdir]
+            conv_cmd = [
+                dds_convert_cmd,
+                "-bc1",
+                "-fast",
+                file_to_convert,
+                os.path.join(tile.build_dir, "textures", out_file_name),
+                devnull_rdir,
+            ]
         else:
-            conv_cmd=[dds_convert_cmd,'-bc3','-fast',file_to_convert,os.path.join(tile.build_dir,'textures',out_file_name),devnull_rdir]
+            conv_cmd = [
+                dds_convert_cmd,
+                "-bc3",
+                "-fast",
+                file_to_convert,
+                os.path.join(tile.build_dir, "textures", out_file_name),
+                devnull_rdir,
+            ]
+
     else:
-        (latmax,lonmin)=GEO.gtile_to_wgs84(til_x_left,til_y_top,zoomlevel)
-        (latmin,lonmax)=GEO.gtile_to_wgs84(til_x_left+16,til_y_top+16,zoomlevel)
-        (xmin,ymin)=GEO.transform('4326','3857',lonmin,latmin)
-        (xmax,ymax)=GEO.transform('4326','3857',lonmax,latmax)
-        if latmax-latmin < 0.04:
-            conv_cmd=[gdal_transl_cmd,'-of','Gtiff','-co','COMPRESS=JPEG','-a_ullr',str(lonmin),str(latmax),str(lonmax),str(latmin),'-a_srs','epsg:4326',file_to_convert,os.path.join(FNAMES.Geotiff_dir,out_file_name)]     
+        (latmax, lonmin) = GEO.gtile_to_wgs84(til_x_left, til_y_top, zoomlevel)
+        (latmin, lonmax) = GEO.gtile_to_wgs84(
+            til_x_left + 16, til_y_top + 16, zoomlevel
+        )
+        (xmin, ymin) = GEO.transform("4326", "3857", lonmin, latmin)
+        (xmax, ymax) = GEO.transform("4326", "3857", lonmax, latmax)
+        if (latmax - latmin < 0.04) and use_gdal:
+            if use_gdal == True:
+                conv_cmd = [
+                    gdal_transl_cmd,
+                    "-of",
+                    "Gtiff",
+                    "-co",
+                    "COMPRESS=JPEG",
+                    "-a_ullr",
+                    str(lonmin),
+                    str(latmax),
+                    str(lonmax),
+                    str(latmin),
+                    "-a_srs",
+                    "epsg:4326",
+                    file_to_convert,
+                    os.path.join(FNAMES.Geotiff_dir, out_file_name),
+                ]
+            else:
+                conv_cmd = r_translate(
+                    file_to_convert,
+                    os.path.join(FNAMES.Geotiff_dir, out_file_name),
+                    "epsg:4326",
+                    lonmin,
+                    latmax,
+                    lonmax,
+                    latmin,
+                )
         else:
-            geotag_cmd=[gdal_transl_cmd,'-of','Gtiff','-co','COMPRESS=JPEG','-a_ullr',str(xmin),str(ymax),str(xmax),str(ymin),'-a_srs','epsg:3857',file_to_convert,tmp_tif_file_name] 
-            erase_tmp_tif=True
-            if subprocess.call(geotag_cmd,stdout=subprocess.DEVNULL, stderr=subprocess.STDOUT):
-                UI.vprint(1,"ERROR: Could not geotag texture (gdal not present ?) ",os.path.join(tile.build_dir,'textures',out_file_name))
-                try: os.remove(os.path.join(UI.Ortho4XP_dir,'tmp',png_file_name))
-                except: pass  
-                return
-            conv_cmd=[gdalwarp_cmd,'-of','Gtiff','-co','COMPRESS=JPEG','-s_srs','epsg:3857','-t_srs','epsg:4326','-ts','4096','4096','-rb',tmp_tif_file_name,os.path.join(FNAMES.Geotiff_dir,out_file_name)] 
-    tentative=0
+            if use_gdal == True:
+                geotag_cmd = [
+                    gdal_transl_cmd,
+                    "-of",
+                    "Gtiff",
+                    "-co",
+                    "COMPRESS=JPEG",
+                    "-a_ullr",
+                    str(xmin),
+                    str(ymax),
+                    str(xmax),
+                    str(ymin),
+                    "-a_srs",
+                    "epsg:3857",
+                    file_to_convert,
+                    tmp_tif_file_name,
+                ]
+            else:
+                geotag_cmd = r_translate(
+                    file_to_convert,
+                    tmp_tif_file_name,
+                    "epsg:3857",
+                    xmin,
+                    ymax,
+                    xmax,
+                    ymin,
+                )
+            erase_tmp_tif = True
+            if str(geotag_cmd).startswith("["):
+                if subprocess.call(
+                    geotag_cmd, stdout=subprocess.DEVNULL, stderr=subprocess.STDOUT
+                ):
+                    UI.vprint(
+                        1,
+                        "ERROR: Could not geotag texture (gdal not present ?) ",
+                        os.path.join(tile.build_dir, "textures", out_file_name),
+                    )
+                    try:
+                        os.remove(os.path.join(UI.Ortho4XP_dir, "tmp", png_file_name))
+                    except:
+                        pass
+                    return
+
+            else:
+                if geotag_cmd:
+                    UI.vprint(
+                        1,
+                        "ERROR: Could not geotag texture ",
+                        os.path.join(tile.build_dir, "textures", out_file_name),
+                    )
+                    try:
+                        os.remove(os.path.join(UI.Ortho4XP_dir, "tmp", png_file_name))
+                    except:
+                        pass
+                    return
+            if use_gdal == True:
+                conv_cmd = [
+                    gdalwarp_cmd,
+                    "-of",
+                    "Gtiff",
+                    "-co",
+                    "COMPRESS=JPEG",
+                    "-s_srs",
+                    "epsg:3857",
+                    "-t_srs",
+                    "epsg:4326",
+                    "-ts",
+                    "4096",
+                    "4096",
+                    "-rb",
+                    tmp_tif_file_name,
+                    os.path.join(FNAMES.Geotiff_dir, out_file_name),
+                ]
+            else:
+                conv_cmd = r_warp(
+                    tmp_tif_file_name,
+                    os.path.join(FNAMES.Geotiff_dir, out_file_name),
+                    "epsg:4326",
+                )
+
+    tentative = 0
     while True:
-        if not subprocess.call(conv_cmd,stdout=subprocess.DEVNULL, stderr=subprocess.STDOUT):
+        if str(conv_cmd).startswith("["):
+            if not subprocess.call(
+                conv_cmd, stdout=subprocess.DEVNULL, stderr=subprocess.STDOUT
+            ):
+                break
+        else:
+            if not conv_cmd:
+                break
+        tentative += 1
+        if tentative == 10:
+            UI.lvprint(
+                1,
+                "ERROR: Could not convert texture",
+                os.path.join(tile.build_dir, "textures", out_file_name),
+                "(10 tries)",
+            )
             break
-        tentative+=1
-        if tentative==10:
-            UI.lvprint(1,"ERROR: Could not convert texture",os.path.join(tile.build_dir,'textures',out_file_name),"(10 tries)")
-            break
-        UI.lvprint(1,"WARNING: Could not convert texture",os.path.join(tile.build_dir,'textures',out_file_name))
+        UI.lvprint(
+            1,
+            "WARNING: Could not convert texture",
+            os.path.join(tile.build_dir, "textures", out_file_name),
+        )
         time.sleep(1)
     if erase_tmp_png:
-        try: os.remove(os.path.join(UI.Ortho4XP_dir,'tmp',png_file_name))
-        except: pass
+        try:
+            os.remove(os.path.join(UI.Ortho4XP_dir, "tmp", png_file_name))
+        except:
+            pass
     if erase_tmp_tif:
-        try: os.remove(os.path.join(UI.Ortho4XP_dir,'tmp',png_file_name))
-        except: pass
-    return 
-###############################################################################################################################
+        try:
+            os.remove(tmp_tif_file_name)
+        except:
+            pass
+    return
 
 ###############################################################################################################################
 def geotag(input_file_name):
+    suffix = input_file_name.split(".")[-1]
+    out_file_name = input_file_name.replace(suffix, "tiff")
+    items = input_file_name.split("_")
+    til_y_top = int(items[0])
+    til_x_left = int(items[1])
+    zoomlevel = int(items[-1][-6:-4])
+    (latmax, lonmin) = GEO.gtile_to_wgs84(til_x_left, til_y_top, zoomlevel)
+    (latmin, lonmax) = GEO.gtile_to_wgs84(til_x_left + 16, til_y_top + 16, zoomlevel)
+
+    if use_gdal == True:
+        conv_cmd = [
+            gdal_transl_cmd,
+            "-of",
+            "Gtiff",
+            "-co",
+            "COMPRESS=JPEG",
+            "-a_ullr",
+            str(lonmin),
+            str(latmax),
+            str(lonmax),
+            str(latmin),
+            "-a_srs",
+            "epsg:4326",
+            input_file_name,
+            out_file_name,
+        ]
+    else:
+        conv_cmd = r_translate(
+            file_to_convert,
+            os.path.join(FNAMES.Geotiff_dir, out_file_name),
+            "epsg:4326",
+            lonmin,
+            latmax,
+            lonmax,
+            latmin,
+        )
+    tentative = 0
+    while True:
+
+        if str(conv_cmd).startswith("["):
+            if not subprocess.call(conv_cmd):
+                break
+        else:
+            if not conv_cmd:
+                break
+        tentative += 1
+        if tentative == 10:
+            print("ERROR: Could not convert texture", out_file_name, "(10 tries)")
+            break
+        print("WARNING: Could not convert texture", out_file_name)
+        time.sleep(1)
+
+###############################################################################################################################
+def geotag_old(input_file_name):
     suffix=input_file_name.split('.')[-1]
     out_file_name=input_file_name.replace(suffix,'tiff')
     items=input_file_name.split('_')
@@ -1515,5 +1722,55 @@ def HSV_value(lat, lon, provider_code, zoomlevel, cached_image = None):
     V = max/255
     return (int(H),int(100*S),int(100*V))   
 ###############################################################################################################################            
+def r_translate(filein, fileout, r_crs, xmin, ymin, xmax, ymax):
+
+    with rasterio.open(filein) as src:
+        transform = from_bounds(xmin, ymin, xmax, ymax, src.width, src.height)
+        kwargs = src.meta.copy()
+        kwargs.update(
+            {
+                "driver": "GTiff",
+                "compress": "jpeg",
+                "transform": transform,
+                "crs": r_crs,
+                "interleave": "pixel",
+                "jpeg_quality": 75,
+                "num_threads":4
+            }
+        )
+
+        with rasterio.open(fileout, "w", **kwargs) as dst:
+            dst.write(src.read())
+
+
+################################################################################
+def r_warp(filein, fileout, r_crs):
+
+    with rasterio.open(filein) as src:
+        transform, width, height = calculate_default_transform(
+            src.crs, r_crs, src.width, src.height, *src.bounds
+        )
+
+        new_transform = transform * transform.scale((width / 4096), (height / 4096))
+        kwargs = src.meta.copy()
+        kwargs.update(
+            {
+                "crs": r_crs,
+                "transform": new_transform,
+                "width": 4096,
+                "height": 4096,
+                "compress": "jpeg",
+                "interleave": "pixel",
+                "jpeg_quality": 75,
+                "num_threads":4
+            }
+        )
+
+        data = src.read(
+            out_shape=(src.count, 4096, 4096), resampling=Resampling.bilinear
+        )
+
+        with rasterio.open(fileout, "w", **kwargs) as dst:
+            dst.write(data)
 
 

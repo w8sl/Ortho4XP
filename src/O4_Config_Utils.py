@@ -11,6 +11,9 @@ import O4_Vector_Map as VMAP
 import O4_Imagery_Utils as IMG
 import O4_Tile_Utils as TILE
 import O4_Overlay_Utils as OVL
+import O4_Airport_Data_Source as APT_SRC
+
+from O4_Common_Types import CoverZLConfig, DecalConfig, ScreenRes
 
 
 cfg_vars={
@@ -27,7 +30,7 @@ cfg_vars={
     'max_baddata_retries':   {'module':'IMG','type':int,'default':5,'hint':'How much times do we try again after an internal server error for an imagery request. Only used if check_tms_response is set to True.'},
     'ovl_exclude_pol'    :   {'module':'OVL','type':list,'default':[0],'hint':'Indices of polygon types which one would like to left aside in the extraction of overlays. The list of these indices in front of their name can be obtained by running the "extract overlay" process with verbosity = 2 (skip facades that can be numerous) or 3. Index 0 corresponds to beaches in Global and HD sceneries. Strings can be used in places of indices, in that case any polygon_def that contains that string is excluded, and the string can begin with a ! to invert the matching. As an exmaple, ["!.for"] would exclude everything but forests.'},
     'ovl_exclude_net'    :   {'module':'OVL','type':list,'default':[],'hint':'Indices of road types which one would like to left aside in the extraction of overlays. The list of these indices is can be in the roads.net file within X-Plane Resources, but some sceneries use their own corresponding net definition file. Powerlines have index 22001 in XP11 roads.net default file.'},
-    'custom_scenery_dir':    {'type':str,'default':'','hint':'Your X-Plane Custom Scenery. Used only for "1-click" creation (or deletion) of symbolic links from Ortho4XP tiles to there.'},
+    'xplane_install_dir':    {'type':str,'default':'<X-Plane Top Level directory>','hint':'Your X-Plane top-level directory. Used to find and parse the X-Plane apt.dat files. Also used for "1-click" linking of tiles from Ortho4XP to the X-Plane Custom Scenery folder. Supersedes the old "custom_scenery_dir" config option'},
     'custom_overlay_src':    {'module':'OVL','type':str,'default':'','hint':'The directory containing the sceneries with the overlays you would like to extract. You need to select the level of directory just _ABOVE_ Earth nav data.'},
     # Vector
     'apt_smoothing_pix':   {'type':list,'default':[8],'hint':"How much gaussian blur is applied to the elevation raster for the look up of altitude over airports. Unit is the evelation raster pixel size."},
@@ -64,9 +67,14 @@ cfg_vars={
     'default_website':     {'type':str,'default':'','hint':''},
     'default_zl':          {'type':int,'default':16,'hint':''},
     'zone_list':           {'type':list,'default':[],'hint':''},
-    'cover_airports_with_highres':{'type':str,'default':'False','values':('False','True','ICAO','Existing'),'hint':'When set, textures above airports will be upgraded to a higher zoomlevel, the imagery being the same as the one they would otherwise receive. Can be limited to airports with an ICAO code for tiles with so many airports. Exceptional: use "Existing" to (try to) derive custom zl zones from the textures directory of an existing tile.','short_name':'high_zl_airports'},
-    'cover_extent':        {'type':float,'default':1,'hint':'The extent (in km) past the airport boundary taken into account for higher ZL. Note that for VRAM efficiency higher ZL textures are fully used on their whole extent as soon as part of them are needed.'},
-    'cover_zl':            {'type':int,'default':18,'hint':'The zoomlevel with which to cover the airports zone when high_zl_airports is set. Note that if the cover_zl is lower than the zoomlevel which would otherwise be applied on a specific zone, the latter is used.'},
+    'cover_airports_with_highres':{'type':str,'default':'False','values':('False','True','ICAO','Progressive','Existing'),'hint':'When set to True, textures above airports will be upgraded to a higher zoomlevel, the imagery being the same as the one they would otherwise receive.\nIn ICAO mode, this will be limited to airports with an ICAO code (for tiles with so many airports).\nIn Progressive mode, custom ZL zones will automatically be computed along all the runway axes, from "cover_zl" (highest resolution near the airport, see below) up to "base_zl" (lowest). See also cover_screen_res, cover_fov, and cover_fpa.\nIn "Existing" mode, (try to) derive custom zl zones from the textures directory of an existing tile.','short_name':'high_zl_airports'},
+    'cover_extent':        {'type':float,'default':1,'hint':'Only used in True or ICAO mode (see "high_zl_airports")\nThe extent (in km) past the airport boundary taken into account for higher ZL.\nNote that for VRAM efficiency higher ZL textures are fully used on their whole extent as soon as part of them are needed.'},
+    'cover_zl':            {'type': CoverZLConfig, 'default':18, 'hint': 'Only used in True, ICAO or Progressive mode (see "high_zl_airports")\nIn True or ICAO mode, this is the zoomlevel with which to cover the airports zone.\nNote that if the cover_zl is lower than the zoomlevel which would otherwise be applied on a specific zone, the latter is used.\nIn Progressive mode, this is the highest desired ZL, near the airport (lowest is set to the base_zl).\nIt can be either an int, or dict of the form {"non-icao": 17, "icao": 18, "KBSP": 19, "L52": 16} ("icao" and "non-icao" are required)'},
+    'cover_screen_res':    {'type': ScreenRes, 'default': 'HD_1080p', 'values': [str(res) for res in ScreenRes], 'hint': 'Only used in Progressive mode (see "high_zl_airports")\nThe screen resolution you are expecting to use the most in the simulator.'},
+    'cover_fov':           {'type':float,'default':60.0,'hint':'Only used in Progressive mode (see "high_zl_airports")\nThe Field of View you are are expecting to use in the simulator.'},
+    'cover_fpa':           {'type':float,'default':10,'hint':"Only used in Progressive mode (see \"high_zl_airports\")\nThe higher you are, the less texture resolution you need. Progressive mode uses this Flight Path Angle (from the runway outward) to progressively decrease the Zoom Level of the textures.\nThe total tile size can very drastically increase as you lower this value. The default of 10 degrees was found visually acceptable, with a decent tile size."},
+    'cover_greediness':    {'type':int,'default':1,'hint':"Only used in Progressive mode (see \"high_zl_airports\")\nOptimize texture usage, by \"eating up\" any ZLn-1 texture being \"greediness_threshold\"-percent covered by ZLn textures\nWill look up to 'greediness' lower zoom levels"},
+    'cover_greediness_threshold': {'type':float,'default':0.70,'hint':"Only used in Progressive mode (see \"high_zl_airports\")\nOptimize texture usage, by \"eating up\" any ZLn-1 texture being \"greediness_threshold\"-percent covered by ZLn textures\nWill look up to 'greediness' lower zoom levels"},
     'sea_texture_blur':    {'type':float,'default':0,'hint':'For layers of type "mask" in combined providers imageries, determines the extent (in meters) of the blur radius applied. This allows to smoothen some sea imageries where the wave or reflection pattern was too much present.'},
     'add_low_res_sea_ovl': {'type':bool,'default':False,'hint':'Will add an extra texture layer over the sea (with constant alpha channel given by ratio_water as for inland water), based on a low resolution imagery with global coverage. Masks with their full resolution imagery are still being used when present, the final render is a composite of both. The default imagery with code SEA can be changed as any other imagery defined in the Providers directory, it needs to have a max_zl defined and is used at its max_zl.'},
     'experimental_water':  {'type':int,'default':0,'values':(0,1,2,3),'hint':'If non zero, replaces X-Plane water by a custom normal map over low res ortho-imagery (requires XP11 but turns water rendering more XP10 alike). The value 0 corresponds to legacy X-Plane water, 1 replaces it for inland water only, 2 over sea water only, and 3 over both. Values 2 and 3 should always be used in combination with "imprint_masks_to_dds".\n\nThis experimental feature has two strong downsides: 1) the waves are static rather dynamical (would require a plugin to update the normal_map as X-Plane does) and 2) the wave height is no longer weather dependent. On the other hand, waves might have less repetitive patterns and some blinking in water reflections might be improved too; users are welcome to improve the provided water_normal_map.dds (Gimp can be used to edit the mipmaps individually).'},
@@ -74,7 +82,15 @@ cfg_vars={
     'normal_map_strength': {'type':float,'default':1,'hint':'Orthophotos by essence already contain the part of the shading burned in (here by shading we mean the amount of reflected light in the camera direction as a function of the terrain slope, not the shadows). This option allows to tweak the normal coordinates of the mesh in the DSF to avoid "overshading", but it has side effects on the way X-Plane computes scenery shadows. Used to be 0.3 by default in earlier versions, the default is now 1 which means exact normals.},      '},
     'terrain_casts_shadows':{'type':bool,'default':True,'hint':'If unset, the terrain itself will not cast (but still receive!) shadows. This option is only meaningful if scenery shadows are opted for in the X-Plane graphics settings.','short_name':'terrain_casts_shadow'},
     'overlay_lod':         {'type':float,'default':25000,'hint':'Distance until which overlay imageries (that is orthophotos over water) are drawn. Lower distances have a positive impact on frame rate and VRAM usage, and IFR flyers will probably need a higher value than VFR ones.'},
-    'use_decal_on_terrain':{'type':bool,'default':False,'hint':'Terrain files for all but water triangles will contain the maquify_1_green_key.dcl decal directive. The effect is noticeable at very low altitude and helps to overcome the orthophoto blur at such levels. Can be slightly distracting at higher altitude.'},
+    'use_decal_on_terrain': {'type': DecalConfig, 'default': True, 'hint': '\n'.join(['Terrain files for all but water triangles will or will not contain a decal directive according to this value.',
+                                                                                      'The effect is noticeable at very low altitude and helps to overcome the orthophoto blur at such levels.',
+                                                                                      'Can be slightly distracting at higher altitude.',
+                                                                                      'Can be either :',
+                                                                                      '- a boolean : if True, apply default decals according to the ZL',
+                                                                                      '- an int : if the ZL is at or above this value, a default decal is applied',
+                                                                                      '- a dict of {"zl": "<dcl_file_from_XP11/Resources/default scenery/1000 decals>"} :',
+                                                                                      '  => both zl and the decal file must be enclosed in double-quotes',
+                                                                                      '  => the corresponding decal is applied to each specified zl, or no decal if omitted'])},
     # Other
     'custom_dem':          {'type':str,'default':'','hint':'Path to an elevation data file to be used instead of the default Viewfinderpanoramas.org ones (J. de Ferranti). The raster must be in geopgraphical coordinates (EPSG:4326) but the extent need not match the tile boundary (requires Gdal). Regions of the tile that are not covered by the raster are mapped to zero altitude (can be useful for high resolution data over islands in particular).     '},
     'fill_nodata':         {'type':bool,'default':True,'hint':'When set, the no_data values in the raster will be filled by a nearest neighbour algorithm. If unset, they are turned into zero (can be useful for rasters with no_data over the whole oceanic part or partial LIDAR data).'}
@@ -82,14 +98,14 @@ cfg_vars={
 
 list_app_vars=['verbosity','cleaning_level','overpass_server_choice',
                'skip_downloads','skip_converts','max_convert_slots','check_tms_response',
-               'http_timeout','max_connect_retries','max_baddata_retries','ovl_exclude_pol','ovl_exclude_net','custom_scenery_dir','custom_overlay_src']
+                'http_timeout','max_connect_retries','max_baddata_retries','ovl_exclude_pol','ovl_exclude_net','xplane_install_dir','custom_overlay_src']
 gui_app_vars_short=list_app_vars[:-2]
 gui_app_vars_long=list_app_vars[-2:]
 
 list_vector_vars=['apt_smoothing_pix','road_level','road_banking_limit','lane_width','max_levelled_segs','water_simplification','min_area','max_area','clean_bad_geometries','mesh_zl']
 list_mesh_vars=['curvature_tol','apt_curv_tol','apt_curv_ext','coast_curv_tol','coast_curv_ext','limit_tris','hmin','min_angle','sea_smoothing_mode','water_smoothing','iterate']
 list_mask_vars=['mask_zl','masks_width','masking_mode','use_masks_for_inland','imprint_masks_to_dds','masks_use_DEM_too','masks_custom_extent']
-list_dsf_vars=['cover_airports_with_highres','cover_extent','cover_zl','ratio_water','overlay_lod','sea_texture_blur','add_low_res_sea_ovl','experimental_water','normal_map_strength','terrain_casts_shadows','use_decal_on_terrain']
+list_dsf_vars=['cover_airports_with_highres','cover_extent','cover_zl','cover_screen_res','cover_fov','cover_fpa','cover_greediness','cover_greediness_threshold','ratio_water','overlay_lod','sea_texture_blur','add_low_res_sea_ovl','experimental_water','normal_map_strength','terrain_casts_shadows','use_decal_on_terrain']
 list_other_vars=['custom_dem','fill_nodata']
 list_tile_vars=list_vector_vars+list_mesh_vars+list_mask_vars+list_dsf_vars+list_other_vars+['default_website','default_zl','zone_list']
 
@@ -183,7 +199,13 @@ class Tile():
                     # compatibility with config files from version <= 1.20
                     if value and value[0] in ('"',"'"): value=value[1:]
                     if value and value[-1] in ('"',"'"): value=value[:-1]
-                    self.update_var(var,value)
+                    if cfg_vars[var]['type'] in (bool,list):
+                        cmd="self."+var+"="+value
+                   #elif cfg_vars[var]['type'] is ScreenRes:
+                   #    cmd="self."+var+"=ScreenRes.from_config_value(value)"
+                    else:
+                        cmd="self."+var+"=cfg_vars['"+var+"']['type'](value)"
+                    exec(cmd)
                 except Exception as e:
                     # compatibility with zone_list config files from version <= 1.20
                     if "zone_list.append" in line:
@@ -273,9 +295,9 @@ class Ortho4XP_Config(tk.Toplevel):
                 ttk.Button(self.frame_cfg,text=text,takefocus=False,command=lambda item=item: self.popup(item,cfg_vars[item]['hint'])).grid(row=row,column=col,padx=2,pady=2,sticky=E+W+N+S)
                 if cfg_vars[item]['type']==bool or 'values' in cfg_vars[item]:
                     values=[True,False] if cfg_vars[item]['type']==bool else [str(x) for x in cfg_vars[item]['values']]
-                    self.entry_[item]=ttk.Combobox(self.frame_cfg,values=values,textvariable=self.v_[item],width=6,state='readonly',style='O4.TCombobox')
+                    self.entry_[item]=ttk.Combobox(self.frame_cfg,values=values,textvariable=self.v_[item],width=11,state='readonly',style='O4.TCombobox')
                 else:
-                    self.entry_[item]=ttk.Entry(self.frame_cfg,textvariable=self.v_[item],width=7) 
+                    self.entry_[item]=ttk.Entry(self.frame_cfg,textvariable=self.v_[item],width=12) 
                 self.entry_[item].grid(row=row,column=col+1,padx=(0,20),pady=2,sticky=N+S+W)
                 row+=1
             next_row=max(next_row,row)
@@ -481,6 +503,9 @@ class Ortho4XP_Config(tk.Toplevel):
         if errors:
             error_text="The following variables had wrong type\nand were reset to their default value!\n\n* "+'\n* '.join(errors) 
             self.popup("ERROR",error_text)
+
+        # Trigger a cache update (will only run if needed)
+        APT_SRC.AirportDataSource.update_cache()
 
     def popup(self,header,input_text):
         self.popupwindow = tk.Toplevel()

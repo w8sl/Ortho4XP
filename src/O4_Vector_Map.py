@@ -145,7 +145,7 @@ def include_airports(vector_map,tile):
     del(iterate)
     (patches_area,patches_list)=include_patches(vector_map,tile)
     runway_taxiway_apron_building_area=APT.encode_runways_taxiways_aprons_and_buildings(tile,airport_layer,dico_airports,vector_map,patches_list)
-    treated_area=ops.cascaded_union([patches_area,runway_taxiway_apron_building_area])
+    treated_area=ops.unary_union([patches_area,runway_taxiway_apron_building_area])
     APT.flatten_helipads(airport_layer,vector_map,tile,treated_area)
     apt_array=APT.build_airport_array(tile,dico_airports)
     return (apt_array,treated_area)
@@ -201,7 +201,7 @@ def include_roads(vector_map,tile,apt_array,apt_area):
         (road_network_banked_2,road_network_flat_2)=OSM.OSM_to_MultiLineString(road_layer,\
                 tile.lat,tile.lon,tags_for_exclusion,road_is_too_much_banked) 
         UI.vprint(3,"Time for check :",time.time()-timer)
-        road_network_banked=geometry.MultiLineString(list(road_network_banked)+list(road_network_banked_2))
+        road_network_banked=geometry.MultiLineString(list(road_network_banked.geoms)+list(road_network_banked_2.geoms))
     if not road_network_banked.is_empty:
         UI.vprint(1,"    * Buffering banked road network as multipolygon.")
         timer=time.time()
@@ -255,11 +255,11 @@ def include_sea(vector_map,tile):
         if not remainder.is_empty: 
             remainder=VECT.ensure_MultiLineString(ops.linemerge(remainder))
         UI.vprint(3,"...done.")
-        coastline=geometry.MultiLineString([line for line in remainder]+[line for line in loops])
+        coastline=geometry.MultiLineString([line for line in remainder.geoms]+[line for line in loops.geoms])
         sea_area=VECT.ensure_MultiPolygon(VECT.coastline_to_MultiPolygon(coastline,tile.lat,tile.lon,custom_source)) 
         if sea_area.geoms: UI.vprint(1,"      Found ",len(sea_area.geoms),"contiguous patch(es).")
         for polygon in sea_area.geoms:
-            seed=numpy.array(polygon.representative_point()) 
+            seed=numpy.array(polygon.representative_point().coords) 
             if 'SEA' in vector_map.seeds:
                 vector_map.seeds['SEA'].append(seed)
             else:
@@ -386,7 +386,7 @@ def include_patches(vector_map,tile):
         #HACK
         waylist=tuple(df['w'].intersection(dt['w']))+tuple(df['w'].difference(dt['w']))
         for wayid in waylist:
-            way=numpy.array([dn[nodeid] for nodeid in dw[wayid]],dtype=numpy.float)
+            way=numpy.array([dn[nodeid] for nodeid in dw[wayid]],dtype=float)
             way=numpy.round(way-numpy.array([[tile.lon,tile.lat]]),7) 
             alti_way_orig=tile.dem.alt_vec(way)
             cplx_way=False
@@ -463,7 +463,7 @@ def include_patches(vector_map,tile):
                     if pol.is_valid and pol.area:
                         patches_area=patches_area.union(pol)
                         vector_map.insert_way(numpy.hstack([way,alti_way]),'INTERP_ALT',check=True)
-                        seed=numpy.array(pol.representative_point())
+                        seed=numpy.array(pol.representative_point().coords)
                         if 'INTERP_ALT' in vector_map.seeds:
                             vector_map.seeds['INTERP_ALT'].append(seed)
                         else:
@@ -550,7 +550,7 @@ def keep_obj8(lat_anchor,lon_anchor,alt_anchor,heading_anchor,objfile_name,vecto
                     else:
                         vector_map.seeds['INTERP_ALT']=[seed]    
                     polist.append(geometry.Polygon([vector_map.nodes_dico[a],vector_map.nodes_dico[b],vector_map.nodes_dico[c],vector_map.nodes_dico[a]]))
-                multipol=VECT.ensure_MultiPolygon(ops.cascaded_union(polist))    
+                multipol=VECT.ensure_MultiPolygon(ops.unary_union(polist))    
             except:
                 pass
     f.close()

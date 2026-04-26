@@ -10,10 +10,8 @@ import O4_UI_Utils as UI
 import O4_File_Names as FNAMES
 
 overpass_servers={
-        "DE":"http://overpass-api.de/api/interpreter",
-        "FR":"http://api.openstreetmap.fr/oapi/interpreter",
-        "KU":"https://overpass.kumi.systems/api/interpreter", 
-        "RU":"http://overpass.osm.rambler.ru/cgi/interpreter"
+        "DE":"https://overpass-api.de/api/interpreter",
+        "KU":"https://overpass.private.coffee/api/interpreter", 
         }
 overpass_server_choice="DE"
 max_osm_tentatives=8
@@ -454,12 +452,12 @@ def OSM_to_MultiPolygon(osm_layer,lat,lon,filter=None):
                                         for nodeid in nodelist],dtype=numpy.float64)-numpy.array([lon,lat],dtype=numpy.float64),7))\
                                         for nodelist in osm_layer.dicosmr[relid]['outer']]
             # do not check for validity here, let it fail and write a log
-            multiout=ops.cascaded_union([geom for geom in multiout])
+            multiout=ops.unary_union([geom for geom in multiout])
             multiin=[geometry.Polygon(numpy.round(numpy.array([osm_layer.dicosmn[nodeid]\
                                         for nodeid in nodelist],dtype=numpy.float64)-numpy.array([lon,lat],dtype=numpy.float64),7))\
                                         for nodelist in osm_layer.dicosmr[relid]['inner']]
             # insteand OSM errors in some small inner islands within rel might be ignored and shouldn't make the whole rel to be skipped 
-            multiin=ops.cascaded_union([geom for geom in multiin if geom.is_valid])
+            multiin=ops.unary_union([geom for geom in multiin if geom.is_valid])
             multipol = multiout.difference(multiin)
         except Exception as e:
             UI.lvprint(2,"Invalid OSM relation starting at",osm_layer.dicosmn[osm_layer.dicosmr[relid]['outer'][0]],", skipped.")
@@ -522,12 +520,12 @@ def OSM_to_MultiPolygon_dico(osm_layer, lat, lon, classifier, dico):
                                         for nodeid in nodelist],dtype=numpy.float64)-numpy.array([lon,lat],dtype=numpy.float64),7))\
                                         for nodelist in osm_layer.dicosmr[relid]['outer']]
             # do not check for validity here, let it fail and write a log
-            multiout=ops.cascaded_union([geom for geom in multiout])
+            multiout=ops.unary_union([geom for geom in multiout])
             multiin=[geometry.Polygon(numpy.round(numpy.array([osm_layer.dicosmn[nodeid]\
                                         for nodeid in nodelist],dtype=numpy.float64)-numpy.array([lon,lat],dtype=numpy.float64),7))\
                                         for nodelist in osm_layer.dicosmr[relid]['inner']]
             # insteand OSM errors in some small inner islands within rel might be ignored and shouldn't make the whole rel to be skipped 
-            multiin=ops.cascaded_union([geom for geom in multiin if geom.is_valid])
+            multiin=ops.unary_union([geom for geom in multiin if geom.is_valid])
             multipol = multiout.difference(multiin)
         except Exception as e:
             UI.lvprint(2,"Invalid OSM relation starting at",osm_layer.dicosmn[osm_layer.dicosmr[relid]['outer'][0]],", skipped.")

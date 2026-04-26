@@ -1,7 +1,10 @@
 from numba import jit
+import datetime
+import math
 import os
 import pickle
 import shutil
+import time
 from math import floor, ceil
 import array
 import numpy
@@ -10,12 +13,16 @@ from PIL import Image, ImageDraw, ImageFilter
 from collections import defaultdict
 import struct
 import hashlib
+import O4_Common_Types
 import O4_File_Names as FNAMES
 import O4_Geo_Utils as GEO
 import O4_Mask_Utils as MASK
 import O4_Mesh_Utils as MESH
 import O4_UI_Utils as UI
-import O4_DEM_Utils as DEM
+import O4_Config_Utils as CFG
+import O4_Airport_Data_Source as APT_SRC
+import shapely.geometry
+import shapely.prepared
 
 #min_cliff=0.8
 min_cliff=0
@@ -49,82 +56,119 @@ def barycenter(n1,n2,n3,node_coords):
 
 ##############################################################################
 def zone_list_to_ortho_dico(tile):
-        # tile.zone_list is a list of 3-uples of the form ([(lat0,lat0),...(latN,lonN),zoomlevel,provider_code)
-        # where higher lines have priority over lower ones.
-        masks_im=Image.new("L",(4096,4096),'black')
-        masks_draw=ImageDraw.Draw(masks_im)
-        airport_array=numpy.zeros((4096,4096),dtype=numpy.bool)
-        if tile.cover_airports_with_highres in ['True','ICAO']:
-            UI.vprint(1,"-> Checking airport locations for upgraded zoomlevel.")
-            try:
-                f=open(FNAMES.apt_file(tile),'rb')
-                dico_airports=pickle.load(f)
-                f.close()
-            except:
-                UI.vprint(1,"   WARNING: File",FNAMES.apt_file(tile),"is missing (erased after Step 1?), cannot check airport info for upgraded zoomlevel.")
-                dico_airports={}
-            if tile.cover_airports_with_highres=='ICAO':
-                airports_list=[airport for airport in dico_airports if dico_airports[airport]['key_type']=='icao']
-            else:
-                airports_list=dico_airports.keys()
-            for airport in airports_list:
-                (xmin,ymin,xmax,ymax)=dico_airports[airport]['boundary'].bounds
-                # extension
-                xmin-=1000*tile.cover_extent*GEO.m_to_lon(tile.lat)
-                xmax+=1000*tile.cover_extent*GEO.m_to_lon(tile.lat)
-                ymax+=1000*tile.cover_extent*GEO.m_to_lat
-                ymin-=1000*tile.cover_extent*GEO.m_to_lat
-                # round off to texture boundaries at tile.cover_zl zoomlevel
-                (til_x_left,til_y_top)=GEO.wgs84_to_orthogrid(ymax+tile.lat,xmin+tile.lon,tile.cover_zl)
-                (ymax,xmin)=GEO.gtile_to_wgs84(til_x_left,til_y_top,tile.cover_zl)
-                ymax-=tile.lat; xmin-=tile.lon
-                (til_x_left2,til_y_top2)=GEO.wgs84_to_orthogrid(ymin+tile.lat,xmax+tile.lon,tile.cover_zl)
-                (ymin,xmax)=GEO.gtile_to_wgs84(til_x_left2+16,til_y_top2+16,tile.cover_zl)
-                ymin-=tile.lat; xmax-=tile.lon
-                xmin=max(0,xmin); xmax=min(1,xmax); ymin=max(0,ymin); ymax=min(1,ymax)
-                # mark to airport_array
-                colmin=round(xmin*4095)
-                colmax=round(xmax*4095)
-                rowmax=round((1-ymin)*4095)
-                rowmin=round((1-ymax)*4095)
-                airport_array[rowmin:rowmax+1,colmin:colmax+1]=1
-        dico_customzl={}        
-        dico_tmp={}
-        til_x_min,til_y_min=GEO.wgs84_to_orthogrid(tile.lat+1,tile.lon,tile.mesh_zl)
-        til_x_max,til_y_max=GEO.wgs84_to_orthogrid(tile.lat,tile.lon+1,tile.mesh_zl) 
-        i=1
-        base_zone=((tile.lat,tile.lon,tile.lat,tile.lon+1,tile.lat+1,tile.lon+1,tile.lat+1,tile.lon,tile.lat,tile.lon),tile.default_zl,tile.default_website)
-        for region in [base_zone]+tile.zone_list[::-1]:
-            dico_tmp[i]=(region[1],region[2])
-            pol=[(round((x-tile.lon)*4095),round((tile.lat+1-y)*4095)) for (x,y) in zip(region[0][1::2],region[0][::2])]
-            masks_draw.polygon(pol,fill=i)
-            i+=1
-        for til_x in range(til_x_min,til_x_max+1,16):
-            for til_y in range(til_y_min,til_y_max+1,16):
-                (latp,lonp)=GEO.gtile_to_wgs84(til_x+8,til_y+8,tile.mesh_zl)
-                lonp=max(min(lonp,tile.lon+1),tile.lon) 
-                latp=max(min(latp,tile.lat+1),tile.lat) 
-                x=round((lonp-tile.lon)*4095)
-                y=round((tile.lat+1-latp)*4095)
-                (zoomlevel,provider_code)=dico_tmp[masks_im.getpixel((x,y))]
-                if airport_array[y,x]: 
-                    zoomlevel=max(zoomlevel,tile.cover_zl)
-                til_x_text=16*(int(til_x/2**(tile.mesh_zl-zoomlevel))//16)
-                til_y_text=16*(int(til_y/2**(tile.mesh_zl-zoomlevel))//16)
-                dico_customzl[(til_x,til_y)]=(til_x_text,til_y_text,zoomlevel,provider_code)
-        if tile.cover_airports_with_highres=='Existing':
-            # what we find in the texture folder of the existing tile
-            for f in os.listdir(os.path.join(tile.build_dir,'textures')):
-                if f[-4:]!='.dds': continue
-                items=f.split('_')
-                (til_y_text,til_x_text)=[int(x) for x in items[:2]]
-                zoomlevel=int(items[-1][-6:-4])
-                provider_code='_'.join(items[2:])[:-6]
-                for til_x in range(til_x_text*2**(tile.mesh_zl-zoomlevel),(til_x_text+16)*2**(tile.mesh_zl-zoomlevel)):
-                    for til_y in range(til_y_text*2**(tile.mesh_zl-zoomlevel),(til_y_text+16)*2**(tile.mesh_zl-zoomlevel)):
-                        if ((til_x,til_y) not in dico_customzl) or dico_customzl[(til_x,til_y)][2]<=zoomlevel:
-                            dico_customzl[(til_x,til_y)]=(til_x_text,til_y_text,zoomlevel,provider_code)
-        return dico_customzl
+    def _sorted_zones(*_zone_lists):
+        # Sort order is :
+        # #1 - Container list : the order of the zone list passed as parameter is preserved, so a zone in the 3rd
+        #                       list will always be sorted after (ie. ABOVE) a zone from the 2nd list
+        #                       This means that manual custom ZL take precedence over the progressive zones
+        # #2 - Zoom Level : for each list, ensure than lower ZL are below higher ZL
+        # #3 - Initial sort order within each zone list
+        _zone_properties = list()
+        for _zone_list_priority, _zone_list in enumerate(_zone_lists):
+            for _zone_index, _zone in enumerate(_zone_list):
+                _zone_properties.append((_zone_list_priority, _zone[1], _zone_index, _zone))
+
+        return [_zp[3] for _zp in sorted(_zone_properties)]
+
+    # tile.zone_list is a list of 3-uples of the form ([(lat0,lat0),...(latN,lonN),zoomlevel,provider_code)
+    # where higher lines have priority over lower ones.
+    masks_im=Image.new("L",(4096,4096),'black')
+    masks_draw=ImageDraw.Draw(masks_im)
+    airport_array=numpy.zeros((4096,4096),dtype=bool)
+    progressive_zones = list()
+
+    if tile.cover_airports_with_highres in ['True','ICAO']:
+        UI.vprint(1,"-> Checking airport locations for upgraded zoomlevel.")
+
+        try:
+            f=open(FNAMES.apt_file(tile),'rb')
+            dico_airports=pickle.load(f)
+            f.close()
+        except:
+            UI.vprint(1,"   WARNING: File",FNAMES.apt_file(tile),"is missing (erased after Step 1?), cannot check airport info for upgraded zoomlevel.")
+            dico_airports={}
+
+        if tile.cover_airports_with_highres=='ICAO':
+            airports_list=[airport for airport in dico_airports if dico_airports[airport]['key_type']=='icao']
+        else:
+            airports_list=dico_airports.keys()
+
+        for airport in airports_list:
+            (xmin,ymin,xmax,ymax)=dico_airports[airport]['boundary'].bounds
+            # extension
+            xmin-=1000*tile.cover_extent*GEO.m_to_lon(tile.lat)
+            xmax+=1000*tile.cover_extent*GEO.m_to_lon(tile.lat)
+            ymax+=1000*tile.cover_extent*GEO.m_to_lat
+            ymin-=1000*tile.cover_extent*GEO.m_to_lat
+            # round off to texture boundaries at tile.cover_zl zoomlevel
+            (til_x_left,til_y_top)=GEO.wgs84_to_orthogrid(ymax+tile.lat,xmin+tile.lon,tile.cover_zl.max)
+            (ymax,xmin)=GEO.gtile_to_wgs84(til_x_left,til_y_top,tile.cover_zl.max)
+            ymax-=tile.lat; xmin-=tile.lon
+            (til_x_left2,til_y_top2)=GEO.wgs84_to_orthogrid(ymin+tile.lat,xmax+tile.lon,tile.cover_zl.max)
+            (ymin,xmax)=GEO.gtile_to_wgs84(til_x_left2+16,til_y_top2+16,tile.cover_zl.max)
+            ymin-=tile.lat; xmax-=tile.lon
+            xmin=max(0,xmin); xmax=min(1,xmax); ymin=max(0,ymin); ymax=min(1,ymax)
+            # mark to airport_array
+            colmin=round(xmin*4095)
+            colmax=round(xmax*4095)
+            rowmax=round((1-ymin)*4095)
+            rowmin=round((1-ymax)*4095)
+            airport_array[rowmin:rowmax+1,colmin:colmax+1]=1
+
+    elif tile.cover_airports_with_highres == 'Progressive':
+        UI.vprint(1,"-> Auto-generating custom ZL zones along the runways of each airport.")
+        wall_time = time.perf_counter()
+        airport_collection = APT_SRC.AirportCollection(xp_tile=APT_SRC.XPlaneTile(tile.lat, tile.lon),
+                                                       include_surrounding_tiles=True)
+        progressive_zones = airport_collection.zone_list(screen_res=tile.cover_screen_res,
+                                                         fov=tile.cover_fov,
+                                                         fpa=tile.cover_fpa,
+                                                         provider=tile.default_website,
+                                                         base_zl=tile.default_zl,
+                                                         cover_zl=tile.cover_zl,
+                                                         greediness=tile.cover_greediness,
+                                                         greediness_threshold=tile.cover_greediness_threshold)
+        wall_time_delta = datetime.timedelta(seconds=(time.perf_counter() - wall_time))
+        UI.lvprint(0, "ZL zones computed in {}s".format(wall_time_delta))
+
+    dico_customzl={}
+    dico_tmp={}
+    til_x_min,til_y_min=GEO.wgs84_to_orthogrid(tile.lat+1,tile.lon,tile.mesh_zl)
+    til_x_max,til_y_max=GEO.wgs84_to_orthogrid(tile.lat,tile.lon+1,tile.mesh_zl)
+    base_zone=((tile.lat,tile.lon,tile.lat,tile.lon+1,tile.lat+1,tile.lon+1,tile.lat+1,tile.lon,tile.lat,tile.lon),tile.default_zl,tile.default_website)
+    for region_mask_color, region in enumerate(_sorted_zones([base_zone], progressive_zones, tile.zone_list), start=1):
+        dico_tmp[region_mask_color]=(region[1],region[2])
+        pol=[(round((x-tile.lon)*4095),round((tile.lat+1-y)*4095)) for (x,y) in zip(region[0][1::2],region[0][::2])]
+        masks_draw.polygon(pol,fill=region_mask_color)
+
+    for til_x in range(til_x_min,til_x_max+1,16):
+        for til_y in range(til_y_min,til_y_max+1,16):
+            (latp,lonp)=GEO.gtile_to_wgs84(til_x+8,til_y+8,tile.mesh_zl)
+            lonp=max(min(lonp,tile.lon+1),tile.lon)
+            latp=max(min(latp,tile.lat+1),tile.lat)
+            x=round((lonp-tile.lon)*4095)
+            y=round((tile.lat+1-latp)*4095)
+            (zoomlevel,provider_code)=dico_tmp[masks_im.getpixel((x,y))]
+            if airport_array[y,x]:
+                zoomlevel=max(zoomlevel,tile.cover_zl.max)
+            til_x_text=16*(int(til_x/2**(tile.mesh_zl-zoomlevel))//16)
+            til_y_text=16*(int(til_y/2**(tile.mesh_zl-zoomlevel))//16)
+            dico_customzl[(til_x,til_y)]=(til_x_text,til_y_text,zoomlevel,provider_code)
+
+    if tile.cover_airports_with_highres=='Existing':
+        # what we find in the texture folder of the existing tile
+        for f in os.listdir(os.path.join(tile.build_dir,'textures')):
+            if f[-4:]!='.dds': continue
+            items=f.split('_')
+            (til_y_text,til_x_text)=[int(x) for x in items[:2]]
+            zoomlevel=int(items[-1][-6:-4])
+            provider_code='_'.join(items[2:])[:-6]
+            for til_x in range(til_x_text*2**(tile.mesh_zl-zoomlevel),(til_x_text+16)*2**(tile.mesh_zl-zoomlevel)):
+                for til_y in range(til_y_text*2**(tile.mesh_zl-zoomlevel),(til_y_text+16)*2**(tile.mesh_zl-zoomlevel)):
+                    if ((til_x,til_y) not in dico_customzl) or dico_customzl[(til_x,til_y)][2]<=zoomlevel:
+                        dico_customzl[(til_x,til_y)]=(til_x_text,til_y_text,zoomlevel,provider_code)
+
+    return dico_customzl
 ##############################################################################
 
 ##############################################################################
@@ -734,3 +778,75 @@ class QuadTree(dict):
         UI.vprint(1,"     Largest depth:",numpy.max(depths))
     
 ##############################################################################
+def dsf_terrain_filenames(build_dir, dsf_filename, tile_lat, tile_lon):
+    """Parse the given DSF and return the list of referenced .ter files"""
+    _terrain_files = list()
+    atom_header = struct.Struct('<4sI')
+
+    with open(dsf_filename, 'rb') as dsf:
+        # Skip the DSF header
+        dsf.seek(12)
+
+        # Walk through the atoms, until we reach HEAD (should be first, but not required)
+        (atom_id, head_atom_size) = (None, 8)
+        while atom_id != b'DAEH':
+            dsf.seek(head_atom_size - 8, 1)
+            (atom_id, head_atom_size) = atom_header.unpack(dsf.read(8))
+        head_atom_offset = dsf.tell() - 8
+
+        # Walk through the HEAD sub-atoms, until we reach PROP
+        (atom_id, atom_size) = (None, 8)
+        while atom_id != b'PORP':
+            dsf.seek(atom_size - 8, 1)
+            (atom_id, atom_size) = atom_header.unpack(dsf.read(8))
+
+        # The PROP sub-atom is string table atom, read it and build a dict from its key/values pairs
+        prop_strings = dsf.read(atom_size - 8).split(b'\0')
+        prop_dict = {k: v for (k, v) in zip(prop_strings[0::2],
+                                            prop_strings[1::2])}
+
+        # If DSF west and south limits don't match the current tile, stop here
+        if int(prop_dict[b'sim/west']) != tile_lon or int(prop_dict[b'sim/south']) != tile_lat:
+            return None
+
+        # Now skip to the end of the HEAD atom, and look for the DEFN atom
+        dsf.seek(head_atom_offset + head_atom_size)
+        (atom_id, defn_atom_size) = (None, 8)
+        while atom_id != b'NFED':
+            dsf.seek(defn_atom_size - 8, 1)
+            (atom_id, defn_atom_size) = atom_header.unpack(dsf.read(8))
+
+        # Walk through the DEFN sub-atoms, until we reach TERT
+        (atom_id, atom_size) = (None, 8)
+        while atom_id != b'TRET':
+            dsf.seek(atom_size - 8, 1)
+            (atom_id, atom_size) = atom_header.unpack(dsf.read(8))
+
+        # The TERT sub-atom is string table atom, which will give us our list of .ter files (and textures, filter those)
+        return filter(lambda f: os.path.isfile(f) and f.endswith('.ter'),
+                      map(lambda f: os.path.join(build_dir, f.decode()),
+                          dsf.read(atom_size - 8).split(b'\0')))
+
+
+def parse_ter_file(ter_filename):
+    """Return the top-left lat, lon and zoomlevel for the given .ter file"""
+
+    # First locate the LOAD_CENTER instruction
+    with open(ter_filename) as f:
+        for line in f:
+            m = re.match(r'^LOAD_CENTER\s+' +
+                         r'(?P<lat>[0-9.-]+)\s+' +
+                         r'(?P<lon>[0-9.-]+)\s+' +
+                         r'(?P<terrain_size>[0-9]+)' +
+                         r'\s+(?P<texture_size>[0-9]+).*$', line)
+            if m:
+                # Extract the lat, lon, approximate terrain size (in meters) and the texture size (in pixels)
+                lat_med = float(m.group('lat'))
+                lon_med = float(m.group('lon'))
+                terrain_size = int(m.group('terrain_size'))
+                texture_size = int(m.group('texture_size'))
+
+                # Compute the ZL from the latitude, the terrain size and the texture size
+                zoomlevel = GEO.webmercator_zoomlevel(lat_med, terrain_size / texture_size)
+                x, y = GEO.wgs84_to_orthogrid(lat_med, lon_med, zoomlevel)
+                return x, y, zoomlevel

@@ -7,11 +7,7 @@ import itertools
 from math import sqrt
 import array
 import numpy
-try:
-    import gdal
-    has_gdal=True
-except:
-    has_gdal=False
+import rasterio
 from PIL import Image
 import O4_UI_Utils as UI
 import O4_File_Names as FNAMES
@@ -329,43 +325,80 @@ def read_elevation_from_file(file_name,lat,lon,info_only=False,base_if_error=360
             nxdem=nydem=base_if_error
             if not info_only: alt_dem=numpy.zeros((base_if_error,base_if_error),dtype=numpy.float32)
         x0=y0=0; x1=y1=1; epsg=4326; nodata=-32768
-    elif has_gdal:
+    else:
         try:
-            ds=gdal.Open(file_name)
-            rs=ds.GetRasterBand(1)
-            if not info_only: alt_dem=rs.ReadAsArray().astype(numpy.float32)
-            (nxdem,nydem)=(ds.RasterXSize,ds.RasterYSize) 
-            nodata=rs.GetNoDataValue()
-            if nodata is None: 
-                UI.vprint(1,"    WARNING: raster ",os.path.basename(file_name),"does not advertise its no_data value, assuming -32768.")
-                nodata=-32768
-            else: # elevations being stored as float32, we push the nodata to that framework too, and then replace no_data values by -32768 anyway for uniformity
-                nodata=numpy.float32(nodata)
-                if not info_only: alt_dem[alt_dem==nodata]=-32768
-                nodata=-32768
-            try: 
-                epsg=int(ds.GetProjection().split('"')[-2])
+            dataset = rasterio.open(file_name)
+            if not info_only:
+                alt_dem= dataset.read(1).astype(numpy.float32)
+            (nxdem, nydem)=(dataset.width, dataset.height)
+            nodata=dataset.nodata
+            if nodata is None:
+                UI.vprint(
+                    1,
+                    "    WARNING: raster DEM does not advertise its no_data ",
+                    "value, assuming -32768.",
+                )
+                nodata = -32768
+            else:
+                # elevations being stored as float32, we push the nodata to that
+                # framework too, and then replace no_data values by -32768
+                # anyway for uniformity
+                nodata = numpy.float32(nodata)
+                if not info_only:
+                    alt_dem[alt_dem == nodata] = -32768
+                nodata = -32768
+                
+            #Replace nan with nodata
+            alt_dem=numpy.nan_to_num(alt_dem,nan=nodata)
+            
+            try:
+                crs=dataset.crs
+                epsg=crs.to_epsg()
             except:
-                UI.vprint(1,"    WARNING: raster DEM does not advertise its EPSG code, assuming 4326.") 
-                epsg=4326
-            if epsg not in (4326,4269): # let's be blind about 4269 which might be sufficiently close to 4326 for our purposes
-                UI.lvprint(1,"    WARNING: unsupported EPSG code ",epsg,". Only EPSG:4326 is supported, result is likely to be non sense.") 
-            geo=ds.GetGeoTransform()
-            # We are assuming AREA_OR_POINT is area here 
-            x0=geo[0]+.5*geo[1]-lon
-            y1=geo[3]+.5*geo[5]-lat
-            x1=x0+(nxdem-1)*geo[1] 
-            y0=y1+(nydem-1)*geo[5]  
+                UI.vprint(
+                    1,
+                    "    WARNING: raster DEM does not advertise its EPSG ",
+                    "code, assuming 4326.",
+                )
+                epsg = 4326
+            if epsg not in (
+                4326,
+                4269,
+            ):
+            # let's be blind about 4269 which might be sufficiently close to
+            # 4326 for our purposes
+                UI.lvprint(
+                    1,
+                    "    WARNING: unsupported EPSG code ",
+                    epsg,
+                    ". Only EPSG:4326 is supported, result is likely to ",
+                    "be non sense.",
+                )
+            transform=dataset.transform
+            geo=(transform.c, transform.a, transform.b, transform.f, transform.d, transform.e)
+            # We are assuming AREA_OR_POINT is area here
+            x0 = geo[0] + 0.5 * geo[1] - lon
+            y1 = geo[3] + 0.5 * geo[5] - lat
+            x1 = x0 + (nxdem - 1) * geo[1]
+            y0 = y1 + (nydem - 1) * geo[5]
         except:
-            UI.lvprint(1,"   ERROR: in reading ", file_name, "-> replaced with zero altitude.") 
-            nxdem=nydem=base_if_error
-            if not info_only: alt_dem=numpy.zeros((base_if_error,base_if_error),dtype=numpy.float32)
-            x0=y0=0; x1=y1=1; epsg=4326; nodata=-32768
-    elif not has_gdal:
-        UI.lvprint(1,"   WARNING: unsupported raster (install Gdal):", file_name, "-> replaced with zero altitude.") 
-        nxdem=nydem=base_if_error
-        if not info_only: alt_dem=numpy.zeros((base_if_error,base_if_error),dtype=numpy.float32)
-        x0=y0=0; x1=y1=1; epsg=4326; nodata=-32768
+            UI.lvprint(
+                1,
+                "   ERROR: in reading ",
+                file_name,
+                "-> replaced with zero altitude.",
+            )
+            nxdem = nydem = base_if_error
+            if not info_only:
+                alt_dem = numpy.zeros(
+                    (base_if_error, base_if_error), dtype=numpy.float32
+                )
+            x0 = y0 = 0
+            x1 = y1 = 1
+            epsg = 4326
+            nodata = -32768
+            
+
     return (epsg,x0,y0,x1,y1,nodata,nxdem,nydem,alt_dem)
 ##############################################################################    
            
@@ -373,9 +406,7 @@ def read_elevation_from_file(file_name,lat,lon,info_only=False,base_if_error=360
 def ensure_elevation(source,lat,lon,verbose=True):
     if source=='View':
         # Viewfinderpanorama grouping of files and resolutions is a bit complicated...
-        if (lat,lon) in ((44,5),(45,5),(46,5),(43,6),(44,6),(45,6),(46,6),(47,6),(43,7),(44,7),(45,7),
-                         (46,7),(47,7),(45,8),(46,8),(47,8),(45,9),(46,9),(47,9),(45,10),(46,10),(47,10),
-                         (45,11),(46,11),(47,11),(45,12),(46,12),(47,12),(46,13),(47,13),(46,14),(47,14),(46,15),(47,15)):
+        if (lat,lon) in ((100,100)):
             resol = 1                 
             url="http://viewfinderpanoramas.org/dem1/"+os.path.basename(FNAMES.base_file_name(lat,lon)).lower()+".zip"
         else:
@@ -396,7 +427,7 @@ def ensure_elevation(source,lat,lon,verbose=True):
                 resol=3
             url="http://viewfinderpanoramas.org/dem"+str(resol)+"/"+deferranti_letter+deferranti_nbr+".zip"
         if os.path.exists(FNAMES.viewfinderpanorama(lat,lon)) and (resol==3 or os.path.getsize(FNAMES.viewfinderpanorama(lat,lon))>=25934402):
-            UI.vprint(2,"   Recycling ",FNAMES.viewfinderpanorama(lat,lon))
+            UI.vprint(1,"   Recycling ",FNAMES.viewfinderpanorama(lat,lon))
             return 1
         UI.vprint(1,"    Downloading ",FNAMES.viewfinderpanorama(lat,lon),"from Viewfinderpanoramas (J. de Ferranti).")    
         r=http_request(url,source,verbose)
@@ -423,7 +454,7 @@ def ensure_elevation(source,lat,lon,verbose=True):
                         out.write(zip_ref.open(f,"r").read())
     elif source in ('SRTM','ALOS'):
         if os.path.exists(FNAMES.elevation_data(source,lat,lon)):
-            UI.vprint(2,"   Recycling ",FNAMES.elevation_data(source,lat,lon))
+            UI.vprint(1,"   Recycling ",FNAMES.elevation_data(source,lat,lon))
             return 1 
         UI.vprint(1,"    Downloading ",FNAMES.elevation_data(source,lat,lon),"from OpenTopography (SDSC).")
         url="https://cloud.sdsc.edu/v1/AUTH_opentopography/Raster/"
@@ -457,52 +488,46 @@ def ensure_elevation(source,lat,lon,verbose=True):
                 out.write(r.content)
             except:
                 return 0
-    elif source=='NED1/3':
-        if os.path.exists(FNAMES.elevation_data(source,lat,lon)):
-            UI.vprint(2,"   Recycling ",FNAMES.elevation_data(source,lat,lon))
-            return 1 
-        UI.vprint(1,"    Downloading ",FNAMES.elevation_data(source,lat,lon),"from USGS.")
-        url_base='https://prd-tnm.s3.amazonaws.com/StagedProducts/Elevation/13/IMG/'
-        usgs_name='USGS_NED_13_n'+str(lat + 1)+'w'+str(-lon).zfill(3)+'_IMG'
-        r=http_request(url_base+usgs_name+'.zip',source,verbose)
+    elif source in ("NED1", "NED1/3"):
+        if os.path.exists(FNAMES.elevation_data(source, lat, lon)):
+            UI.vprint(
+                1, "   Recycling ", FNAMES.elevation_data(source, lat, lon)
+            )
+            return 1
+        UI.vprint(
+            1,
+            "    Downloading ",
+            FNAMES.elevation_data(source, lat, lon),
+            "from USGS.",
+        )
+        nbr = "1" if source == "NED1" else "13"
+        url_base = (
+            "https://prd-tnm.s3.amazonaws.com/StagedProducts/Elevation/"
+            + nbr + "/TIFF/current/"
+        )
+        tid = "n" if lat >= 0 else "s"
+        tid = tid + str(abs(lat + 1)).zfill(2)
+        tid = tid + "w" if lon < 0 else "e"
+        tid = tid + str(abs(lon)).zfill(3)
+        url_base = url_base + tid + "/"
+        usgs_name = (
+            "USGS_" + nbr + "_" + tid + ".tif"
+        )
+        url = url_base + usgs_name
+        r = http_request(url, source, verbose)
         if not r:
-            UI.vprint(2,"    Trying alternative naming scheme.")
-            usgs_name="imgn"+str(lat + 1)+"w"+str(-lon).zfill(3)+"_13"
-            r=http_request(url_base+'n'+str(lat + 1).zfill(2)+'w'+str(-lon).zfill(3)+'.zip',source,verbose)
-            if not r:
+            return 0
+        if not os.path.isdir(
+            os.path.dirname(FNAMES.elevation_data(source, lat, lon))
+        ):
+            os.makedirs(
+                os.path.dirname(FNAMES.elevation_data(source, lat, lon))
+            )
+        with open(FNAMES.elevation_data(source, lat, lon), "wb") as out:
+            try:
+                out.write(r.content)
+            except:
                 return 0
-        with zipfile.ZipFile(io.BytesIO(r.content),"r") as zip_ref:
-            if not os.path.isdir(os.path.dirname(FNAMES.elevation_data(source,lat,lon))):
-                os.makedirs(os.path.dirname(FNAMES.elevation_data(source,lat,lon)))
-            with open(FNAMES.elevation_data(source,lat,lon),"wb") as out:
-                try:
-                    out.write((zip_ref.open(usgs_name+'.img',"r").read()))
-                except:
-                    return 0
-    elif source=='NED1':
-        if os.path.exists(FNAMES.elevation_data(source,lat,lon)):
-            UI.vprint(2,"   Recycling ",FNAMES.elevation_data(source,lat,lon))
-            return 1 
-        UI.vprint(1,"    Downloading ",FNAMES.elevation_data(source,lat,lon),"from USGS.")
-        url_base='https://prd-tnm.s3.amazonaws.com/StagedProducts/Elevation/1/ArcGrid/'
-        usgs_base='n'+str(lat + 1)+'w'+str(-lon).zfill(3)
-        r=http_request(url_base+'USGS_NED_1_'+usgs_base+'_ArcGrid.zip',source,verbose)
-        if not r:
-            UI.vprint(2,"    Trying alternative naming scheme.")
-            r=http_request(url_base+usgs_base+'.zip',source,verbose)
-            if not r:
-                return 0
-        with zipfile.ZipFile(io.BytesIO(r.content),"r") as zip_ref:
-            if not os.path.isdir(os.path.dirname(FNAMES.elevation_data(source,lat,lon))):
-                os.makedirs(os.path.dirname(FNAMES.elevation_data(source,lat,lon)))
-            for f in zip_ref.filelist:
-                if not '.adf' in f.filename: continue
-                fname=os.path.basename(f.filename)    
-                with open(os.path.join(os.path.dirname(FNAMES.elevation_data(source,lat,lon)),fname),"wb") as out:
-                    try:
-                        out.write((zip_ref.open(f,"r").read()))
-                    except:
-                        return 0
     else:
         UI.vprint(1,"   ERROR: Unknown elevation source.")
         return 0
