@@ -17,7 +17,7 @@ Windows:
 - Click on **"win_install.bat"** file for the installation and **"win_start.bat"** to run Ortho4XP
 - For manual installation, run in PowerShell: **pip install -r requirements.txt**
 
-Important notices:
+Important notes:
 -------------------------------
 - On Windows, use Notepad++ or a similar editor to open Ortho4XP files
 - After modifying the settings, press the `Apply` button, for the current session. Press `Write App Config` to make changes permanent
