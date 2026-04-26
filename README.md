@@ -18,4 +18,4 @@ Merged with files shared by [@oscarpilote](https://github.com/oscarpilote) via [
 
 Thanks to all !
 
-[Install instructions](https://github.com/w8sl/Ortho4XP/blob/Progressive_130/Install_Instructions.md)
+[Install instructions](https://github.com/w8sl/Ortho4XP/blob/mesh_dev/Install_Instructions.md)
