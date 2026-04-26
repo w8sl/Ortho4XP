@@ -1,20 +1,4 @@
-[Download Ortho4XP](https://github.com/w8sl/Ortho4XP/archive/refs/heads/Progressive_130.zip)
-
-Installation on macOS - quick method
----------------------
-
-Download and install Python 3.14 from [www.python.org](https://www.python.org/downloads/macos/) *(Python 3.12 on macOS < 14)*
-- Use **“z_Install_Mac.sh”** script to install O4XP. Follow these steps:
-
-  - Open the terminal in the main Ortho4XP directory -> right click on the folder, choose: **Services** -> **New Terminal at Folder**
-
-  - Execute the following commands in the terminal (copy-paste and press enter):
-
-    `chmod +x z_Install_Mac.sh`
-
-    `./z_Install_Mac.sh`
-    
- - To launch Ortho4XP, simply double-click on the file named **"z_Start_O4XP.command"**
+[Download Ortho4XP](https://github.com/w8sl/Ortho4XP/archive/refs/heads/mesh_dev.zip)
 
 Installation on Linux, macOS with [Homebrew](https://brew.sh/)
 ------------------------------------------
