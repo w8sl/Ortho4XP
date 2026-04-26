@@ -5,3 +5,5 @@ requests
 Rtree
 shapely
 rasterio
+numba
+scipy
