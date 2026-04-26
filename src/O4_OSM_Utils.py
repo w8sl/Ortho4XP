@@ -10,11 +10,12 @@ import O4_UI_Utils as UI
 import O4_File_Names as FNAMES
 
 overpass_servers={
-         "DE":"https://overpass-api.de/api/interpreter",
-         "KU":"https://overpass.private.coffee/api/interpreter",
-         "RU":"https://maps.mail.ru/osm/tools/overpass/api/interpreter"       
+        "DE":"http://overpass-api.de/api/interpreter",
+        "FR":"http://api.openstreetmap.fr/oapi/interpreter",
+        "KU":"https://overpass.kumi.systems/api/interpreter", 
+        "RU":"http://overpass.osm.rambler.ru/cgi/interpreter"
         }
-overpass_server_choice="KU"
+overpass_server_choice="DE"
 max_osm_tentatives=8
 
 ##############################################################################
@@ -27,18 +28,18 @@ class OSM_layer():
         self.next_node_id=-1
         self.next_way_id=-1
         self.next_rel_id=-1
-        # rels already sorted out and containing nodeids rather than wayids
+        # rels already sorted out and containing nodeids rather than wayids 
         self.dicosmr={}
         # original rels containing wayids only, not sorted and/or reversed
         self.dicosmrorig={}
-        # ids of objects directly queried, not of child or
+        # ids of objects directly queried, not of child or 
         # parent objects pulled indirectly by queries. Since
         # osm ids are only unique per object type we need one for each:
-        self.dicosmfirst={'n':set(),'w':set(),'r':set()}
+        self.dicosmfirst={'n':set(),'w':set(),'r':set()}  
         self.dicosmtags={'n':{},'w':{},'r':{}}
         self.dicosm=[self.dicosmn,self.dicosmw,self.dicosmr,self.dicosmrorig,
-                     self.dicosmfirst,self.dicosmtags]
-
+                     self.dicosmfirst,self.dicosmtags]       
+        
 
     def update_dicosm(self,osm_input,input_tags=None,target_tags=None):
         # input_tags (dict or None) are the input query tags (per osm type)
@@ -49,10 +50,10 @@ class OSM_layer():
         initrels=len(self.dicosmfirst['r'])
         dicosmn_id_map={}
         dicosmw_id_map={}
-        # osm_input may either refer to an osm filename (e.g. cached data) or
-        # to a xml bytestring (direct download)
+        # osm_input may either refer to an osm filename (e.g. cached data) or 
+        # to a xml bytestring (direct download) 
         if isinstance(osm_input,str):
-            osm_file_name=osm_input
+            osm_file_name=osm_input 
             try:
                 if osm_file_name[-4:]=='.bz2':
                     pfile=bz2.open(osm_file_name,'rt',encoding="utf-8")
@@ -60,7 +61,7 @@ class OSM_layer():
                     pfile=open(osm_file_name,'r',encoding="utf-8")
             except:
                 UI.vprint(1,"    Could not open",osm_file_name,"for reading (corrupted ?).")
-                return 0
+                return 0    
         elif isinstance(osm_input,bytes):
             pfile=io.StringIO(osm_input.decode(encoding="utf-8"))
         first_line=pfile.readline()
@@ -96,7 +97,7 @@ class OSM_layer():
                 self.next_way_id-=1
                 dicosmw_id_map[osmid]=true_osmid
                 osmid=true_osmid
-                self.dicosmw[osmid]=[]
+                self.dicosmw[osmid]=[]  
                 if not input_tags: self.dicosmfirst['w'].add(osmid)
             elif '<nd ref=' in items[0]:
                 self.dicosmw[osmid].append(dicosmn_id_map[items[1]])
@@ -109,14 +110,14 @@ class OSM_layer():
                 self.dicosmr[osmid]={'outer':[],'inner':[]}
                 self.dicosmrorig[osmid]={'outer':[],'inner':[]}
                 dico_rel_check={'inner':{},'outer':{}}
-                if not input_tags:
+                if not input_tags: 
                     self.dicosmfirst['r'].add(osmid)
             elif '<member type=' in items[0]:
                 role=items[5]
                 if items[1]!='way' or role not in ('outer','inner'):
                     if items[1]=='node': continue # not necessary to report these
                     UI.lvprint(2,"Relation id=",osmid,"contains a member of type","'"+items[1]+"'","and role","'"+role+"'","which was not treated (only deal with 'ways' of role 'inner' or 'outer').")
-                    continue
+                    continue                
                 try:
                     wayid=dicosmw_id_map[items[3]]
                 except:
@@ -140,16 +141,16 @@ class OSM_layer():
                 if (not input_tags) or (('all','') in target_tags[osmtype])\
                                      or ((items[1],'') in target_tags[osmtype])\
                                      or ((items[1],items[3]) in target_tags[osmtype]):
-                    if osmid not in self.dicosmtags[osmtype]:
+                    if osmid not in self.dicosmtags[osmtype]: 
                         self.dicosmtags[osmtype][osmid]={items[1]:items[3]}
                     else:
-                        self.dicosmtags[osmtype][osmid][items[1]]=items[3]
-                    # If so, do we need to declare this osmid as a first catch, not one only brought with as a child
+                        self.dicosmtags[osmtype][osmid][items[1]]=items[3]                     
+                    # If so, do we need to declare this osmid as a first catch, not one only brought with as a child    
                     if input_tags and (((items[1],'') in input_tags[osmtype]) or ((items[1],items[3]) in input_tags[osmtype])):
-                        self.dicosmfirst[osmtype].add(osmid)
+                        self.dicosmfirst[osmtype].add(osmid)                         
             elif '</way' in items[0]:
                 if not self.dicosmw[osmid]:
-                    del(self.dicosmw[osmid])
+                    del(self.dicosmw[osmid]) 
                     self.next_way_id+=1
                     if osmid in self.dicosmfirst['w']: self.dicosmfirst['w'].remove(osmid)
                     if osmid in self.dicosmtags['w']: del(self.dicosmtags[osmtype][osmid])
@@ -202,7 +203,7 @@ class OSM_layer():
                             self.dicosmfirst['w'].remove(wayid)
                         except:
                            pass
-                if not self.dicosmr[osmid]['outer']:
+                if not self.dicosmr[osmid]['outer']: 
                     del(self.dicosmr[osmid])
                     del(self.dicosmrorig[osmid])
                     self.next_rel_id+=1
@@ -214,13 +215,15 @@ class OSM_layer():
         pfile.close()
         if not normal_exit:
             UI.lvprint(0,"ERROR: OSM overpass server answer was corrupted (no ending </OSM> tag)")
-            return 0
+            return 0 
         UI.vprint(2,"      A total of "+str(len(self.dicosmn)-initnodes)+" new node(s), "+\
                str(len(self.dicosmfirst['w'])-initways)+" new ways and "+str(len(self.dicosmfirst['r'])-initrels)+" new relation(s).")
         return 1
 
     def write_to_file(self,filename):
         try:
+            if not os.path.isdir(os.path.dirname(filename)):
+                os.makedirs(os.path.dirname(filename))
             if filename[-4:]=='.bz2':
                 fout=bz2.open(filename,'wt',encoding="utf-8")
             else:
@@ -258,7 +261,7 @@ class OSM_layer():
                 fout.write('    <tag k="'+tag+'" v="'+self.dicosmtags['r'][relid][tag]+'"/>\n')
             fout.write('  </relation>\n')
         fout.write('</osm>')
-        fout.close()
+        fout.close()    
         return 1
 ##############################################################################
 
@@ -272,10 +275,10 @@ def OSM_queries_to_OSM_layer(queries,osm_layer,lat,lon,tags_of_interest=[],serve
         for tag in [query] if isinstance(query,str) else query:
             items=tag.split('"')
             osm_type=items[0][0]
-            try:
+            try: 
                 target_tags[osm_type].append((items[1],items[3]))
                 input_tags[osm_type].append((items[1],items[3]))
-            except:
+            except: 
                 target_tags[osm_type].append((items[1],''))
                 input_tags[osm_type].append((items[1],''))
             for tag in tags_of_interest:
@@ -295,15 +298,15 @@ def OSM_queries_to_OSM_layer(queries,osm_layer,lat,lon,tags_of_interest=[],serve
                 UI.vprint(1,"    * Recycling OSM data for",query)
                 osm_layer.update_dicosm(old_cached_data_filename,input_tags,target_tags)
                 continue
-        UI.vprint(1,"    * Downloading OSM data for",query)
+        UI.vprint(1,"    * Downloading OSM data for",query)        
         response=get_overpass_data(query,(lat,lon,lat+1,lon+1),server_code)
         if UI.red_flag: return 0
-        if not response:
-           UI.logprint("No valid answer for",query,"after",max_osm_tentatives,", skipping it.")
+        if not response: 
+           UI.logprint("No valid answer for",query,"after",max_osm_tentatives,", skipping it.") 
            UI.vprint(1,"      No valid answer after",max_osm_tentatives,", skipping it.")
            return 0
         osm_layer.update_dicosm(response,input_tags,target_tags)
-    if cached_suffix:
+    if cached_suffix: 
         osm_layer.write_to_file(cached_data_filename)
     return 1
 ##############################################################################
@@ -316,10 +319,10 @@ def OSM_query_to_OSM_layer(query,bbox,osm_layer,tags_of_interest=[],server_code=
     for tag in [query] if isinstance(query,str) else query:
         items=tag.split('"')
         osm_type=items[0][0]
-        try:
+        try: 
             target_tags[osm_type].append((items[1],items[3]))
             input_tags[osm_type].append((items[1],items[3]))
-        except:
+        except: 
             target_tags[osm_type].append((items[1],''))
             input_tags[osm_type].append((items[1],''))
         for tag in tags_of_interest:
@@ -333,7 +336,7 @@ def OSM_query_to_OSM_layer(query,bbox,osm_layer,tags_of_interest=[],server_code=
     else:
         response=get_overpass_data(query,bbox,server_code)
         if UI.red_flag: return 0
-        if not response:
+        if not response: 
             UI.lvprint(1,"      No valid answer for",query,"after",max_osm_tentatives,", skipping it.")
             return 0
         osm_layer.update_dicosm(response,input_tags,target_tags)
@@ -347,13 +350,12 @@ def get_overpass_data(query,bbox,server_code=None):
     tentative=1
     while True:
         s=requests.Session()
-        true_server_code = server_code
         if not server_code:
            true_server_code = random.choice(list(overpass_servers.keys())) if overpass_server_choice=='random' else overpass_server_choice
         base_url=overpass_servers[true_server_code]
         if isinstance(query,str):
             overpass_query=query+str(bbox)+";"
-        else: # query is a tuple
+        else: # query is a tuple 
             overpass_query=''.join([x+str(bbox)+";" for x in query])
         url=base_url+"?data=("+overpass_query+");(._;>>;);out meta;"
         UI.vprint(3,url)
@@ -363,7 +365,7 @@ def get_overpass_data(query,bbox,server_code=None):
             if '200' in str(r):
                 if b"</osm>" not in r.content[-10:] and b"</OSM>" not in r.content[-10:]:
                     UI.vprint(1,"        OSM server",true_server_code,"sent a corrupted answer (no closing </osm> tag in answer), new tentative in",2**tentative,"sec...")
-                elif len(r.content)<=1000 and b"error" in r.content:
+                elif len(r.content)<=1000 and b"error" in r.content: 
                     UI.vprint(1,"        OSM server",true_server_code,"sent us an error code for the data (data too big ?), new tentative in",2**tentative,"sec...")
                 else:
                     break
@@ -375,7 +377,7 @@ def get_overpass_data(query,bbox,server_code=None):
             return 0
         if UI.red_flag: return 0
         time.sleep(2**tentative)
-        tentative+=1
+        tentative+=1           
     return r.content
 ##############################################################################
 
@@ -392,8 +394,8 @@ def OSM_to_MultiLineString(osm_layer,lat,lon,tags_for_exclusion=set(),filter=Non
         if tags_for_exclusion and wayid in osm_layer.dicosmtags['w'] \
           and not set(osm_layer.dicosmtags['w'][wayid].keys()).isdisjoint(tags_for_exclusion):
             done+=1
-            continue
-        way=numpy.round(numpy.array([osm_layer.dicosmn[nodeid] for nodeid in osm_layer.dicosmw[wayid]],dtype=numpy.float64)-numpy.array([[lon,lat]],dtype=numpy.float64),7)
+            continue  
+        way=numpy.round(numpy.array([osm_layer.dicosmn[nodeid] for nodeid in osm_layer.dicosmw[wayid]],dtype=numpy.float64)-numpy.array([[lon,lat]],dtype=numpy.float64),7) 
         if filter and not filter(way,filtered_segs):
             try:
                 multiline_reject.append(geometry.LineString(way))
@@ -424,11 +426,11 @@ def OSM_to_MultiPolygon(osm_layer,lat,lon,filter=None):
     done=0
     for wayid in osm_layer.dicosmfirst['w']:
         if done%step==0: UI.progress_bar(1,int(100*done/todo))
-        if osm_layer.dicosmw[wayid][0]!=osm_layer.dicosmw[wayid][-1]:
+        if osm_layer.dicosmw[wayid][0]!=osm_layer.dicosmw[wayid][-1]: 
             UI.logprint("Non closed way starting at",osm_layer.dicosmn[osm_layer.dicosmw[wayid][0]],", skipped.")
             done+=1
             continue
-        way=numpy.round(numpy.array([osm_layer.dicosmn[nodeid] for nodeid in osm_layer.dicosmw[wayid]],dtype=numpy.float64)-numpy.array([[lon,lat]],dtype=numpy.float64),7)
+        way=numpy.round(numpy.array([osm_layer.dicosmn[nodeid] for nodeid in osm_layer.dicosmw[wayid]],dtype=numpy.float64)-numpy.array([[lon,lat]],dtype=numpy.float64),7) 
         try:
             pol=geometry.Polygon(way)
             if not pol.area: continue
@@ -443,7 +445,7 @@ def OSM_to_MultiPolygon(osm_layer,lat,lon,filter=None):
         if filter and filter(pol,wayid,osm_layer.dicosmtags['w']):
             excludelist.append(pol)
         else:
-            multilist.append(pol)
+            multilist.append(pol) 
         done+=1
     for relid in osm_layer.dicosmfirst['r']:
         if done%step==0: UI.progress_bar(1,int(100*done/todo))
@@ -451,29 +453,32 @@ def OSM_to_MultiPolygon(osm_layer,lat,lon,filter=None):
             multiout=[geometry.Polygon(numpy.round(numpy.array([osm_layer.dicosmn[nodeid] \
                                         for nodeid in nodelist],dtype=numpy.float64)-numpy.array([lon,lat],dtype=numpy.float64),7))\
                                         for nodelist in osm_layer.dicosmr[relid]['outer']]
-            multiout=ops.unary_union([geom for geom in multiout if geom.is_valid])
+            # do not check for validity here, let it fail and write a log
+            multiout=ops.cascaded_union([geom for geom in multiout])
             multiin=[geometry.Polygon(numpy.round(numpy.array([osm_layer.dicosmn[nodeid]\
                                         for nodeid in nodelist],dtype=numpy.float64)-numpy.array([lon,lat],dtype=numpy.float64),7))\
                                         for nodelist in osm_layer.dicosmr[relid]['inner']]
-            multiin=ops.unary_union([geom for geom in multiin if geom.is_valid])
+            # insteand OSM errors in some small inner islands within rel might be ignored and shouldn't make the whole rel to be skipped 
+            multiin=ops.cascaded_union([geom for geom in multiin if geom.is_valid])
+            multipol = multiout.difference(multiin)
         except Exception as e:
-            UI.logprint(e)
+            UI.lvprint(2,"Invalid OSM relation starting at",osm_layer.dicosmn[osm_layer.dicosmr[relid]['outer'][0]],", skipped.")
+            UI.vprint(3,e)
             done+=1
             continue
-        multipol = multiout.difference(multiin)
         if filter and filter(multipol,relid,osm_layer.dicosmtags['r']):
             targetlist=excludelist
         else:
-            targetlist=multilist
+            targetlist=multilist 
         for pol in multipol.geoms if ('Multi' in multipol.geom_type or 'Collection' in multipol.geom_type) else [multipol]:
-            if not pol.area:
+            if not pol.area: 
                 done+=1
                 continue
-            if not pol.is_valid:
-                UI.logprint("Relation",relid,"contains an invalid polygon which was discarded")
+            if not pol.is_valid: 
+                UI.logprint("Relation",relid,"contains an invalid polygon which was discarded") 
                 done+=1
                 continue
-            targetlist.append(pol)
+            targetlist.append(pol)  
         done+=1
     if filter:
         ret_val=(geometry.MultiPolygon(multilist),geometry.MultiPolygon(excludelist))
@@ -485,3 +490,52 @@ def OSM_to_MultiPolygon(osm_layer,lat,lon,filter=None):
     return ret_val
 ##############################################################################
 
+##############################################################################
+def OSM_to_MultiPolygon_dico(osm_layer, lat, lon, classifier, dico):
+    todo=len(osm_layer.dicosmfirst['w'])+len(osm_layer.dicosmfirst['r'])
+    step=int(todo/100)+1
+    done=0
+    for wayid in osm_layer.dicosmfirst['w']:
+        if done%step==0: UI.progress_bar(1,int(100*done/todo))
+        if osm_layer.dicosmw[wayid][0]!=osm_layer.dicosmw[wayid][-1]: 
+            UI.logprint("Non closed way starting at",osm_layer.dicosmn[osm_layer.dicosmw[wayid][0]],", skipped.")
+            done+=1
+            continue
+        way=numpy.round(numpy.array([osm_layer.dicosmn[nodeid] for nodeid in osm_layer.dicosmw[wayid]],dtype=numpy.float64)-numpy.array([[lon,lat]],dtype=numpy.float64),7) 
+        try:
+            pol=geometry.Polygon(way)
+            if not pol.area: continue
+            if not pol.is_valid:
+                UI.logprint("Invalid OSM way starting at",osm_layer.dicosmn[osm_layer.dicosmw[wayid][0]],", skipped.")
+                done+=1
+                continue
+        except Exception as e:
+            UI.vprint(2,e)
+            done+=1
+            continue
+        classifier(pol,osm_layer.dicosmtags['w'][wayid],dico)
+        done+=1
+    for relid in osm_layer.dicosmfirst['r']:
+        if done%step==0: UI.progress_bar(1,int(100*done/todo))
+        try:
+            multiout=[geometry.Polygon(numpy.round(numpy.array([osm_layer.dicosmn[nodeid] \
+                                        for nodeid in nodelist],dtype=numpy.float64)-numpy.array([lon,lat],dtype=numpy.float64),7))\
+                                        for nodelist in osm_layer.dicosmr[relid]['outer']]
+            # do not check for validity here, let it fail and write a log
+            multiout=ops.cascaded_union([geom for geom in multiout])
+            multiin=[geometry.Polygon(numpy.round(numpy.array([osm_layer.dicosmn[nodeid]\
+                                        for nodeid in nodelist],dtype=numpy.float64)-numpy.array([lon,lat],dtype=numpy.float64),7))\
+                                        for nodelist in osm_layer.dicosmr[relid]['inner']]
+            # insteand OSM errors in some small inner islands within rel might be ignored and shouldn't make the whole rel to be skipped 
+            multiin=ops.cascaded_union([geom for geom in multiin if geom.is_valid])
+            multipol = multiout.difference(multiin)
+        except Exception as e:
+            UI.lvprint(2,"Invalid OSM relation starting at",osm_layer.dicosmn[osm_layer.dicosmr[relid]['outer'][0]],", skipped.")
+            UI.vprint(3,e)
+            done+=1
+            continue
+        for pol in multipol.geoms if ('Multi' in multipol.geom_type or 'Collection' in multipol.geom_type) else [multipol]:
+            classifier(pol,osm_layer.dicosmtags['r'][relid],dico)
+    UI.progress_bar(1,100)
+    return 
+##############################################################################

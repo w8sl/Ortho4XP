@@ -14,14 +14,14 @@ ovl_exclude_net=[]
 custom_overlay_src=''
 
 if 'dar' in sys.platform:
-    unzip_cmd    = os.path.join(FNAMES.Utils_dir,"7zz ")
-    dsftool_cmd  = os.path.join(FNAMES.Utils_dir,"DSFTool ")
-elif 'win' in sys.platform:
+    unzip_cmd    = "7z "
+    dsftool_cmd  = os.path.join(FNAMES.Utils_dir,"DSFTool.app ")
+elif 'win' in sys.platform: 
     unzip_cmd    = os.path.join(FNAMES.Utils_dir,"7z.exe ")
     dsftool_cmd  = os.path.join(FNAMES.Utils_dir,"DSFTool.exe ")
 else:
     unzip_cmd    = "7z "
-    dsftool_cmd  = os.path.join(FNAMES.Utils_dir,"DSFTool_linux ")
+    dsftool_cmd  = os.path.join(FNAMES.Utils_dir,"DSFTool ")
 
 ##############################################################################
 def build_overlay(lat,lon):
@@ -49,11 +49,11 @@ def build_overlay(lat,lon):
         os.rename(file_to_sniff_loc,file_to_sniff_loc+'.7z')
         os.system(unzip_cmd+' e -o'+FNAMES.Tmp_dir+' "'+file_to_sniff_loc+'.7z"')
     UI.vprint(1,"-> Converting the copy to text format")
-    dsfconvertcmd=[dsftool_cmd.strip(),' -dsf2text '.strip(),file_to_sniff_loc,os.path.join(FNAMES.Tmp_dir,FNAMES.short_latlon(lat,lon)+'_tmp_dsf.txt')]
+    dsfconvertcmd=[dsftool_cmd.strip(),' -dsf2text '.strip(),file_to_sniff_loc,os.path.join(FNAMES.Tmp_dir,'tmp_dsf.txt')]
     fingers_crossed=subprocess.Popen(dsfconvertcmd,stdout=subprocess.PIPE,bufsize=0)
     while True:
         line = fingers_crossed.stdout.readline()
-        if not line:
+        if not line: 
             break
         else:
             UI.vprint(1,'     '+line.decode("utf-8")[:-1])
@@ -61,8 +61,8 @@ def build_overlay(lat,lon):
         UI.exit_message_and_bottom_line("   ERROR: DSFTool crashed.")
         return 0
     UI.vprint(1,"-> Selecting overlays for copy/paste")
-    f=open(os.path.join(FNAMES.Tmp_dir,FNAMES.short_latlon(lat,lon)+'_tmp_dsf.txt'),'r')
-    g=open(os.path.join(FNAMES.Tmp_dir,FNAMES.short_latlon(lat,lon)+'_tmp_dsf_without_mesh.txt'),'w')
+    f=open(os.path.join(FNAMES.Tmp_dir,'tmp_dsf.txt'),'r')
+    g=open(os.path.join(FNAMES.Tmp_dir,'tmp_dsf_without_mesh.txt'),'w')
     line=f.readline()
     g.write('PROPERTY sim/overlay 1\n')
     pol_type=0
@@ -79,6 +79,8 @@ def build_overlay(lat,lon):
             pol_type+=1
             g.write(line)
         elif 'NETWORK_DEF' in line:
+            g.write(line)
+        elif 'OBJECT_DEF' in line:
             g.write(line)
         elif 'BEGIN_POLYGON' in line:
             if not exclude_set_updated:
@@ -113,35 +115,37 @@ def build_overlay(lat,lon):
             else:
                 while line and ('END_SEGMENT' not in line):
                     line=f.readline()
+        elif 'OBJECT ' in line:
+            g.write(line)
         line=f.readline()
     f.close()
     g.close()
     UI.vprint(1,"-> Converting back the text DSF to binary format")
-    dsfconvertcmd=[dsftool_cmd.strip(),' -text2dsf '.strip(),os.path.join(FNAMES.Tmp_dir,FNAMES.short_latlon(lat,lon)+'_tmp_dsf_without_mesh.txt'),os.path.join(FNAMES.Tmp_dir,FNAMES.short_latlon(lat,lon)+'_tmp_dsf_without_mesh.dsf')]
+    dsfconvertcmd=[dsftool_cmd.strip(),' -text2dsf '.strip(),os.path.join(FNAMES.Tmp_dir,'tmp_dsf_without_mesh.txt'),os.path.join(FNAMES.Tmp_dir,'tmp_dsf_without_mesh.dsf')] 
     fingers_crossed=subprocess.Popen(dsfconvertcmd,stdout=subprocess.PIPE,bufsize=0)
     while True:
         line = fingers_crossed.stdout.readline()
-        if not line:
+        if not line: 
             break
         else:
             print('     '+line.decode("utf-8")[:-1])
     dest_dir=os.path.join(FNAMES.Overlay_dir,"Earth nav data",FNAMES.round_latlon(lat,lon))
-    UI.vprint(1,"-> Coping the final overlay DSF in "+dest_dir)
+    UI.vprint(1,"-> Coping the final overlay DSF in "+dest_dir) 
     if not os.path.exists(dest_dir):
         try:
             os.makedirs(dest_dir)
         except:
             UI.exit_message_and_bottom_line("   ERROR: could not create destination directory "+str(dest_dir))
             return 0
-    shutil.copy(os.path.join(FNAMES.Tmp_dir,FNAMES.short_latlon(lat,lon)+'_tmp_dsf_without_mesh.dsf'),os.path.join(dest_dir,FNAMES.short_latlon(lat,lon)+'.dsf'))
-    os.remove(os.path.join(FNAMES.Tmp_dir,FNAMES.short_latlon(lat,lon)+'_tmp_dsf_without_mesh.dsf'))
-    os.remove(os.path.join(FNAMES.Tmp_dir,FNAMES.short_latlon(lat,lon)+'_tmp_dsf_without_mesh.txt'))
-    os.remove(os.path.join(FNAMES.Tmp_dir,FNAMES.short_latlon(lat,lon)+'_tmp_dsf.txt'))
+    shutil.copy(os.path.join(FNAMES.Tmp_dir,'tmp_dsf_without_mesh.dsf'),os.path.join(dest_dir,FNAMES.short_latlon(lat,lon)+'.dsf'))
+    os.remove(os.path.join(FNAMES.Tmp_dir,'tmp_dsf_without_mesh.dsf'))
+    os.remove(os.path.join(FNAMES.Tmp_dir,'tmp_dsf_without_mesh.txt'))
+    os.remove(os.path.join(FNAMES.Tmp_dir,'tmp_dsf.txt'))
     os.remove(file_to_sniff_loc)
     try:
-        os.remove(os.path.join(FNAMES.Tmp_dir,FNAMES.short_latlon(lat,lon)+'_tmp_dsf.txt.elevation.raw'))
-        os.remove(os.path.join(FNAMES.Tmp_dir,FNAMES.short_latlon(lat,lon)+'_tmp_dsf.txt.sea_level.raw'))
-    except:
+        os.remove(os.path.join(FNAMES.Tmp_dir,'tmp_dsf.txt.elevation.raw')) 
+        os.remove(os.path.join(FNAMES.Tmp_dir,'tmp_dsf.txt.sea_level.raw')) 
+    except: 
         pass
     if dsfid == '7z':
         os.remove(file_to_sniff_loc+'.7z')
