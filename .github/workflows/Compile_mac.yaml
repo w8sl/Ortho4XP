@@ -1,0 +1,35 @@
+name: Compile push_obj_into_mesh.c macOS
+
+on:
+  workflow_dispatch:
+
+permissions:
+  contents: write
+  actions: read
+
+jobs:
+  build_mac:
+    runs-on: macos-14
+    steps:
+    - name: Checkout code
+      uses: actions/checkout@v6
+    
+    - name: Compile on macOS
+      run: |         
+         cd ./src/C
+         ls
+         gcc push_obj_into_mesh.c -o push_obj_into_mesh -lm
+         cd ../..
+         mv src/C/push_obj_into_mesh Utils/
+         
+    - name: Create branch and commit changes
+      run: |
+         git config --global user.name 'github-actions[bot]'
+         git config --global user.email 'github-actions[bot]@users.noreply.github.com'
+         git checkout ${{ github.ref_name }}
+         git add .
+         git commit -m 'Compile push_obj_into_mesh.c/macOS'
+
+    - name: Push changes
+      run: git push origin ${{ github.ref_name }}
+      
