@@ -1735,11 +1735,15 @@ class Ortho4XP_Custom_ZL(tk.Toplevel):
     	   build_dir=FNAMES.build_dir(self.lat,self.lon,self.parent.custom_build_dir.get())
     	   mesh_file = FNAMES.mesh_file(build_dir,self.lat,self.lon)
     	   UI.vprint(1,"\nExtracting part of ",mesh_file,"to",FNAMES.obj_file(til_x_left,til_y_top,zoomlevel,provider_code),"(Wavefront)")
-    	   fargs_extract_mesh=[mesh_file, til_x_left, til_y_top, zoomlevel, provider_code]
-    	   extract_mesh_thread=threading.Thread(target=MESH.extract_mesh_to_linear_wgs84_obj_wavefront,
+    	   if os.path.exists(mesh_file): 
+    	      fargs_extract_mesh=[mesh_file, til_x_left, til_y_top, zoomlevel, provider_code]
+    	      extract_mesh_thread=threading.Thread(target=MESH.extract_mesh_to_linear_wgs84_obj_wavefront,
                     args=fargs_extract_mesh)
-    	   extract_mesh_thread.start()
-    	   return
+    	      extract_mesh_thread.start()
+    	      return
+    	   else:
+    	      UI.vprint(1, "Mesh file not found. Run step 1 and 2!")
+    	      return  
     	else:
     	   UI.vprint(1, "Select zones to extract mesh!")
     	   return
