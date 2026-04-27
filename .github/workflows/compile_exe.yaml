@@ -23,7 +23,7 @@ jobs:
       run: |         
          cd ./src/C
          ls
-         gcc push_obj_into_mesh.c -o push_obj_into_mesh.exe -static -lm 
+         gcc push_obj_into_mesh.c -o push_obj_into_mesh.exe -static -static-libgcc -static-libstdc++ -Wl,--whole-archive -lpthread -Wl,--no-whole-archive -lm
          cd ../..
          ls
          Move-Item -Path "src/C/push_obj_into_mesh.exe" -Destination "Utils/"
