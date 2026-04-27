@@ -18,7 +18,7 @@ jobs:
     - name: Install LLVM + LLVM-MinGW
       shell: cmd
       run: |
-        curl -L -o llvm-mingw.zip https://github.com/mstorsjo/llvm-mingw/releases/download/2024-01-14/llvm-mingw-20240114-msvcrt-x86_64.zip
+        curl -L -o llvm-mingw.zip https://github.com/mstorsjo/llvm-mingw/releases/download/20260421/llvm-mingw-20260421-msvcrt-x86_64.zip
         powershell -Command "Expand-Archive llvm-mingw.zip -DestinationPath llvm-mingw"
         echo %CD%\llvm-mingw\llvm-mingw-20240114-msvcrt-x86_64\bin>>%GITHUB_PATH%
 
