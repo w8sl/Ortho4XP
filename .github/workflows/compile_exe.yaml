@@ -15,21 +15,22 @@ jobs:
     - name: Checkout code
       uses: actions/checkout@v4
 
-    - name: Set up Mingw64
+    - name: Install LLVM + LLVM-MinGW
       shell: cmd
       run: |
-        echo C:\tools\mingw64\bin>>%GITHUB_PATH%
+       curl -L -o llvm-mingw.zip https://github.com/mstorsjo/llvm-mingw/releases/download/2024-01-14/llvm-mingw-20240114-msvcrt-x86_64.zip
+       tar -xf llvm-mingw.zip
+       echo %CD%\llvm-mingw-20240114-msvcrt-x86_64\bin>>%GITHUB_PATH%
 
-    - name: Compile C code (static build)
+    - name: Compile C code with Clang (LLVM-MinGW)
       shell: cmd
       run: |
        cd src\C
        dir
-       gcc push_obj_into_mesh.c -o push_obj_into_mesh.exe -static -static-libgcc -static-libstdc++ -lm
+       clang --target=x86_64-w64-windows-gnu push_obj_into_mesh.c -o push_obj_into_mesh.exe -static -lm
        cd ..\..
        dir
        move src\C\push_obj_into_mesh.exe Utils\
-
     
     - name: Create branch and commit changes
       run: |
