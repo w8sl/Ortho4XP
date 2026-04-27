@@ -1,6 +1,8 @@
 name: Compile push_obj_into_mesh.exe with MinGW-GCC
+
 on:
   push
+
 permissions:
   contents: write
   actions: read
@@ -8,25 +10,23 @@ permissions:
 jobs:
   build:
     runs-on: windows-latest
+
     steps:
     - name: Checkout code
       uses: actions/checkout@v4
+
+    - name: Set up Mingw64
+      run: echo "C:\tools\mingw64\bin" >> $env:GITHUB_PATH
+      shell: pwsh
     
-    - name: Set up MSVC
-      uses: ilammy/msvc-dev-cmd@v1
-      with:
-        arch: x64
-        
-    - name: Compile C code    
-      run: |
-        call "C:\Program Files\Microsoft Visual Studio\2022\Enterprise\VC\Auxiliary\Build\vcvars64.bat"
-        cd src\C
-        dir
-        cl push_obj_into_mesh.c /Fe:push_obj_into_mesh.exe /link /out:push_obj_into_mesh.exe
-        cd ..\..
-        dir
-        move src\C\push_obj_into_mesh.exe Utils\
-      shell: cmd
+    - name: Compile C code
+      run: |         
+         cd ./src/C
+         ls
+         gcc push_obj_into_mesh.c -o push_obj_into_mesh.exe -static -lm 
+         cd ../..
+         ls
+         Move-Item -Path "src/C/push_obj_into_mesh.exe" -Destination "Utils/"
     
     - name: Create branch and commit changes
       run: |
@@ -34,6 +34,7 @@ jobs:
          git config --global user.email 'github-actions[bot]@users.noreply.github.com'
          git checkout ${{ github.ref_name }}
          git add .
-         git commit -m 'Compile push_obj_into_mesh.exe with Visual Studio'
+         git commit -m 'Compile push_obj_into_mesh.exe with static libraries'
+
     - name: Push changes
       run: git push origin ${{ github.ref_name }}
