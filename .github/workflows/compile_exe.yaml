@@ -12,27 +12,31 @@ jobs:
     runs-on: windows-latest
 
     steps:
-    - name: Checkout code
+    - name: Checkout repository
       uses: actions/checkout@v4
 
     - name: Install LLVM + LLVM-MinGW
       shell: cmd
       run: |
-        curl -L -o llvm-mingw.zip https://github.com/mstorsjo/llvm-mingw/releases/download/20260421/llvm-mingw-20260421-msvcrt-x86_64.zip
-        powershell -Command "Expand-Archive llvm-mingw.zip -DestinationPath llvm-mingw"
-        echo %CD%\llvm-mingw\llvm-mingw-20240114-msvcrt-x86_64\bin>>%GITHUB_PATH%
+        set LLVM_DIR=C:\llvm-mingw
+        mkdir %LLVM_DIR%
+        curl -L -o %LLVM_DIR%\llvm-mingw.zip https://github.com/mstorsjo/llvm-mingw/releases/download/20260421/llvm-mingw-20260421-msvcrt-x86_64.zip
+        powershell -Command "Expand-Archive %LLVM_DIR%\llvm-mingw.zip -DestinationPath %LLVM_DIR%"
+        echo %LLVM_DIR%\llvm-mingw-20260421-msvcrt-x86_64\bin>>%GITHUB_PATH%
 
     - name: Compile C code with Clang (LLVM-MinGW)
       shell: cmd
       run: |
         cd src\C
-        dir
         clang --target=x86_64-w64-windows-gnu push_obj_into_mesh.c -o push_obj_into_mesh.exe -static -lm
         cd ..\..
-        dir
         move src\C\push_obj_into_mesh.exe Utils\
 
-    
+    - name: Cleanup LLVM
+      shell: cmd
+      run: |
+        rmdir /s /q C:\llvm-mingw
+
     - name: Create branch and commit changes
       run: |
          git config --global user.name 'github-actions[bot]'
