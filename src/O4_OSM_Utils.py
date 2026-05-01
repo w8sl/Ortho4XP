@@ -509,9 +509,10 @@ def OSM_query_to_OSM_layer(
 
 ################################################################################
 def get_overpass_data(query, bbox, server_code=None):
+    s = requests.Session()
+    s.headers.update({"User-Agent": f"Ortho4XP-Progressive_130"})
     tentative = 1
     while True:
-        s = requests.Session()
         true_server_code = server_code
         if not server_code:
             true_server_code = (
