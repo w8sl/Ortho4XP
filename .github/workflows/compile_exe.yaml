@@ -1,7 +1,7 @@
 name: Compile push_obj_into_mesh.exe with MinGW-GCC
 
 on:
-  push
+ # push
 
 permissions:
   contents: write
