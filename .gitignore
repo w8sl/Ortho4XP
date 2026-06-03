@@ -4,10 +4,10 @@ Previews/
 Extents/
 tmp/
 venv-ortho/
+**/Ortho4XP.cfg
 **/Ortho4XP.log
 **/__pycache__
 **/Thumbs.db
 **/*.bak
 **/*.swp
 .last_gui_params.txt
-Ortho4XP.cfg
