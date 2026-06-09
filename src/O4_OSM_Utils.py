@@ -558,9 +558,6 @@ def OSM_queries_to_OSM_layer(queries, osm_layer, lat, lon, tags_of_interest=[],
         osm_layer.write_to_file(cached_data_filename)
       return 1
 ##############################################################################
-
-
-##############################################################################
 def OSM_query_to_OSM_layer(query, bbox, osm_layer, tags_of_interest=[],
                            server_code=None, cached_file_name=''):
     target_tags = {'n': [], 'w': [], 'r': []}
@@ -581,21 +578,29 @@ def OSM_query_to_OSM_layer(query, bbox, osm_layer, tags_of_interest=[],
                 target_tags[osm_type].append(tag)
 
     if cached_file_name and os.path.isfile(cached_file_name):
-        UI.vprint(1, "    * Recycling OSM data from", cached_file_name)
-        osm_layer.update_dicosm(cached_file_name, input_tags, target_tags)
-        return 1
-
-    lat_min, lon_min, lat_max, lon_max = bbox
-    tile_path = _local_tile_path(lat_min, lon_min)
-    if not tile_path:
+      UI.vprint(1, "    * Recycling OSM data from", cached_file_name)
+      osm_layer.update_dicosm(cached_file_name, input_tags, target_tags)
+      return 1
+    elif USE_LOCAL_EXTRACT:
+      lat_min, lon_min, lat_max, lon_max = bbox
+      tile_path = _local_tile_path(lat_min, lon_min)
+      if not tile_path:
         return 0
-    osm_layer.update_dicosm(tile_path, input_tags, target_tags)
-    if cached_file_name:
-        osm_layer.write_to_file(cached_file_name)
-    return 1
+      osm_layer.update_dicosm(tile_path, input_tags, target_tags)
+      if cached_file_name:
+         osm_layer.write_to_file(cached_file_name)
+      return 1
+    else:
+      response=get_overpass_data(query,bbox,server_code)
+      if UI.red_flag: return 0
+      if not response:
+         UI.lvprint(1,"      No valid answer for",query,"after",max_osm_tentatives,", skipping it.")
+         return 0
+      osm_layer.update_dicosm(response,input_tags,target_tags)
+      if cached_file_name: osm_layer.write_to_file(cached_file_name)
+      return 1
+      
 ##############################################################################
-
-
 
 ##############################################################################
 def get_overpass_data(query,bbox,server_code=None):
