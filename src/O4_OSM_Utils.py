@@ -17,20 +17,9 @@ import O4_File_Names as FNAMES
 # =============================================================================
 # LOCAL TILE CONFIGURATION
 # =============================================================================
-USE_LOCAL_EXTRACT=False
-LOCAL_TILE_DIR = "Path to local tiles extracted from .pbf file"
-# If PBF_FILE is set, missing tiles will be automatically extracted via osmium
-PBF_FILE = "Path to .pbf file downloaded from https://download.geofabrik.de" 
+OSM_pbf_file=None
+LOCAL_TILE_DIR = os.path.join(FNAMES.OSM_dir, "Local_OSM_extract")
 
-# Validate at import time
-if LOCAL_TILE_DIR and not os.path.isdir(LOCAL_TILE_DIR):
-    print(f"WARNING: LOCAL_TILE_DIR '{LOCAL_TILE_DIR}' does not exist — falling back to Overpass.")
-    LOCAL_TILE_DIR = None
-    USE_LOCAL_EXTRACT=False
-else:
-    if LOCAL_TILE_DIR:
-        os.makedirs(LOCAL_TILE_DIR, exist_ok=True)
-        print(f"Local OSM tiles: {LOCAL_TILE_DIR}")
 
 overpass_servers = {
     "DE": "https://overpass-api.de/api/interpreter",
@@ -394,32 +383,56 @@ class OSM_layer():
         return 1
 ##############################################################################
 def _local_tile_path(lat, lon):
-    """Return tile path if a local .osm.bz2 exists, or attempt extraction if PBF is configured."""
+    """
+    Attempts to find or create a local tile.
+    Provides specific feedback for different failure modes.
+    """
     if not LOCAL_TILE_DIR:
+        UI.vprint(1, "    [Error] LOCAL_TILE_DIR is not defined.")
         return None
         
-    path = os.path.join(LOCAL_TILE_DIR, f"{int(lat)}_{int(lon)}.osm.bz2")
+    tile_name = f"{int(lat)}_{int(lon)}.osm.bz2"
+    path = os.path.join(LOCAL_TILE_DIR, tile_name)
     
-    # 1. Check if tile already exists
-    if os.path.isfile(path) and os.path.getsize(path) > 150:
-        # Quick validation check
-        try:
-            with bz2.open(path, 'rb') as f:
-                if b'<osm' in f.read(64):
-                    UI.vprint(2, f"    Local tile found: {path}")
-                    return path
-        except:
-            pass
+    # --- 1. CHECK EXISTING TILE ---
+    if os.path.isfile(path):
+        file_size = os.path.getsize(path)
+        if file_size > 150:
+            try:
+                with bz2.open(path, 'rb') as f:
+                    if b'<osm' in f.read(64):
+                        UI.vprint(2, f"    Local tile found: {path}")
+                        return path
+                    else:
+                        UI.vprint(1, f"    [Data Error] Tile found but header is invalid (not OSM).")
+            except Exception as e:
+                UI.vprint(1, f"    [Data Error] Could not read tile file: {e}")
+        else:
+            UI.vprint(1, f"    [Data Error] Tile file {tile_name} is too small ({file_size} bytes). Likely an ocean or empty extract.")
+    else:
+        # We don't warn about "missing" here because we expect to extract it if PBF is set
+        pass
 
-    # 2. If not found, try to extract from PBF
-    if PBF_FILE:
-        extracted_path = _extract_tile_from_pbf(lat, lon, PBF_FILE, LOCAL_TILE_DIR)
-        if extracted_path:
-            return extracted_path
+    # --- 2. ATTEMPT EXTRACTION ---
+    # CASE: PBF is not configured in the dropdown
+    if OSM_pbf_file is None or OSM_pbf_file == "":
+        UI.vprint(1, "    [Config Error] Local mode selected, but no PBF file is configured in settings.")
+        return None
+        
+    # CASE: PBF is configured but the file is unreachable (deleted/unplugged drive)
+    if not os.path.exists(OSM_pbf_file):
+        UI.vprint(1, f"    [File Error] PBF file is configured but NOT FOUND: {OSM_pbf_file}")
+        return None
 
-    UI.vprint(1, f"    Local tile NOT FOUND and PBF extraction failed/not configured: {path}")
-    return None
-
+    # CASE: Everything is set correctly, try the extraction
+    UI.vprint(1, f"    * No valid tile found. Attempting extraction from PBF...")
+    extracted_path = _extract_tile_from_pbf(lat, lon, OSM_pbf_file, LOCAL_TILE_DIR)
+    
+    if extracted_path:
+        return extracted_path
+    else:
+        # If _extract_tile_from_pbf returns None, it already printed its own error
+        return None
 
 ##############################################################################
 
@@ -522,10 +535,11 @@ def OSM_queries_to_OSM_layer(queries, osm_layer, lat, lon, tags_of_interest=[],
         return osm_layer.update_dicosm(cached_data_filename, input_tags, target_tags)
 
     # Local tile — single parse covers all queries
-    if USE_LOCAL_EXTRACT:
+    if overpass_server_choice == "local_file":
+      os.makedirs(LOCAL_TILE_DIR, exist_ok=True)     
       tile_path = _local_tile_path(lat, lon)
       if not tile_path:
-        UI.vprint(1, f"    No local tile for lat={int(lat)} lon={int(lon)}, skipping.")
+        UI.red_flag = True
         return 0
       for query in queries:
         UI.vprint(1, "    * Reading local OSM data for", query)
@@ -536,7 +550,7 @@ def OSM_queries_to_OSM_layer(queries, osm_layer, lat, lon, tags_of_interest=[],
         _prune_osm_layer(osm_layer)
         osm_layer.write_to_file(cached_data_filename)
       return 1
-    
+     
     else:
       for query in queries:
         # look first for cached data (old scheme)
@@ -581,7 +595,7 @@ def OSM_query_to_OSM_layer(query, bbox, osm_layer, tags_of_interest=[],
       UI.vprint(1, "    * Recycling OSM data from", cached_file_name)
       osm_layer.update_dicosm(cached_file_name, input_tags, target_tags)
       return 1
-    elif USE_LOCAL_EXTRACT:
+    elif overpass_server_choice == "local_file":
       lat_min, lon_min, lat_max, lon_max = bbox
       tile_path = _local_tile_path(lat_min, lon_min)
       if not tile_path:
