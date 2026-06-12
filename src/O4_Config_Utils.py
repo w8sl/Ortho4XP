@@ -20,7 +20,7 @@ cfg_vars={
     # App
     'verbosity':             {'module':'UI','type':int,'default':1,'values':(0,1,2,3),'hint':'Verbosity determines the amount of information about the whole process which is printed on screen.  Critical errors, if any, are reported in all states as well as in the Log. Values above 1 are probably only useful for for debug purposes.'},
     'cleaning_level':        {'module':'UI','type':int,'default':1,'values':(0,1,2,3),'hint':'Determines which temporary files are removed. Level 3 erases everything except the config and what is needed for X-Plane; Level 2 erases everything except what is needed to redo the current step only; Level 1 allows you to redo any prior step; Level 0 keeps every single file.'},
-    'overpass_server_choice':{'module':'OSM','type':str,'default':'random','values':['random']+sorted(OSM.overpass_servers.keys()),'hint':'The (country) of the Overpass OSM server used to grab vector data. It can be modified on the fly (as all _Application_ variables) in case of problem with a particular server.'},
+    'overpass_server_choice':{'module':'OSM','type':str,'default':'random','values':['random']+['local_file']+sorted(OSM.overpass_servers.keys()),'hint':'The (country) of the Overpass OSM server used to grab vector data. It can be modified on the fly (as all _Application_ variables) in case of problem with a particular server. Use "local_file" for extracting data from osm.pbf file'},
     'skip_downloads':        {'module':'TILE','type':bool,'default':False,'hint':'Will only build the DSF and TER files but not the textures (neither download nor convert). This could be useful in cases where imagery cannot be shared.'},
     'skip_converts':         {'module':'TILE','type':bool,'default':False,'hint':'Imagery will be downloaded but not converted from jpg to dds. Some user prefer to postprocess imagery with third party softwares prior to the dds conversion. In that case Step 3 needs to be run a second time after the retouch work.'},
     'max_convert_slots':     {'module':'TILE','type':int,'default':4,'values':(1,2,3,4,5,6,7,8,9,10,11,12,13,14,15,16),'hint':'Number of parallel threads for dds conversion. Should be mainly dictated by the number of cores in your CPU.'},
@@ -32,6 +32,7 @@ cfg_vars={
     'ovl_exclude_net'    :   {'module':'OVL','type':list,'default':[],'hint':'Indices of road types which one would like to left aside in the extraction of overlays. The list of these indices is can be in the roads.net file within X-Plane Resources, but some sceneries use their own corresponding net definition file. Powerlines have index 22001 in XP11 roads.net default file.'},
     'xplane_install_dir':    {'type':str,'default':'<X-Plane Top Level directory>','hint':'Your X-Plane top-level directory. Used to find and parse the X-Plane apt.dat files. Also used for "1-click" linking of tiles from Ortho4XP to the X-Plane Custom Scenery folder. Supersedes the old "custom_scenery_dir" config option'},
     'custom_overlay_src':    {'module':'OVL','type':str,'default':'','hint':'The directory containing the sceneries with the overlays you would like to extract. You need to select the level of directory just _ABOVE_ Earth nav data.'},
+    'OSM_pbf_file':          {'module':'OSM','type':str,'default':'','hint':'Local ...osm.pbf file downloaded from https://download.geofabrik.de. Used with overpass_server_choice=local_file for extracting OSM data. Requires osmium-tool (brew install/sudo apt install osmium-tool). Back-up solution as download from the overpass-server is usually faster'},
     # Vector
     'apt_smoothing_pix':   {'type':int,  'default':8,'hint':"How much gaussian blur is applied to the elevation raster for the look up of altitude over airports. Unit is the evelation raster pixel size."},
     'road_level':          {'type':int,'default':1,'values':(0,1,2,3,4,5),'hint':'Allows to level the mesh along roads and railways. Zero means nothing such is included; "1" looks for banking ways among motorways, primary and secondary roads and railway tracks; "2" adds tertiary roads; "3" brings residential and unclassified roads; "4" takes service roads, and 5 finishes with tracks. Purge the small_roads.osm cached data if you change your mind in between the levels 2-5.'},
@@ -98,9 +99,9 @@ cfg_vars={
 
 list_app_vars=['verbosity','cleaning_level','overpass_server_choice',
                'skip_downloads','skip_converts','max_convert_slots','check_tms_response',
-               'http_timeout','max_connect_retries','max_baddata_retries','ovl_exclude_pol','ovl_exclude_net','xplane_install_dir','custom_overlay_src']
+               'http_timeout','max_connect_retries','max_baddata_retries','ovl_exclude_pol','ovl_exclude_net','xplane_install_dir','custom_overlay_src','OSM_pbf_file']
 gui_app_vars_short=list_app_vars[:-2]
-gui_app_vars_long=list_app_vars[-2:]
+gui_app_vars_long = list_app_vars[-3:-1]
 
 list_vector_vars=['apt_smoothing_pix','road_level','road_banking_limit','lane_width','max_levelled_segs','water_simplification','min_area','max_area','clean_bad_geometries','mesh_zl']
 list_mesh_vars=['curvature_tol','apt_curv_tol','apt_curv_ext','coast_curv_tol','coast_curv_ext','limit_tris','hmin','min_angle','sea_smoothing_mode','water_smoothing','iterate']
@@ -336,6 +337,13 @@ class Ortho4XP_Config(tk.Toplevel):
             self.entry_[item].grid(row=row,column=1,columnspan=5,padx=(2,0),pady=2,sticky=N+S+E+W)
             ttk.Button(self.frame_cfg,image=self.folder_icon,command=lambda item=item: self.choose_dir(item),style='Flat.TButton').grid(row=row,column=6, padx=2, pady=0,sticky=N+S+W)
             row+=1
+        
+        item='OSM_pbf_file'
+        ttk.Button(self.frame_cfg,text=item,takefocus=False,command=lambda item=item: self.popup(item,cfg_vars[item]['hint'])).grid(row=row,column=0,padx=2,pady=2,sticky=E+W+N+S)
+        self.entry_[item]=tk.Entry(self.frame_cfg,textvariable=self.v_[item],bg='white',fg='blue')
+        self.entry_[item].grid(row=row,column=1,columnspan=5,padx=(2,0),pady=2,sticky=N+S+E+W)
+        ttk.Button(self.frame_cfg,image=self.folder_icon,command=lambda item=item: self.choose_pbf(item),style='Flat.TButton').grid(row=row,column=6, padx=2, pady=0,sticky=N+S+W)
+        row+=1
 
 
         self.button1= ttk.Button(self.frame_lastbtn, text='Load Tile Cfg ',command= self.load_tile_cfg)
@@ -375,6 +383,13 @@ class Ortho4XP_Config(tk.Toplevel):
             else:
                 self.v_['custom_dem'].set(self.v_['custom_dem'].get()+";"+str(tmp))
 
+    
+    def choose_pbf(self, item=None):
+        """Opens dialog to select a single PBF file."""
+        tmp = filedialog.askopenfilename(parent=self, title='Choose PBF file', filetypes=[('PBF files', ('.pbf',)), ('all files', '.*')])
+        if tmp: 
+            self.v_['OSM_pbf_file'].set(str(tmp))
+    
     def choose_dir(self,item):
         tmp=filedialog.askdirectory(parent=self)
         if tmp: self.v_[item].set(str(tmp))
