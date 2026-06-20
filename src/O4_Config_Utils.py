@@ -100,7 +100,7 @@ cfg_vars={
 list_app_vars=['verbosity','cleaning_level','overpass_server_choice',
                'skip_downloads','skip_converts','max_convert_slots','check_tms_response',
                'http_timeout','max_connect_retries','max_baddata_retries','ovl_exclude_pol','ovl_exclude_net','xplane_install_dir','custom_overlay_src','OSM_pbf_file']
-gui_app_vars_short=list_app_vars[:-2]
+gui_app_vars_short=list_app_vars[:-3]
 gui_app_vars_long = list_app_vars[-3:-1]
 
 list_vector_vars=['apt_smoothing_pix','road_level','road_banking_limit','lane_width','max_levelled_segs','water_simplification','min_area','max_area','clean_bad_geometries','mesh_zl']
