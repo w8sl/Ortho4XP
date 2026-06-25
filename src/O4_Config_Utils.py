@@ -35,9 +35,9 @@ cfg_vars = {
     "overpass_server_choice": {
         "module": "OSM",
         "type": str,
-        "default": "DE",
-        "values": ["random"] + sorted(OSM.overpass_servers.keys()),
-        "hint": "The (country) of the Overpass OSM server used to grab vector data. It can be modified on the fly (as all _Application_ variables) in case of problem with a particular server.",
+        "default": "random",
+        "values": ["random"] + ["local_file"] + sorted(OSM.overpass_servers.keys()),
+        "hint": 'The (country) of the Overpass OSM server used to grab vector data. It can be modified on the fly (as all _Application_ variables) in case of problem with a particular server. Use "local_file" for extracting data from osm.pbf file',
     },
     "skip_downloads": {
         "module": "TILE",
@@ -104,6 +104,12 @@ cfg_vars = {
         "type": str,
         "default": "",
         "hint": "The directory containing the sceneries with the overlays you would like to extract. You need to select the level of directory just _ABOVE_ Earth nav data.",
+    },
+    "OSM_pbf_file": {
+        "module": "OSM",
+        "type": str,
+        "default": "",
+        "hint": "Local ...osm.pbf file downloaded from https://download.geofabrik.de. Used with overpass_server_choice=local_file for extracting OSM data. Requires osmium-tool (brew install/sudo apt install osmium-tool). Back-up solution as download from the overpass-server is usually faster",
     },
     # Vector
     "apt_smoothing_pix": {
@@ -375,9 +381,10 @@ list_app_vars = [
     "ovl_exclude_net",
     "xplane_install_dir",
     "custom_overlay_src",
+    "OSM_pbf_file",
 ]
-gui_app_vars_short = list_app_vars[:-2]
-gui_app_vars_long = list_app_vars[-2:]
+gui_app_vars_short = list_app_vars[:-3]
+gui_app_vars_long = list_app_vars[-3:-1]
 
 list_vector_vars = [
     "apt_smoothing_pix",
@@ -442,7 +449,12 @@ list_tile_vars = (
 )
 
 list_global_cfg = (
-    list_app_vars + list_vector_vars + list_mesh_vars + list_mask_vars + list_dsf_vars + list_other_vars
+    list_app_vars
+    + list_vector_vars
+    + list_mesh_vars
+    + list_mask_vars
+    + list_dsf_vars
+    + list_other_vars
 )
 
 ############################################################################################
@@ -555,7 +567,7 @@ class Tile:
                         value = value[:-1]
                     if cfg_vars[var]["type"] in (bool, list):
                         cmd = "self." + var + "=" + value
-                    #elif cfg_vars[var]["type"] is ScreenRes:
+                    # elif cfg_vars[var]["type"] is ScreenRes:
                     #    cmd = "self." + var + "=ScreenRes.from_config_value(value)"
                     else:
                         cmd = "self." + var + "=cfg_vars['" + var + "']['type'](value)"
@@ -847,6 +859,27 @@ class Ortho4XP_Config(tk.Toplevel):
             ).grid(row=row, column=6, padx=2, pady=0, sticky=N + S + W)
             row += 1
 
+        item = "OSM_pbf_file"
+        ttk.Button(
+            self.frame_cfg,
+            text=item,
+            takefocus=False,
+            command=lambda item=item: self.popup(item, cfg_vars[item]["hint"]),
+        ).grid(row=row, column=0, padx=2, pady=2, sticky=E + W + N + S)
+        self.entry_[item] = tk.Entry(
+            self.frame_cfg, textvariable=self.v_[item], bg="white", fg="blue"
+        )
+        self.entry_[item].grid(
+            row=row, column=1, columnspan=5, padx=(2, 0), pady=2, sticky=N + S + E + W
+        )
+        ttk.Button(
+            self.frame_cfg,
+            image=self.folder_icon,
+            command=lambda item=item: self.choose_pbf(item),
+            style="Flat.TButton",
+        ).grid(row=row, column=6, padx=2, pady=0, sticky=N + S + W)
+        row += 1
+
         self.button1 = ttk.Button(
             self.frame_lastbtn, text="Load Tile Cfg ", command=self.load_tile_cfg
         )
@@ -917,6 +950,16 @@ class Ortho4XP_Config(tk.Toplevel):
         tmp = filedialog.askdirectory(parent=self)
         if tmp:
             self.v_[item].set(str(tmp))
+
+    def choose_pbf(self, item=None):
+        """Opens dialog to select a single PBF file."""
+        tmp = filedialog.askopenfilename(
+            parent=self,
+            title="Choose PBF file",
+            filetypes=[("PBF files", (".pbf",)), ("all files", ".*")],
+        )
+        if tmp:
+            self.v_["OSM_pbf_file"].set(str(tmp))
 
     def load_tile_cfg(self):
         zone_list = []
