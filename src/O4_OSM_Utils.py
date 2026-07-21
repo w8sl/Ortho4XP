@@ -8,6 +8,7 @@ import json
 import subprocess
 import shutil
 import requests
+import random
 import time
 import sys
 from shapely import geometry, ops
