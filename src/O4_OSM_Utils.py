@@ -778,84 +778,95 @@ def OSM_query_to_OSM_layer(
 
 
 ##############################################################################
-
-
-##############################################################################
 def get_overpass_data(query, bbox, server_code=None):
     s = requests.Session()
-    s.headers.update({"User-Agent": f"Ortho4XP-Progressive_140"})
-    tentative = 1
+    s.headers.update({"User-Agent": "Ortho4XP-Progressive_140"})
+
+    tentative = 1  # Total attempts across all servers (safety limit)
+    retry_delay_index = 0  # Current position in the delay_schedule
+    consecutive_failures = 0  # Counter to track failures on the current server
+
+    delay_schedule = [4, 10, 16, 30, 40, 50, 60, 70]
+    server_list = list(overpass_servers.keys())
+
+    # --- INITIAL SERVER SELECTION ---
+
+    if overpass_server_choice == "random":
+        current_index = 0
+    elif overpass_server_choice in server_list:
+        current_index = server_list.index(overpass_server_choice)
+
     while True:
-        true_server_code = server_code
-        if not server_code:
-            true_server_code = (
-                random.choice(list(overpass_servers.keys()))
-                if overpass_server_choice == "random"
-                else overpass_server_choice
-            )
+        true_server_code = server_list[current_index]
         base_url = overpass_servers[true_server_code]
+
         if isinstance(query, str):
             overpass_query = query + str(bbox) + ";"
-        else:  # query is a tuple
+        else:
             overpass_query = "".join([x + str(bbox) + ";" for x in query])
+
         url = base_url + "?data=(" + overpass_query + ");(._;>>;);out meta;"
         UI.vprint(3, url)
+
         try:
-            r = s.get(url, timeout=60)
-            UI.vprint(3, "OSM response status :", r)
+            jitter = random.uniform(1, 4)
+            time.sleep(jitter)
+            r = s.get(url, timeout=30)
+
             if "200" in str(r):
-                if (
-                    b"</osm>" not in r.content[-10:]
-                    and b"</OSM>" not in r.content[-10:]
-                ):
+                content_tail = r.content[-10:].upper()
+                if b"</OSM>" not in content_tail:
                     UI.vprint(
                         1,
-                        "        OSM server",
-                        true_server_code,
-                        "sent a corrupted answer (no closing </osm> tag in answer), new tentative in",
-                        2**tentative,
-                        "sec...",
+                        f"        OSM server {true_server_code} sent a corrupted answer...",
                     )
-                elif len(r.content) <= 1000 and b"error" in r.content:
+                elif len(r.content) <= 1000 and b"ERROR" in r.content.upper():
                     UI.vprint(
                         1,
-                        "        OSM server",
-                        true_server_code,
-                        "sent us an error code for the data (data too big ?), new tentative in",
-                        2**tentative,
-                        "sec...",
+                        f"        OSM server {true_server_code} sent an error code...",
                     )
                 else:
-                    break
+                    return r.content
             else:
                 UI.vprint(
-                    1,
-                    "        OSM server",
-                    true_server_code,
-                    "rejected our query, new tentative in",
-                    2**tentative,
-                    "sec...",
+                    1, f"        OSM server {true_server_code} rejected our query..."
                 )
-        except:
+        except Exception as e:
             UI.vprint(
-                1,
-                "        OSM server",
-                true_server_code,
-                "was too busy, new tentative in",
-                2**tentative,
-                "sec...",
+                1, f"        OSM server {true_server_code} connection failed: {e}"
             )
+
+        # --- FAILURE HANDLING ---
         if tentative >= max_osm_tentatives:
             return 0
         if UI.red_flag:
             return 0
-        time.sleep(2**tentative)
+
         tentative += 1
-    return r.content
+        consecutive_failures += 1
 
+        # 1. Check if we should switch servers (after 3 failures)
+        if overpass_server_choice == "random" and consecutive_failures >= 3:
+            UI.vprint(
+                1,
+                f"        {consecutive_failures} failures on {true_server_code}. Switching server...",
+            )
+            current_index = (current_index + 1) % len(server_list)
+            consecutive_failures = 0
+            retry_delay_index = 0
+        else:
+            pass
 
-##############################################################################
+        sleep_time = delay_schedule[min(retry_delay_index, len(delay_schedule) - 1)]
 
+        UI.vprint(
+            1, f"        Retrying {server_list[current_index]} in {sleep_time} sec..."
+        )
+        time.sleep(sleep_time)
+
+        # Prepare index for the next attempt
+        if not (overpass_server_choice == "random" and consecutive_failures >= 3):
+            retry_delay_index += 1
 
 ##############################################################################
 def OSM_to_MultiLineString(osm_layer, lat, lon, tags_for_exclusion=set(), filter=None):
