@@ -50,6 +50,7 @@ import O4_Config_Utils as CFG
 import O4_Airport_Data_Source as APT_SRC
 from concurrent.futures import ThreadPoolExecutor
 import logging
+import webbrowser
 
 
 # Set OsX=True if you prefer the OsX way of drawing existing tiles but are on Linux or Windows.
@@ -698,6 +699,14 @@ class Ortho4XP_Custom_ZL(tk.Toplevel):
 
         row += 1
 
+        ttk.Button(
+            self.frame_left,
+            text="Open in OSM Browser",
+            command=self.open_osm_in_browser,
+        ).grid(row=row, column=0, padx=5, pady=3, sticky=N + S + E + W)
+
+        row += 1
+
         # Widgets - Layers Controls
         tk.Label(
             self.frame_left,
@@ -804,6 +813,7 @@ class Ortho4XP_Custom_ZL(tk.Toplevel):
             self.frame_left, text="Load Tile Config ", command=self.read_tile_cfg
         ).grid(row=row, column=0, padx=5, pady=3, sticky=N + S + E + W)
         row += 1
+
         tk.Label(
             self.frame_left,
             text="Ctrl+B1 : add texture\nShift+B1: add zone point\nCtrl+B2 : delete zone",
@@ -898,6 +908,35 @@ class Ortho4XP_Custom_ZL(tk.Toplevel):
         self.canvas = tk.Canvas(self.frame_right, bd=0, height=750, width=750)
         self.canvas.grid(row=right_row, column=0, sticky=N + S + E + W)
         self._canvas_layers = None
+
+    def open_osm_in_browser(self):
+        # 1. Capture the exact center of the current canvas view
+        self._capture_viewport_center()
+
+        if not hasattr(self, "_saved_center") or self._saved_center is None:
+            UI.vprint(
+                1,
+                "Please generate a local preview first (click 'Automatic + Custom Zones' or 'Custom Zones') so a map/orthophoto is visible.",
+            )
+            return
+
+        center_lat, center_lon = self._saved_center
+
+        # 2. Get the zoom level from the combobox
+        try:
+            zoom = int(self.zl_combo.get())
+        except ValueError:
+            zoom = 15  # Fallback
+
+        # 3. Construct the OSM URL
+        # Format: https://www.openstreetmap.org/#map=ZOOM/LAT/LON
+        url = f"https://www.openstreetmap.org/#map={zoom}/{center_lat}/{center_lon}"
+
+        try:
+            webbrowser.open(url)
+        except Exception as e:
+            # Assuming UI.vprint is a global utility in your codebase
+            UI.vprint(1, f"Error opening browser: {e}")
 
     def _monitor_cache_update(self):
         # Wait for cache update to finish (non-GUI work)
