@@ -1,5 +1,3 @@
-# O4_OSM_Utils.py
-
 import os
 import io
 import bz2
@@ -25,7 +23,7 @@ LOCAL_TILE_DIR = os.path.join(FNAMES.OSM_dir, "Local_OSM_extract")
 overpass_servers = {
     "DE": "https://overpass-api.de/api/interpreter",
     "KU": "https://overpass.private.coffee/api/interpreter",
-    "RU":"https://maps.mail.ru/osm/tools/overpass/api/interpreter",
+    "RU": "https://maps.mail.ru/osm/tools/overpass/api/interpreter",
 }
 overpass_server_choice = "DE"
 max_osm_tentatives = 8
@@ -111,6 +109,7 @@ class OSM_layer:
 
     def __init__(self):
         self.dicosmn = {}
+        self.is_pbf_source = False
         self.dicosmn_reverse = {}
         self.dicosmw = {}
         self.next_node_id = -1
@@ -681,6 +680,7 @@ def OSM_queries_to_OSM_layer(
         result = osm_layer.update_dicosm(tile_path, input_tags, target_tags)
         if not result:
             return 0
+        osm_layer.is_pbf_source = True
         if cached_suffix:
             _prune_osm_layer(osm_layer)
             osm_layer.write_to_file(cached_data_filename)
@@ -754,6 +754,7 @@ def OSM_query_to_OSM_layer(
         tile_path = _local_tile_path(lat_min, lon_min)
         if not tile_path:
             return 0
+        osm_layer.is_pbf_source = True
         osm_layer.update_dicosm(tile_path, input_tags, target_tags)
         if cached_file_name:
             osm_layer.write_to_file(cached_file_name)
@@ -869,14 +870,32 @@ def get_overpass_data(query, bbox, server_code=None):
         if not (overpass_server_choice == "random" and consecutive_failures >= 3):
             retry_delay_index += 1
 
+
+##############################################################################
+def _add_polygon(pol, targetlist):
+    """Flatten MultiPolygon/GeometryCollection results from bbox clipping into individual polygons."""
+    if pol.is_empty or not pol.area:
+        return
+    if pol.geom_type == "Polygon":
+        if pol.is_valid:
+            targetlist.append(pol)
+    elif pol.geom_type in ("MultiPolygon", "GeometryCollection"):
+        for geom in pol.geoms:
+            if geom.geom_type == "Polygon" and geom.is_valid and geom.area:
+                targetlist.append(geom)
+                
 ##############################################################################
 def OSM_to_MultiLineString(osm_layer, lat, lon, tags_for_exclusion=set(), filter=None):
+    # Clip only when data came from a local PBF smart-strategy tile
+    clip = getattr(osm_layer, "is_pbf_source", False)
     multiline = []
     multiline_reject = []
     todo = len(osm_layer.dicosmfirst["w"])
     step = int(todo / 100) + 1
     done = 0
     filtered_segs = 0
+    # Tile bbox in local coordinates (origin at lon,lat)
+    tile_bbox = geometry.box(0, 0, 1, 1) if clip else None
     for wayid in osm_layer.dicosmfirst["w"]:
         if done % step == 0:
             UI.progress_bar(1, int(100 * done / todo))
@@ -905,7 +924,22 @@ def OSM_to_MultiLineString(osm_layer, lat, lon, tags_for_exclusion=set(), filter
             done += 1
             continue
         try:
-            multiline.append(geometry.LineString(way))
+            line = geometry.LineString(way)
+            # Clip way polygon to tile bbox — only when osm_layer.is_pbf_source
+            if tile_bbox is not None and not tile_bbox.contains(line):
+                line = line.intersection(tile_bbox)
+                if line.is_empty:
+                    done += 1
+                    continue
+                if line.geom_type == "MultiLineString":
+                    multiline.extend(line.geoms)
+                    filtered_segs += len(way)
+                elif line.geom_type == "LineString":
+                    multiline.append(line)
+                    filtered_segs += len(way)
+                done += 1
+                continue
+            multiline.append(line)
             filtered_segs += len(way)
         except:
             pass
@@ -920,17 +954,16 @@ def OSM_to_MultiLineString(osm_layer, lat, lon, tags_for_exclusion=set(), filter
             geometry.MultiLineString(multiline_reject),
         )
 
-
-##############################################################################
-
-
 ##############################################################################
 def OSM_to_MultiPolygon(osm_layer, lat, lon, filter=None):
+    # Clip only when data came from a local PBF smart-strategy tile.
+    clip = getattr(osm_layer, "is_pbf_source", False)
     multilist = []
     excludelist = []
     todo = len(osm_layer.dicosmfirst["w"]) + len(osm_layer.dicosmfirst["r"])
     step = int(todo / 100) + 1
     done = 0
+    tile_bbox = geometry.box(0, 0, 1, 1) if clip else None
     for wayid in osm_layer.dicosmfirst["w"]:
         if done % step == 0:
             UI.progress_bar(1, int(100 * done / todo))
@@ -962,14 +995,20 @@ def OSM_to_MultiPolygon(osm_layer, lat, lon, filter=None):
                 )
                 done += 1
                 continue
+            # Clip way polygon to tile bbox — only when osm_layer.is_pbf_source
+            if tile_bbox is not None and not tile_bbox.contains(pol):
+                pol = pol.intersection(tile_bbox)
+                if pol.is_empty:
+                    done += 1
+                    continue
         except Exception as e:
             UI.vprint(2, e)
             done += 1
             continue
         if filter and filter(pol, wayid, osm_layer.dicosmtags["w"]):
-            excludelist.append(pol)
+            _add_polygon(pol, excludelist)
         else:
-            multilist.append(pol)
+            _add_polygon(pol, multilist)
         done += 1
     for relid in osm_layer.dicosmfirst["r"]:
         if done % step == 0:
@@ -1008,6 +1047,12 @@ def OSM_to_MultiPolygon(osm_layer, lat, lon, filter=None):
             done += 1
             continue
         multipol = multiout.difference(multiin)
+        # Clip relation-derived polygon to tile bbox — only active if osm_layer.is_pbf_source
+        if tile_bbox is not None and not tile_bbox.contains(multipol):
+            multipol = multipol.intersection(tile_bbox)
+            if multipol.is_empty:
+                done += 1
+                continue
         if filter and filter(multipol, relid, osm_layer.dicosmtags["r"]):
             targetlist = excludelist
         else:
@@ -1017,16 +1062,7 @@ def OSM_to_MultiPolygon(osm_layer, lat, lon, filter=None):
             if ("Multi" in multipol.geom_type or "Collection" in multipol.geom_type)
             else [multipol]
         ):
-            if not pol.area:
-                done += 1
-                continue
-            if not pol.is_valid:
-                UI.logprint(
-                    "Relation", relid, "contains an invalid polygon which was discarded"
-                )
-                done += 1
-                continue
-            targetlist.append(pol)
+            _add_polygon(pol, targetlist)
         done += 1
     if filter:
         ret_val = (geometry.MultiPolygon(multilist), geometry.MultiPolygon(excludelist))
@@ -1041,6 +1077,3 @@ def OSM_to_MultiPolygon(osm_layer, lat, lon, filter=None):
         UI.vprint(2, "    Total number of geometries:", len(ret_val.geoms))
     UI.progress_bar(1, 100)
     return ret_val
-
-
-##############################################################################
