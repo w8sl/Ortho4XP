@@ -25,6 +25,7 @@ LOCAL_TILE_DIR = os.path.join(FNAMES.OSM_dir, "Local_OSM_extract")
 overpass_servers = {
     "DE": "https://overpass-api.de/api/interpreter",
     "KU": "https://overpass.private.coffee/api/interpreter",
+    "RU":"https://maps.mail.ru/osm/tools/overpass/api/interpreter",
 }
 overpass_server_choice = "DE"
 max_osm_tentatives = 8
