@@ -657,9 +657,15 @@ def blur_mask(img_array, tile, sea_level):
     ##########################################
     pxscal = GEO.webmercator_pixel_size(tile.lat + 0.5, tile.mask_zl)
     if tile.masking_mode == "sand":
-        blur_width = int(tile.masks_width / pxscal)
+        m_w = tile.masks_width
+        # If it's a list, grab the first item
+        val = m_w[0] if isinstance(m_w, list) and len(m_w) > 0 else m_w       
+        blur_width = int(val / pxscal)
     elif tile.masking_mode == "rocks":
-        blur_width = tile.masks_width / (2 * pxscal)
+        m_w = tile.masks_width
+        # If it's a list, grab the first item
+        val = m_w[0] if isinstance(m_w, list) and len(m_w) > 0 else m_w  
+        blur_width = val / (2 * pxscal)
     elif tile.masking_mode == "3steps":
         blur_width = [L / pxscal for L in tile.masks_width]
     # Sand mode
