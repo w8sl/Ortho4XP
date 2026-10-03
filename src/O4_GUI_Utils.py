@@ -2309,11 +2309,25 @@ class Ortho4XP_Earth_Preview(tk.Toplevel):
                 UI.vprint(1, "Use Refresh button to see changes on the map")
             return
 
+        def delete_local_osm_extract(lat, lon):
+            local_tile_dir = os.path.join(FNAMES.OSM_dir, "Local_OSM_extract")
+            tile_name = f"{int(lat)}_{int(lon)}.osm.bz2"
+            tile_path = os.path.join(local_tile_dir, tile_name)
+
+            if os.path.isfile(tile_path):
+                try:
+                    os.remove(tile_path)
+                    UI.vprint(2, f"Deleted local OSM extract: {tile_path}")
+                except Exception as e:
+                    UI.vprint(3, f"Error deleting local OSM extract {tile_path}: {e}")
+
         if self.v_["OSM data"].get():
             try:
                 shutil.rmtree(FNAMES.osm_dir(self.active_lat, self.active_lon))
             except Exception as e:
                 UI.vprint(3, e)
+            delete_local_osm_extract(self.active_lat, self.active_lon)
+
         if self.v_["X-Plane Airport data"].get():
             try:
                 APT_SRC.AirportDataSource.update_cache(force_rebuild=True)
