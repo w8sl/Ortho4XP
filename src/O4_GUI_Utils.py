@@ -1459,7 +1459,7 @@ class Ortho4XP_Custom_ZL(tk.Toplevel):
                     self.async_build_progressive_zl_layers, lat, lon, zl
                 )
             elif CFG.cover_airports_with_highres in ["True", "ICAO"]:
-                tile = CFG.Tile(self.lat, self.lon, "")
+                tile = self.tile_from_preview()
                 zones = self.OSM_airports_zone_list(tile)
                 future_texture = executor.submit(
                     self.async_build_airport_zl_layer, lat, lon, zl, zones
