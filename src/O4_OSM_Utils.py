@@ -249,7 +249,7 @@ class OSM_layer:
                     if items[1] == "node":
                         continue
                     UI.lvprint(
-                        2,
+                        3,
                         "Relation id=",
                         osmid,
                         "contains a member of type",
